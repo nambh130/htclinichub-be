@@ -22,6 +22,21 @@ export class ReservationsController {
     );
   }
 
+  @MessagePattern('create-reservation-postgres')
+  async createReservationPostgres(
+    @Payload()
+    payload: {
+      createReservationDto: CreateReservationDto;
+      userId: string;
+    },
+  ) {
+    const { createReservationDto, userId } = payload;
+    return this.reservationsService.createReservationPostgres(
+      createReservationDto,
+      userId,
+    );
+  }
+
   @EventPattern('reservation-created')
   handleReservationCreated(
     @Payload() reservationCreatedEvent: ReservationCreatedEvent,
