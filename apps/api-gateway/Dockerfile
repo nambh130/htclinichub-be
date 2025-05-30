@@ -9,6 +9,8 @@ COPY pnpm-lock.yaml ./
 COPY tsconfig.json tsconfig.json
 COPY nest-cli.json nest-cli.json
 
+RUN apk add --no-cache coreutils
+
 RUN npm install -g pnpm
 
 RUN pnpm install

@@ -25,6 +25,18 @@ export class ApiGatewayController {
     );
   }
 
+  @Post('create-reservation-postgres')
+  @UseGuards(JwtAuthGuard)
+  createReservationPostgres(
+    @Body() createReservationDto: CreateReservationDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.apiGatewayService.createReservationPostgres(
+      createReservationDto,
+      user._id.toString(),
+    );
+  }
+
   @Post('login')
   async login(
     @Body() userDto: UserDto,
