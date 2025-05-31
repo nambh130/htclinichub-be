@@ -1,48 +1,47 @@
 import { Module } from '@nestjs/common';
-import { ReservationsService } from './reservations.service';
-import { ReservationsController } from './reservations.controller';
+import { ClinicsService } from './clinics.service';
+import { ClinicsController } from './clinics.controller';
 import {
   DatabaseModule,
   LoggerModule,
   AUTH_SERVICE,
-  RESERVATIONS_SERVICE,
-  RESERVATIONS_CONSUMER_GROUP,
   AUTH_CONSUMER_GROUP,
+  CLINIC_SERVICE,
+  CLINIC_CONSUMER_GROUP,
 } from '@app/common';
-import { ReservationsRepository } from './reservations.repository';
-import { ReservationDocument, ReservationSchema } from './models';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ClinicRepository } from './clinic.repository';
+import { Clinic, Doctor, EmployeeInfo } from './models';
 
 @Module({
   imports: [
     DatabaseModule,
-    DatabaseModule.forMongooseFeature([
-      { name: ReservationDocument.name, schema: ReservationSchema },
-    ]),
     LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/reservations/.env',
+      envFilePath: './apps/clinics/.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         MONGODB_URI: Joi.string().required(),
+        POSTGRES_URI: Joi.string().required(),
       }),
     }),
     ClientsModule.registerAsync([
       {
-        name: RESERVATIONS_SERVICE,
+        name: CLINIC_SERVICE,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'reservations',
+              clientId: 'clinic',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
             consumer: {
-              groupId: RESERVATIONS_CONSUMER_GROUP,
+              groupId: CLINIC_CONSUMER_GROUP,
             },
           },
         }),
@@ -66,8 +65,19 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         inject: [ConfigService],
       },
     ]),
+    TypeOrmModule.forFeature([Clinic, Doctor, EmployeeInfo]),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('POSTGRES_URI'),
+        autoLoadEntities: true,
+        synchronize: true, // chỉ dùng cho dev
+      }),
+      inject: [ConfigService],
+    }),
   ],
-  controllers: [ReservationsController],
-  providers: [ReservationsService, ReservationsRepository],
+  controllers: [ClinicsController],
+  providers: [ClinicsService, ClinicRepository],
 })
-export class ReservationsModule {}
+export class ClinicsModule {}

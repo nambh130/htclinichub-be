@@ -5,6 +5,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import {
   AUTH_CONSUMER_GROUP,
   AUTH_SERVICE,
+  CLINIC_CONSUMER_GROUP,
+  CLINIC_SERVICE,
   LoggerModule,
   RESERVATIONS_CONSUMER_GROUP,
   RESERVATIONS_SERVICE,
@@ -38,6 +40,23 @@ import { HttpModule } from '@nestjs/axios';
             },
             consumer: {
               groupId: RESERVATIONS_CONSUMER_GROUP,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: CLINIC_SERVICE, 
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'clinics',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: CLINIC_CONSUMER_GROUP,
             },
           },
         }),

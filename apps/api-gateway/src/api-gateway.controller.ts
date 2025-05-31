@@ -8,6 +8,7 @@ import {
   UserDto,
 } from '@app/common';
 import { Response } from 'express';
+import { AddClinicDto, ClinicDto } from '@app/common/dto/clinic';
 
 @Controller()
 export class ApiGatewayController {
@@ -41,5 +42,10 @@ export class ApiGatewayController {
   @Post('create-user')
   async createUser(@Body() userDto: UserDto) {
     return this.apiGatewayService.createUser(userDto);
+  }
+
+  @Post('add-clinic')
+  async addClinic(@Body() clinicDto: AddClinicDto) {
+    return this.apiGatewayService.addClinic(clinicDto);
   }
 }

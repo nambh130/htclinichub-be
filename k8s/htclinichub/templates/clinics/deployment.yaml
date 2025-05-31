@@ -2,26 +2,31 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: reservations
-  name: reservations
+    app: clinics
+  name: clinics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: reservations
+      app: clinics
   template:
     metadata:
       labels:
-        app: reservations
+        app: clinics
     spec:
       containers:
-        - image: reservations:v1.0.0
-          name: reservations
+        - image: clinics:v1.0.0
+          name: clinics
           env:
-            - name: POSTGRES_URI
+            - name: MONGODB_URI
               valueFrom:
                 secretKeyRef:
                   name: mongodb
+                  key: connectionString
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-clinics
                   key: connectionString
             - name: KAFKA_BROKER
               value: 'kafka.kafka-ca1.svc.cluster.local:9092'

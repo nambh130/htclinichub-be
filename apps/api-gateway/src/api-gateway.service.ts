@@ -8,6 +8,7 @@ import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { AddClinicDto, ClinicDto } from '@app/common/dto/clinic';
 
 @Injectable()
 export class ApiGatewayService {
@@ -23,6 +24,7 @@ export class ApiGatewayService {
     this.authClient.subscribeToResponseOf('login');
     this.authClient.subscribeToResponseOf('authenticate');
     this.authClient.subscribeToResponseOf('create-user');
+    this.authClient.subscribeToResponseOf('add-clinic');
     await this.reservationsClient.connect();
     await this.authClient.connect();
   }
@@ -43,5 +45,13 @@ export class ApiGatewayService {
 
   async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
     return firstValueFrom(this.authClient.send('create-user', userDto));
+  }
+
+  async addClinic(addClinicDto: AddClinicDto) {
+    return firstValueFrom(
+      this.authClient.send('add-clinic', {
+        addClinicDto,
+      }),
+    );
   }
 }

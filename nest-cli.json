@@ -43,6 +43,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/reservations/tsconfig.app.json"
       }
+    },
+    "clinics": {
+      "type": "application",
+      "root": "apps/clinics",
+      "entryFile": "main",
+      "sourceRoot": "apps/clinics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
     }
   },
   "monorepo": true,
