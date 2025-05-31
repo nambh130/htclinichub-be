@@ -13,10 +13,11 @@ export class ClinicsController {
     @Payload()
     payload: {
       addClinicDto: AddClinicDto;
+      userId: string; 
     },
   ) {
-    const { addClinicDto } = payload;
-    return this.clinicsService.addClinic(addClinicDto);
+    const { addClinicDto, userId } = payload;
+    return this.clinicsService.addClinic(addClinicDto, userId);
   }
 
   @EventPattern('clinic-added')

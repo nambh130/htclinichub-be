@@ -60,10 +60,14 @@ export class ApiGatewayService {
     return firstValueFrom(this.authClient.send('create-user', userDto));
   }
 
-  async addClinic(addClinicDto: AddClinicDto) {
+  async addClinic(
+    addClinicDto: AddClinicDto,
+    userId: string,
+  ): Promise<ClinicDto> {
     return firstValueFrom(
       this.authClient.send('add-clinic', {
         addClinicDto,
+        userId,
       }),
     );
   }

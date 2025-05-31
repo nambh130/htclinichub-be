@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ClinicsService } from './clinics.service';
 import { ClinicsController } from './clinics.controller';
 import {
-  DatabaseModule,
   LoggerModule,
   AUTH_SERVICE,
   AUTH_CONSUMER_GROUP,
@@ -14,21 +13,26 @@ import * as Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClinicRepository } from './clinic.repository';
-import { Clinic, Doctor, EmployeeInfo } from './models';
+import { Clinic } from './models';
 
 @Module({
   imports: [
-    DatabaseModule,
     LoggerModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/clinics/.env',
-      validationSchema: Joi.object({
-        KAFKA_BROKER: Joi.required(),
-        MONGODB_URI: Joi.string().required(),
-        POSTGRES_URI: Joi.string().required(),
-      }),
-    }),
+        ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: './apps/clinics/.env',
+          validationSchema: Joi.object({
+            KAFKA_BROKER: Joi.required(),
+            MONGODB_URI: Joi.string().required(),
+            POSTGRES_HOST: Joi.string().required(),
+            POSTGRES_PORT: Joi.number().required(),
+            POSTGRES_DB: Joi.string().required(),
+            POSTGRES_USER: Joi.string().required(),
+            POSTGRES_PASSWORD: Joi.string().required(),
+            // Synchronize should only use in development, not in production
+            POSTGRES_SYNC: Joi.boolean().default(false),
+          }),
+        }),
     ClientsModule.registerAsync([
       {
         name: CLINIC_SERVICE,
@@ -65,17 +69,25 @@ import { Clinic, Doctor, EmployeeInfo } from './models';
         inject: [ConfigService],
       },
     ]),
-    TypeOrmModule.forFeature([Clinic, Doctor, EmployeeInfo]),
+
+    // TypeORM configuration for PostgreSQL
+    TypeOrmModule.forFeature([Clinic]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get<string>('POSTGRES_URI'),
+        host: configService.get('POSTGRES_HOST'),
+        port: configService.get('POSTGRES_PORT'),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
         autoLoadEntities: true,
         synchronize: true, // chỉ dùng cho dev
       }),
       inject: [ConfigService],
     }),
+
+    // MongoDB configuration
   ],
   controllers: [ClinicsController],
   providers: [ClinicsService, ClinicRepository],
