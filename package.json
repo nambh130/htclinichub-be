@@ -1,10 +1,20 @@
 {
   "name": "htclinichub",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
   "private": true,
+  "description": "<p align=\"center\">\r   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo-small.svg\" width=\"120\" alt=\"Nest Logo\" /></a>\r </p>",
+  "homepage": "https://github.com/nambh130/htclinichub-be#readme",
+  "bugs": {
+    "url": "https://github.com/nambh130/htclinichub-be/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nambh130/htclinichub-be.git"
+  },
   "license": "UNLICENSED",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
@@ -46,8 +56,10 @@
     "pg": "^8.16.0",
     "pino-http": "^10.4.0",
     "pino-pretty": "^13.0.0",
+    "postgres": "^3.4.7",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "ts-node-dev": "^2.0.0",
     "typeorm": "^0.3.24"
   },
   "devDependencies": {

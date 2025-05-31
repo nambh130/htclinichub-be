@@ -6,6 +6,11 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - '2181:2181'
+    healthcheck:
+      test: ['CMD', 'echo', 'ruok', '|', 'nc', 'localhost', '2181']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -18,30 +23,65 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'nc', '-z', 'localhost', '9092']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: htclinichub
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api-gateway:
     build:
       context: .
       dockerfile: ./apps/api-gateway/Dockerfile
       target: development
-    command: pnpm run start:dev api-gateway
+    command: sh -c "sleep 10 && pnpm run start:dev api-gateway"
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./apps/api-gateway/src
-          target: /usr/src/app/apps/api-gateway/src
+          target: /app/apps/api-gateway/src
           ignore:
             - node_modules/
-        - action: sync+restart
+        - action: sync
           path: ./libs
-          target: /usr/src/app/libs
+          target: /app/libs
           ignore:
             - node_modules/
         - action: rebuild
           path: ./package.json
     env_file:
       - ./apps/api-gateway/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
     ports:
       - '3000:3000'
 
@@ -50,98 +90,53 @@ services:
       context: .
       dockerfile: ./apps/reservations/Dockerfile
       target: development
-    command: pnpm run start:dev reservations
+    command: sh -c "sleep 10 && pnpm run start:dev reservations"
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./apps/reservations/src
-          target: /usr/src/app/apps/reservations/src
+          target: /app/apps/reservations/src
           ignore:
             - node_modules/
-        - action: sync+restart
+        - action: sync
           path: ./libs
-          target: /usr/src/app/libs
+          target: /app/libs
           ignore:
             - node_modules/
         - action: rebuild
           path: ./package.json
     env_file:
       - ./apps/reservations/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
 
   auth:
     build:
       context: .
       dockerfile: ./apps/auth/Dockerfile
       target: development
-    command: pnpm run start:dev auth
+    command: sh -c "sleep 10 && pnpm run start:dev auth"
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./apps/auth/src
-          target: /usr/src/app/apps/auth/src
+          target: /app/apps/auth/src
           ignore:
             - node_modules/
-        - action: sync+restart
+        - action: sync
           path: ./libs
-          target: /usr/src/app/libs
+          target: /app/libs
           ignore:
             - node_modules/
         - action: rebuild
           path: ./package.json
     env_file:
       - ./apps/auth/.env
-
-      
-  clinics:
-    build:
-      context: .
-      dockerfile: ./apps/clinics/Dockerfile
-      target: development
-    command: pnpm run start:dev clinics
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./apps/clinics/src
-          target: /usr/src/app/apps/clinics/src
-          ignore:
-            - node_modules/
-        - action: sync+restart
-          path: ./libs
-          target: /usr/src/app/libs
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./package.json
-    env_file:
-      - ./apps/clinics/.env  
-
-  mongo:
-    image: mongo
-
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "5050:80"
     depends_on:
-      - postgres_clinics
-
-  postgres_clinics:
-    image: postgres:15
-    container_name: htclinichub-postgres-clinics
-    restart: always
-    environment:
-      POSTGRES_USER: clinics_user
-      POSTGRES_PASSWORD: clinics_pass
-      POSTGRES_DB: clinics_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - clinics_pgdata:/var/lib/postgresql/data
-
-volumes:
-  clinics_pgdata:
-
-  
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy

@@ -21,6 +21,9 @@ export class ApiGatewayService {
 
   async onModuleInit() {
     this.reservationsClient.subscribeToResponseOf('create-reservation');
+    this.reservationsClient.subscribeToResponseOf(
+      'create-reservation-postgres',
+    );
     this.authClient.subscribeToResponseOf('login');
     this.authClient.subscribeToResponseOf('authenticate');
     this.authClient.subscribeToResponseOf('create-user');
@@ -34,6 +37,16 @@ export class ApiGatewayService {
     userId: string,
   ) {
     return this.reservationsClient.send('create-reservation', {
+      createReservationDto,
+      userId,
+    });
+  }
+
+  createReservationPostgres(
+    createReservationDto: CreateReservationDto,
+    userId: string,
+  ) {
+    return this.reservationsClient.send('create-reservation-postgres', {
       createReservationDto,
       userId,
     });
