@@ -15,6 +15,9 @@ export class Clinic {
   ownerId?: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
+  token?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
   createdBy?: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
