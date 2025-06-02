@@ -4,6 +4,7 @@ import { ClientKafka } from '@nestjs/microservices';
 import { AddClinicDto } from '@app/common/dto/clinic';
 import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class ClinicsService {
@@ -11,28 +12,92 @@ export class ClinicsService {
     private readonly clinicsRepository: ClinicRepository,
     @Inject(CLINIC_SERVICE)
     private readonly clinicsClient: ClientKafka,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(ClinicsService.name);
+  }
 
   async addClinic(addClinicDto: AddClinicDto, userId: string) {
     if (!addClinicDto?.name || !addClinicDto?.location) {
+      this.logger.warn({
+        msg: 'Missing clinic name or location in AddClinicDto',
+        context: 'ClinicService',
+        operation: 'CREATE_CLINIC',
+        status: 'FAILED_VALIDATION',
+        payload: addClinicDto,
+        userId,
+        errorDetails: {
+          reason: 'Missing required fields',
+          timestamp: new Date().toISOString(),
+        },
+      });
       throw new Error('Invalid clinic data');
     }
 
-    const newClinic = new Clinic();
-    newClinic.name = addClinicDto.name;
-    newClinic.location = addClinicDto.location;
-    newClinic.ownerId = addClinicDto.ownerId;
-    newClinic.createdBy = userId;
-    const clinic = await this.clinicsRepository.create(newClinic);
+    try {
+      const newClinic = new Clinic();
+      newClinic.name = addClinicDto.name;
+      newClinic.location = addClinicDto.location;
+      newClinic.ownerId = addClinicDto.ownerId;
+      newClinic.createdBy = userId;
 
-    this.clinicsClient.emit('clinic-added', {
-      id: clinic.id,
-      name: clinic.name,
-      location: clinic.location,
-      ownerId: clinic.ownerId,
-      createdBy: clinic.createdBy,
-    });
+      const clinic = await this.clinicsRepository.create(newClinic);
 
-    return clinic;
+      this.logger.info({
+        msg: 'Clinic created successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'CREATE_CLINIC',
+        status: 'SUCCESS',
+        clinicId: clinic.id,
+        name: clinic.name,
+        location: clinic.location,
+        ownerId: clinic.ownerId,
+        createdBy: userId,
+        payload: addClinicDto,
+        businessData: {
+          clinicCreated: {
+            id: clinic.id,
+            name: clinic.name,
+            location: clinic.location,
+            ownerId: clinic.ownerId,
+          },
+          creator: {
+            userId,
+            action: 'CREATE_CLINIC',
+            timestamp: new Date().toISOString(),
+          },
+          inputData: addClinicDto,
+        },
+      });
+
+      this.clinicsClient.emit('clinic-added', {
+        id: clinic.id,
+        name: clinic.name,
+        location: clinic.location,
+        ownerId: clinic.ownerId,
+        createdBy: clinic.createdBy,
+      });
+
+      return clinic;
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to create clinic',
+        context: 'ClinicService',
+        operation: 'CREATE_CLINIC',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+        payload: addClinicDto,
+        userId,
+        errorDetails: {
+          action: 'CREATE_CLINIC',
+          userId,
+          inputData: addClinicDto,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      throw error;
+    }
   }
 }
