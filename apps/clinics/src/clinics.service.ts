@@ -312,7 +312,7 @@ export class ClinicsService {
         msg: 'Clinic deleted successfully',
         type: 'audit-log',
         context: 'ClinicService',
-        operation: 'DELETE_CLINIC',
+        operation: 'DELETE_CLINIC', 
         status: 'SUCCESS',
         clinicId,
         userId,
