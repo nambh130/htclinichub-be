@@ -101,7 +101,7 @@ export class ApiGatewayController {
   ): Promise<ClinicDto> {
     return this.apiGatewayService.updateClinic(
       id,
-      updateClinicDto,
+      updateClinicDto, 
       user._id.toString(),
     );
   }
