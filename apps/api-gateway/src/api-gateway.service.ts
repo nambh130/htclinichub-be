@@ -3,12 +3,14 @@ import {
   CreateReservationDto,
   UserDto,
   AUTH_SERVICE,
+  CLINIC_SERVICE,
 } from '@app/common';
 import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { AddClinicDto, ClinicDto } from '@app/common/dto/clinic';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ApiGatewayService {
@@ -17,6 +19,8 @@ export class ApiGatewayService {
     private readonly reservationsClient: ClientKafka,
     @Inject(AUTH_SERVICE)
     private readonly authClient: ClientKafka,
+    @Inject(CLINIC_SERVICE)
+    private readonly clinicClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
@@ -24,10 +28,18 @@ export class ApiGatewayService {
     this.reservationsClient.subscribeToResponseOf(
       'create-reservation-postgres',
     );
+
+    // Auth-related subscriptions
     this.authClient.subscribeToResponseOf('login');
     this.authClient.subscribeToResponseOf('authenticate');
     this.authClient.subscribeToResponseOf('create-user');
-    this.authClient.subscribeToResponseOf('add-clinic');
+
+    // Clinic-related subscriptions
+    this.clinicClient.subscribeToResponseOf('add-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinics');
+    this.clinicClient.subscribeToResponseOf('delete-clinic');
+
+    await this.clinicClient.connect();
     await this.reservationsClient.connect();
     await this.authClient.connect();
   }
@@ -65,10 +77,19 @@ export class ApiGatewayService {
     userId: string,
   ): Promise<ClinicDto> {
     return firstValueFrom(
-      this.authClient.send('add-clinic', {
+      this.clinicClient.send('add-clinic', {
         addClinicDto,
         userId,
       }),
+    );
+  }
+  async getClinics(userId: string): Promise<ClinicDto[]> {
+    return firstValueFrom(this.clinicClient.send('get-clinics', { userId }));
+  }
+
+  async deleteClinic(id: string, userId: string): Promise<void> {
+    return firstValueFrom(
+      this.clinicClient.send('delete-clinic', { id, userId }),
     );
   }
 }

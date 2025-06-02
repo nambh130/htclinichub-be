@@ -1,4 +1,13 @@
-import { Controller, Post, UseGuards, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Body,
+  Res,
+  Get,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { ApiGatewayService } from './api-gateway.service';
 import {
   CreateReservationDto,
@@ -57,12 +66,28 @@ export class ApiGatewayController {
     );
   }
 
-  @Post('add-clinic')
+  // Clinic routes
+  @Post('clinics')
   @UseGuards(JwtAuthGuard)
   async addClinic(
     @Body() addClinicDto: AddClinicDto,
     @CurrentUser() user: UserDocument,
   ) {
     return this.apiGatewayService.addClinic(addClinicDto, user._id.toString());
+  }
+
+  @Get('clinics')
+  @UseGuards(JwtAuthGuard)
+  async getClinics(@CurrentUser() user: UserDocument) {
+    return this.apiGatewayService.getClinics(user._id.toString());
+  }
+
+  @Delete('clinics/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteClinic(
+    @CurrentUser() user: UserDocument,
+    @Param('id') id: string,
+  ) {
+    return this.apiGatewayService.deleteClinic(id, user._id.toString());
   }
 }

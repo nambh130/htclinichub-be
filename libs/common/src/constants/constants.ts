@@ -6,4 +6,4 @@ export const CLINIC_SERVICE = ' clinics';
 // Consumer group names
 export const RESERVATIONS_CONSUMER_GROUP = 'reservations-consumer';
 export const AUTH_CONSUMER_GROUP = 'auth-consumer';
-export const CLINIC_CONSUMER_GROUP = 'clinic-consumer';
+export const CLINIC_CONSUMER_GROUP = 'clinics-consumer';

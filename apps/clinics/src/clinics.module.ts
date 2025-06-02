@@ -41,7 +41,7 @@ import { Clinic } from './models';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'clinic',
+              clientId: 'clinics',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
             consumer: {

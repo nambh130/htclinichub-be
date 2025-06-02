@@ -46,7 +46,7 @@ import { HttpModule } from '@nestjs/axios';
         inject: [ConfigService],
       },
       {
-        name: CLINIC_SERVICE, 
+        name: CLINIC_SERVICE,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.KAFKA,

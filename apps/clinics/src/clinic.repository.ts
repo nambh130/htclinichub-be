@@ -7,7 +7,6 @@ import { PostgresAbstractRepository } from '@app/common';
 @Injectable()
 export class ClinicRepository extends PostgresAbstractRepository<Clinic> {
   protected readonly logger = new Logger(ClinicRepository.name);
-
   constructor(
     @InjectRepository(Clinic)
     itemsRepository: Repository<Clinic>,

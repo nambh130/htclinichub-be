@@ -13,13 +13,25 @@ export class ClinicsController {
     @Payload()
     payload: {
       addClinicDto: AddClinicDto;
-      userId: string; 
+      userId: string;
     },
   ) {
     const { addClinicDto, userId } = payload;
     return this.clinicsService.addClinic(addClinicDto, userId);
   }
 
+  @MessagePattern('get-clinics')
+  async getClinics(@Payload() userId: string) {
+    return this.clinicsService.getClinics(userId);
+  }
+
+  @MessagePattern('delete-clinic')
+  async deleteClinic(@Payload() payload: { id: string; userId: string }) {
+    const { id, userId } = payload;
+    return this.clinicsService.deleteClinic(id, userId);
+  }
+
+  // Event handlers
   @EventPattern('clinic-added')
   handleClinicAdded(@Payload() clinicAddedEvent: ClinicAddedEvent) {
     clinicAddedEvent.toString();

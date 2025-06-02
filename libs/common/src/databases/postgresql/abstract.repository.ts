@@ -1,26 +1,31 @@
-import { Logger, NotFoundException } from '@nestjs/common';
-import { PostgresAbstractEntity } from './abstract.entity';
 import {
   EntityManager,
+  FindManyOptions,
   FindOptionsRelations,
   FindOptionsWhere,
+  FindOptionsOrder,
   Repository,
 } from 'typeorm';
+import { Logger, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { PostgresAbstractEntity } from './abstract.entity';
 
 export abstract class PostgresAbstractRepository<
   T extends PostgresAbstractEntity<T>,
 > {
   protected abstract readonly logger: Logger;
+
   constructor(
     private readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
   ) {}
 
+  // Create
   async create(entity: T): Promise<T> {
     return this.entityManager.save(entity);
   }
 
+  // Find one
   async findOne(
     where: FindOptionsWhere<T>,
     relations?: FindOptionsRelations<T>,
@@ -35,6 +40,7 @@ export abstract class PostgresAbstractRepository<
     return entity;
   }
 
+  // Update
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
@@ -51,11 +57,54 @@ export abstract class PostgresAbstractRepository<
     return this.findOne(where);
   }
 
+  // Find many by condition
   async find(where: FindOptionsWhere<T>): Promise<T[]> {
     return this.entityRepository.findBy(where);
   }
 
-  async findOneAndDelete(where: FindOptionsWhere<T>) {
+  // Hard Delete
+  async delete(where: FindOptionsWhere<T>): Promise<void> {
     await this.entityRepository.delete(where);
+  }
+
+  // Find All with optional pagination, order, relations and soft delete filter
+  async findAll(options?: {
+    where?: FindOptionsWhere<T>;
+    relations?: FindOptionsRelations<T>;
+    order?: FindOptionsOrder<T>;
+    page?: number;
+    limit?: number;
+    withDeleted?: boolean; // mặc định exclude soft deleted
+  }): Promise<{ data: T[]; total: number; page: number; limit: number }> {
+    const {
+      where,
+      relations,
+      order,
+      page = 1,
+      limit = 10,
+      withDeleted = false,
+    } = options || {};
+
+    const skip = (page - 1) * limit;
+
+    const queryWhere = {
+      ...(where as object),
+      ...(withDeleted ? {} : { deletedAt: null }),
+    } as FindOptionsWhere<T>;
+
+    const [data, total] = await this.entityRepository.findAndCount({
+      where: queryWhere,
+      relations,
+      order,
+      skip,
+      take: limit,
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 }
