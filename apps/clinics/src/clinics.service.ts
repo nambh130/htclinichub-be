@@ -77,7 +77,7 @@ export class ClinicsService {
         createdBy: clinic.createdBy,
       });
 
-      return clinic;
+      return JSON.parse(JSON.stringify(clinic));
     } catch (error) {
       this.logger.error({
         msg: 'Failed to create clinic',
@@ -150,6 +150,66 @@ export class ClinicsService {
       throw new Error(
         'Không thể lấy danh sách phòng khám, vui lòng thử lại sau',
       );
+    }
+  }
+
+  async getClinicById(id: string, userId: string): Promise<Clinic> {
+    if (!id) {
+      this.logger.warn({
+        msg: 'Missing clinic ID in getClinicById',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'FAILED_VALIDATION',
+        userId,
+        errorDetails: {
+          reason: 'Missing clinic ID',
+          timestamp: new Date().toISOString(),
+        },
+      });
+      throw new Error('Invalid clinic ID');
+    }
+
+    try {
+      const clinic = await this.clinicsRepository.findOne({ id: parseInt(id) });
+
+      if (!clinic) {
+        this.logger.warn({
+          msg: 'Clinic not found',
+          type: 'audit-log',
+          context: 'ClinicService',
+          operation: 'GET_CLINIC_BY_ID',
+          status: 'NOT_FOUND',
+          clinicId: id,
+          userId,
+        });
+        throw new Error('Clinic not found');
+      }
+
+      this.logger.info({
+        msg: 'Clinic retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'SUCCESS',
+        clinicId: clinic.id,
+        userId,
+      });
+
+      return JSON.parse(JSON.stringify(clinic));
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to retrieve clinic',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+        clinicId: id,
+        userId,
+      });
+      throw error;
     }
   }
 

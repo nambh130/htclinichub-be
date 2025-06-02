@@ -38,6 +38,8 @@ export class ApiGatewayService {
     this.clinicClient.subscribeToResponseOf('add-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinics');
     this.clinicClient.subscribeToResponseOf('delete-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
+    this.clinicClient.subscribeToResponseOf('update-clinic');
 
     await this.clinicClient.connect();
     await this.reservationsClient.connect();
@@ -85,6 +87,12 @@ export class ApiGatewayService {
   }
   async getClinics(userId: string): Promise<ClinicDto[]> {
     return firstValueFrom(this.clinicClient.send('get-clinics', { userId }));
+  }
+
+  async getClinicById(id: string, userId: string): Promise<ClinicDto> {
+    return firstValueFrom(
+      this.clinicClient.send('get-clinic-by-id', { id, userId }),
+    );
   }
 
   async deleteClinic(id: string, userId: string): Promise<void> {

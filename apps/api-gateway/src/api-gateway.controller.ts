@@ -82,6 +82,15 @@ export class ApiGatewayController {
     return this.apiGatewayService.getClinics(user._id.toString());
   }
 
+  @Get('clinics/:id')
+  @UseGuards(JwtAuthGuard)
+  async getClinicById(
+    @CurrentUser() user: UserDocument,
+    @Param('id') id: string,
+  ): Promise<ClinicDto> {
+    return this.apiGatewayService.getClinicById(id, user._id.toString());
+  }
+
   @Delete('clinics/:id')
   @UseGuards(JwtAuthGuard)
   async deleteClinic(
