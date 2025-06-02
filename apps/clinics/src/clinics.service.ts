@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CLINIC_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { AddClinicDto } from '@app/common/dto/clinic';
+import { AddClinicDto, UpdateClinicDto } from '@app/common/dto/clinic';
 import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
 import { PinoLogger } from 'nestjs-pino';
@@ -210,6 +210,81 @@ export class ClinicsService {
         userId,
       });
       throw error;
+    }
+  }
+
+  async updateClinic(
+    id: string,
+    updateClinicDto: UpdateClinicDto,
+    userId: string,
+  ): Promise<Clinic> {
+    if (!id) {
+      this.logger.warn({
+        msg: 'Missing clinic ID in updateClinic',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'UPDATE_CLINIC',
+        status: 'FAILED_VALIDATION',
+        userId,
+        errorDetails: {
+          reason: 'Missing clinic ID',
+          timestamp: new Date().toISOString(),
+        },
+      });
+      throw new Error('Invalid clinic ID');
+    }
+
+    try {
+      const clinic = await this.clinicsRepository.findOne({ id: parseInt(id) });
+      if (!clinic) {
+        this.logger.warn({
+          msg: 'Clinic not found for update',
+          type: 'audit-log',
+          context: 'ClinicService',
+          operation: 'UPDATE_CLINIC',
+          status: 'NOT_FOUND',
+          clinicId: id,
+          userId,
+        });
+        throw new Error('Clinic not found');
+      }
+
+      const clinicToUpdate = new Clinic();
+      clinicToUpdate.id = parseInt(id);
+
+      const updatedClinic = await this.clinicsRepository.update(
+        clinicToUpdate, // conditions to update
+        {
+          ...clinic,
+          ...updateClinicDto,
+          updatedBy: userId,
+        }, // data to update
+      );
+
+      this.logger.info({
+        msg: 'Clinic updated successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'UPDATE_CLINIC',
+        status: 'SUCCESS',
+        clinicId: id,
+        userId,
+      });
+
+      return JSON.parse(JSON.stringify(updatedClinic));
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to update clinic',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'UPDATE_CLINIC',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+        clinicId: id,
+        userId,
+      });
+      throw new Error('Không thể cập nhật phòng khám, vui lòng thử lại sau');
     }
   }
 

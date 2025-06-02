@@ -31,6 +31,19 @@ export class ClinicsController {
     return this.clinicsService.getClinicById(id, userId);
   }
 
+  @MessagePattern('update-clinic')
+  async updateClinic(
+    @Payload()
+    payload: {
+      id: string;
+      updateClinicDto: AddClinicDto;
+      userId: string;
+    },
+  ) {
+    const { id, updateClinicDto, userId } = payload;
+    return this.clinicsService.updateClinic(id, updateClinicDto, userId);
+  }
+
   @MessagePattern('delete-clinic')
   async deleteClinic(@Payload() payload: { id: string; userId: string }) {
     const { id, userId } = payload;

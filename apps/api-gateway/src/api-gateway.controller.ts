@@ -7,6 +7,7 @@ import {
   Get,
   Delete,
   Param,
+  Put,
 } from '@nestjs/common';
 import { ApiGatewayService } from './api-gateway.service';
 import {
@@ -18,7 +19,7 @@ import {
   UserDto,
 } from '@app/common';
 import { Response } from 'express';
-import { AddClinicDto, ClinicDto } from '@app/common/dto/clinic';
+import { AddClinicDto, ClinicDto, UpdateClinicDto } from '@app/common/dto/clinic';
 
 @Controller()
 export class ApiGatewayController {
@@ -90,6 +91,21 @@ export class ApiGatewayController {
   ): Promise<ClinicDto> {
     return this.apiGatewayService.getClinicById(id, user._id.toString());
   }
+
+  @Put('clinics/:id')
+  @UseGuards(JwtAuthGuard)
+  async updateClinic(
+    @CurrentUser() user: UserDocument,
+    @Param('id') id: string,
+    @Body() updateClinicDto: UpdateClinicDto,
+  ): Promise<ClinicDto> {
+    return this.apiGatewayService.updateClinic(
+      id,
+      updateClinicDto,
+      user._id.toString(),
+    );
+  }
+  
 
   @Delete('clinics/:id')
   @UseGuards(JwtAuthGuard)

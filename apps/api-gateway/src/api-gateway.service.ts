@@ -9,7 +9,11 @@ import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { AddClinicDto, ClinicDto } from '@app/common/dto/clinic';
+import {
+  AddClinicDto,
+  ClinicDto,
+  UpdateClinicDto,
+} from '@app/common/dto/clinic';
 import { In } from 'typeorm';
 
 @Injectable()
@@ -92,6 +96,16 @@ export class ApiGatewayService {
   async getClinicById(id: string, userId: string): Promise<ClinicDto> {
     return firstValueFrom(
       this.clinicClient.send('get-clinic-by-id', { id, userId }),
+    );
+  }
+
+  async updateClinic(
+    id: string,
+    updateClinicDto: UpdateClinicDto,
+    userId: string,
+  ): Promise<ClinicDto> {
+    return firstValueFrom(
+      this.clinicClient.send('update-clinic', { id, updateClinicDto, userId }),
     );
   }
 

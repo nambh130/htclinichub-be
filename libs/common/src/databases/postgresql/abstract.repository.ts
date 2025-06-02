@@ -5,6 +5,7 @@ import {
   FindOptionsWhere,
   FindOptionsOrder,
   Repository,
+  DeepPartial,
 } from 'typeorm';
 import { Logger, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -23,6 +24,11 @@ export abstract class PostgresAbstractRepository<
   // Create
   async create(entity: T): Promise<T> {
     return this.entityManager.save(entity);
+  }
+
+  async update(entity: T, partialEntity: DeepPartial<T>): Promise<T> {
+    const updatedEntity = this.entityRepository.merge(entity, partialEntity);
+    return await this.entityRepository.save(updatedEntity);
   }
 
   // Find one
