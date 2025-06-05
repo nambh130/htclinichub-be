@@ -17,6 +17,7 @@ import {
   Roles,
   UserDocument,
   UserDto,
+  CreatePatientDto
 } from '@app/common';
 import { Response } from 'express';
 import { AddClinicDto, ClinicDto, UpdateClinicDto } from '@app/common/dto/clinic';
@@ -115,4 +116,17 @@ export class ApiGatewayController {
   ) {
     return this.apiGatewayService.deleteClinic(id, user._id.toString());
   }
+
+// Patient routes
+  @Post('/patients/create-patient')
+  @UseGuards(JwtAuthGuard)
+  async createPatient(
+    @Body() createPatientDto: CreatePatientDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    console.log('API Controller:', createPatientDto, user._id.toString());
+    return this.apiGatewayService.createPatient(createPatientDto, user._id.toString());
+      // { userId: user._id.toString(), createPatientDto };
+  }
+
 }

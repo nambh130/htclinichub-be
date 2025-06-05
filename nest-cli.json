@@ -26,6 +26,15 @@
         "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
     },
+    "clinics": {
+      "type": "application",
+      "root": "apps/clinics",
+      "entryFile": "main",
+      "sourceRoot": "apps/clinics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
@@ -35,6 +44,15 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "patients": {
+      "type": "application",
+      "root": "apps/patients",
+      "entryFile": "main",
+      "sourceRoot": "apps/patients/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/patients/tsconfig.app.json"
+      }
+    },
     "reservations": {
       "type": "application",
       "root": "apps/reservations",
@@ -42,15 +60,6 @@
       "sourceRoot": "apps/reservations/src",
       "compilerOptions": {
         "tsConfigPath": "apps/reservations/tsconfig.app.json"
-      }
-    },
-    "clinics": {
-      "type": "application",
-      "root": "apps/clinics",
-      "entryFile": "main",
-      "sourceRoot": "apps/clinics/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/clinics/tsconfig.app.json"
       }
     }
   },

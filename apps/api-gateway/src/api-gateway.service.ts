@@ -4,6 +4,8 @@ import {
   UserDto,
   AUTH_SERVICE,
   CLINIC_SERVICE,
+  PATIENT_SERVICE,
+  CreatePatientDto
 } from '@app/common';
 import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
@@ -25,6 +27,8 @@ export class ApiGatewayService {
     private readonly authClient: ClientKafka,
     @Inject(CLINIC_SERVICE)
     private readonly clinicClient: ClientKafka,
+    @Inject(PATIENT_SERVICE)
+    private readonly patientClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
@@ -45,9 +49,13 @@ export class ApiGatewayService {
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
 
+    //patient-related subscriptions
+    this.patientClient.subscribeToResponseOf('create-patient');
+
     await this.clinicClient.connect();
     await this.reservationsClient.connect();
     await this.authClient.connect();
+    await this.patientClient.connect();
   }
 
   createReservation(
@@ -114,4 +122,16 @@ export class ApiGatewayService {
       this.clinicClient.send('delete-clinic', { id, userId }),
     );
   }
+
+  // Patient-related methods
+  async createPatient(
+    createPatientDto: CreatePatientDto,
+    userId: string,
+  ): Promise<CreatePatientDto> {
+        console.log('Creating patient with data:', createPatientDto, userId);
+    return firstValueFrom(
+      this.patientClient.send('create-patient', { createPatientDto, userId }),
+    );
+  }
+
 }

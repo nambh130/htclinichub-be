@@ -10,6 +10,8 @@ import {
   LoggerModule,
   RESERVATIONS_CONSUMER_GROUP,
   RESERVATIONS_SERVICE,
+  PATIENT_CONSUMER_GROUP,
+  PATIENT_SERVICE,
 } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
@@ -57,6 +59,23 @@ import { HttpModule } from '@nestjs/axios';
             },
             consumer: {
               groupId: CLINIC_CONSUMER_GROUP,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+       {
+        name: PATIENT_SERVICE,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'patients',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: PATIENT_CONSUMER_GROUP,
             },
           },
         }),

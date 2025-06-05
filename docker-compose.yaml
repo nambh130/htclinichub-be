@@ -139,6 +139,33 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+  patients:
+    build:
+      context: .
+      dockerfile: ./apps/patients/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev patients"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/patients/src
+          target: /app/apps/patients/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    env_file:
+      - ./apps/patients/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
   auth:
     build:
       context: .
