@@ -8,7 +8,7 @@ export class PatientsController {
   constructor(private readonly patientService: PatientService) {}
 
  // Patient routes
-  @Post('/patients/create-patient')
+  @Post('/create-patient')
   @UseGuards(JwtAuthGuard)
   async createPatient(
     @Body() createPatientDto: CreatePatientDto,

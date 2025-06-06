@@ -1,4 +1,3 @@
-import { Patient } from '../../../../../.history/htclinichub-be/apps/patients/src/models/patients.entity_20250605150507';
 import { Module } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import { PatientsController } from './patients.controller';
@@ -10,6 +9,7 @@ import {
   PATIENT_SERVICE,
 } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -30,25 +30,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           },
         }),
         inject: [ConfigService],
-      },
-      {
-        name: AUTH_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: AUTH_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
+      }
     ]),
+    AuthModule
   ],
   controllers: [PatientsController],
   providers: [PatientService],

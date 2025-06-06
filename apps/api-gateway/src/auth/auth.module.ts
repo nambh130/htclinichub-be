@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { AUTH_SERVICE } from '@app/common';
+import { AUTH_CONSUMER_GROUP, AUTH_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
@@ -19,6 +19,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
               brokers: [configService.get('KAFKA_BROKER')!],
             },
           },
+          consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
         }),
         inject: [ConfigService],
       },
@@ -26,6 +29,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
   ],
   controllers: [AuthController],
   providers: [AuthService],
-  exports: [AuthService],
+  exports: [AuthService, ClientsModule],
 })
 export class AuthModule {}

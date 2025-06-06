@@ -3,12 +3,12 @@ import {
   CreatePatientDto,
   PATIENT_SERVICE,
 } from '@app/common';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';  
 
 @Injectable()
-export class PatientService {
+export class PatientService implements OnModuleInit {
   constructor(
     @Inject(PATIENT_SERVICE)
     private readonly patientClient: ClientKafka,
