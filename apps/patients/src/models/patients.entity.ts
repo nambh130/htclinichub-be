@@ -25,7 +25,7 @@ export class Patient {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   address2: string;
-
+  
   @Column({ type: 'varchar', length: 255 })
   phone: string;
 

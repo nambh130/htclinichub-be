@@ -24,7 +24,7 @@ import { AddClinicDto, ClinicDto, UpdateClinicDto } from '@app/common/dto/clinic
 
 @Controller()
 export class ApiGatewayController {
-  constructor(private readonly apiGatewayService: ApiGatewayService) {}
+  constructor(private readonly apiGatewayService: ApiGatewayService) { }
 
   @Post('login')
   async login(
@@ -102,11 +102,11 @@ export class ApiGatewayController {
   ): Promise<ClinicDto> {
     return this.apiGatewayService.updateClinic(
       id,
-      updateClinicDto, 
+      updateClinicDto,
       user._id.toString(),
     );
   }
-  
+
 
   @Delete('clinics/:id')
   @UseGuards(JwtAuthGuard)
@@ -117,7 +117,7 @@ export class ApiGatewayController {
     return this.apiGatewayService.deleteClinic(id, user._id.toString());
   }
 
-// Patient routes
+  // Patient routes
   @Post('/patients/create-patient')
   @UseGuards(JwtAuthGuard)
   async createPatient(
@@ -125,8 +125,8 @@ export class ApiGatewayController {
     @CurrentUser() user: UserDocument,
   ) {
     console.log('API Controller:', createPatientDto, user._id.toString());
-    return this.apiGatewayService.createPatient(createPatientDto, user._id.toString());
-      // { userId: user._id.toString(), createPatientDto };
+    this.apiGatewayService.createPatient(createPatientDto, user._id.toString());
+    return { userId: user._id.toString(), createPatientDto };
   }
 
 }
