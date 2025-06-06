@@ -1,0 +1,56 @@
+import { Module } from '@nestjs/common';
+import { StaffService } from './staff.service';
+import { StaffController } from './staff.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import {
+  AUTH_CONSUMER_GROUP,
+  AUTH_SERVICE,
+  STAFF_CONSUMER_GROUP,
+  STAFF_SERVICE,
+} from '@app/common';
+//docker-compose up zookeeper kafka postgres auth staff api-gateway --build --watch
+@Module({
+  imports: [
+    // Microservices clients for Kafka communication
+    ClientsModule.registerAsync([
+      {
+        name: STAFF_SERVICE,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'staff',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: STAFF_CONSUMER_GROUP,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: AUTH_SERVICE,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'auth',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
+  ],
+  controllers: [StaffController],
+  providers: [StaffService],
+})
+export class StaffModule {}
