@@ -22,8 +22,6 @@ export class ReservationsService {
     private readonly reservationsClient: ClientKafka,
     @Inject(AUTH_SERVICE)
     private readonly authClient: ClientKafka,
-    @Inject(CLINIC_SERVICE)
-    private readonly clinicClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
@@ -37,14 +35,6 @@ export class ReservationsService {
     this.authClient.subscribeToResponseOf('authenticate');
     this.authClient.subscribeToResponseOf('create-user');
 
-    // Clinic-related subscriptions
-    this.clinicClient.subscribeToResponseOf('add-clinic');
-    this.clinicClient.subscribeToResponseOf('get-clinics');
-    this.clinicClient.subscribeToResponseOf('delete-clinic');
-    this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
-    this.clinicClient.subscribeToResponseOf('update-clinic');
-
-    await this.clinicClient.connect();
     this.authClient.subscribeToResponseOf('authenticate');
 
     await this.reservationsClient.connect();
@@ -77,42 +67,5 @@ export class ReservationsService {
 
   async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
     return firstValueFrom(this.authClient.send('create-user', userDto));
-  }
-
-  async addClinic(
-    addClinicDto: AddClinicDto,
-    userId: string,
-  ): Promise<ClinicDto> {
-    return firstValueFrom(
-      this.clinicClient.send('add-clinic', {
-        addClinicDto,
-        userId,
-      }),
-    );
-  }
-  async getClinics(userId: string): Promise<ClinicDto[]> {
-    return firstValueFrom(this.clinicClient.send('get-clinics', { userId }));
-  }
-
-  async getClinicById(id: string, userId: string): Promise<ClinicDto> {
-    return firstValueFrom(
-      this.clinicClient.send('get-clinic-by-id', { id, userId }),
-    );
-  }
-
-  async updateClinic(
-    id: string,
-    updateClinicDto: UpdateClinicDto,
-    userId: string,
-  ): Promise<ClinicDto> {
-    return firstValueFrom(
-      this.clinicClient.send('update-clinic', { id, updateClinicDto, userId }),
-    );
-  }
-
-  async deleteClinic(id: string, userId: string): Promise<void> {
-    return firstValueFrom(
-      this.clinicClient.send('delete-clinic', { id, userId }),
-    );
   }
 }

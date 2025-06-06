@@ -3,8 +3,6 @@ import { ClinicsService } from './clinics.service';
 import { ClinicsController } from './clinics.controller';
 import {
   LoggerModule,
-  AUTH_SERVICE,
-  AUTH_CONSUMER_GROUP,
   CLINIC_SERVICE,
   CLINIC_CONSUMER_GROUP,
 } from '@app/common';
@@ -41,28 +39,11 @@ import { Clinic } from './models';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'clinics',
+              clientId: 'clinic',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
             consumer: {
               groupId: CLINIC_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
-      {
-        name: AUTH_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: AUTH_CONSUMER_GROUP,
             },
           },
         }),
