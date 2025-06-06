@@ -35,6 +35,7 @@ services:
     image: mongo
     ports:
       - '27017:27017'
+    command: mongod --quiet --logpath /dev/null
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 5s
@@ -163,6 +164,34 @@ services:
           path: ./package.json
     env_file:
       - ./apps/auth/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  staff:
+    build:
+      context: .
+      dockerfile: ./apps/staff/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev staff"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/staff/src
+          target: /app/apps/staff/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    env_file:
+      - ./apps/staff/.env
     depends_on:
       kafka:
         condition: service_healthy

@@ -1,11 +1,10 @@
 import {
-  RESERVATIONS_SERVICE,
-  CreateReservationDto,
-  UserDto,
   AUTH_SERVICE,
   CLINIC_SERVICE,
+  CreateReservationDto,
+  RESERVATIONS_SERVICE,
+  UserDto,
 } from '@app/common';
-import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -17,7 +16,7 @@ import {
 import { In } from 'typeorm';
 
 @Injectable()
-export class ApiGatewayService {
+export class ReservationsService {
   constructor(
     @Inject(RESERVATIONS_SERVICE)
     private readonly reservationsClient: ClientKafka,
@@ -46,6 +45,8 @@ export class ApiGatewayService {
     this.clinicClient.subscribeToResponseOf('update-clinic');
 
     await this.clinicClient.connect();
+    this.authClient.subscribeToResponseOf('authenticate');
+
     await this.reservationsClient.connect();
     await this.authClient.connect();
   }
