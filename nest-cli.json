@@ -43,6 +43,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/reservations/tsconfig.app.json"
       }
+    },
+    "staff": {
+      "type": "application",
+      "root": "apps/staff",
+      "entryFile": "main",
+      "sourceRoot": "apps/staff/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/staff/tsconfig.app.json"
+      }
     }
   },
   "monorepo": true,

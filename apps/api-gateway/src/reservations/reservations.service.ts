@@ -1,16 +1,13 @@
 import {
-  RESERVATIONS_SERVICE,
-  CreateReservationDto,
-  UserDto,
   AUTH_SERVICE,
+  CreateReservationDto,
+  RESERVATIONS_SERVICE,
 } from '@app/common';
-import { Response } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class ApiGatewayService {
+export class ReservationsService {
   constructor(
     @Inject(RESERVATIONS_SERVICE)
     private readonly reservationsClient: ClientKafka,
@@ -23,9 +20,9 @@ export class ApiGatewayService {
     this.reservationsClient.subscribeToResponseOf(
       'create-reservation-postgres',
     );
-    this.authClient.subscribeToResponseOf('login');
+
     this.authClient.subscribeToResponseOf('authenticate');
-    this.authClient.subscribeToResponseOf('create-user');
+
     await this.reservationsClient.connect();
     await this.authClient.connect();
   }
@@ -48,13 +45,5 @@ export class ApiGatewayService {
       createReservationDto,
       userId,
     });
-  }
-
-  async login(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('login', userDto));
-  }
-
-  async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('create-user', userDto));
   }
 }
