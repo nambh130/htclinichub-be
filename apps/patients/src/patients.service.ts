@@ -100,7 +100,28 @@ export class PatientsService {
     }
   }
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} patient`;
-  // }
+  async deletePatient(id: string, userId: string) {
+    if (!id) {
+      throw new NotFoundException('Invalid id');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ id: parseInt(id) });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with id ${id} not found`);
+      }
+
+      const deletedPatient = await this.patientsRepository.delete({ id: parseInt(id) });
+
+      return {
+        success: true,
+        id: id,
+        message: 'Patient deleted successfully',
+      };
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      throw error;
+    }
+  }
 }

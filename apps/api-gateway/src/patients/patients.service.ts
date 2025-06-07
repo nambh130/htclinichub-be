@@ -20,6 +20,7 @@ export class PatientService implements OnModuleInit {
   async onModuleInit() {
     this.patientClient.subscribeToResponseOf('create-patient');
     this.patientClient.subscribeToResponseOf('update-patient');
+    this.patientClient.subscribeToResponseOf('delete-patient');
 
     this.authClient.subscribeToResponseOf('authenticate');
 
@@ -59,6 +60,21 @@ export class PatientService implements OnModuleInit {
       return result;
     } catch (error) {
       console.error('Error update patient:', error);
+      throw error;
+    }
+  }
+
+  async deletePatient(
+    id: string,
+    userId: string,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.patientClient.send('delete-patient', { id, userId })
+      );
+      return result;
+    } catch (error) {
+      console.error('Error deleting patient:', error);
       throw error;
     }
   }

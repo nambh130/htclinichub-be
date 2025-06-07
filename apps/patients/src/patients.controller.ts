@@ -71,8 +71,21 @@ export class PatientsController {
     patientCreatedEvent.toString();
   }
 
-  // @MessagePattern('removePatient')
-  // remove(@Payload() id: number) {
-  //   return this.patientsService.remove(id);
-  // }
+  @MessagePattern('delete-patient')
+  async removePatient(
+    @Payload()
+    data: {
+      id: string;
+      userId: string;
+    },
+  ) {
+    try {
+      const { id, userId } = data;
+      const deletedPatient = await this.patientsService.deletePatient(id, userId);
+      return deletedPatient;
+    } catch (error) {
+      console.error('Error in removePatient:', error);
+      throw error;
+    }
+  }
 }

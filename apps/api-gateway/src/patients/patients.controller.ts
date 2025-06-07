@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Put, Param } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Put, Param, Delete } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto } from '@app/common';
 import { CurrentUser, JwtAuthGuard, UserDocument } from '@app/common';
@@ -47,6 +47,25 @@ export class PatientsController {
         message: 'Patient updated successfully'
       };
       // return updatedPatient;
+    } catch (error) {
+      console.error('Error update patient:', error);
+      throw error;
+    }
+  }
+
+  @Delete('/delete-patient/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteClinic(
+    @Param('id') id: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const deletedPatient = await this.patientService.deletePatient(id, user._id.toString());
+      return {
+        success: true,
+        id: id,
+        message: 'Patient deleted successfully'
+      };
     } catch (error) {
       console.error('Error update patient:', error);
       throw error;
