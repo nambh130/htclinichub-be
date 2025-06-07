@@ -3,12 +3,8 @@ import { StaffService } from './staff.service';
 import { StaffController } from './staff.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import {
-  AUTH_CONSUMER_GROUP,
-  AUTH_SERVICE,
-  STAFF_CONSUMER_GROUP,
-  STAFF_SERVICE,
-} from '@app/common';
+import { STAFF_CONSUMER_GROUP, STAFF_SERVICE } from '@app/common';
+import { AuthModule } from '../auth/auth.module';
 //docker-compose up zookeeper kafka postgres auth staff api-gateway --build --watch
 @Module({
   imports: [
@@ -31,24 +27,8 @@ import {
         }),
         inject: [ConfigService],
       },
-      {
-        name: AUTH_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: AUTH_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
     ]),
+    AuthModule,
   ],
   controllers: [StaffController],
   providers: [StaffService],
