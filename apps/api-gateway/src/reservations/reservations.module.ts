@@ -2,13 +2,9 @@ import { Module } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { ReservationsController } from './reservations.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import {
-  AUTH_CONSUMER_GROUP,
-  AUTH_SERVICE,
-  RESERVATIONS_CONSUMER_GROUP,
-  RESERVATIONS_SERVICE,
-} from '@app/common';
+import { RESERVATIONS_CONSUMER_GROUP, RESERVATIONS_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -30,24 +26,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         }),
         inject: [ConfigService],
       },
-      {
-        name: AUTH_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: AUTH_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
     ]),
+    AuthModule,
   ],
   controllers: [ReservationsController],
   providers: [ReservationsService],

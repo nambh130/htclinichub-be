@@ -20,8 +20,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
             },
           },
           consumer: {
-              groupId: AUTH_CONSUMER_GROUP,
-            },
+            groupId: AUTH_CONSUMER_GROUP,
+          },
         }),
         inject: [ConfigService],
       },
