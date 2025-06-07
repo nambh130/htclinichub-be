@@ -1,9 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePatientDto } from '@app/common/dto/patients/create-patients.dto';
+import { UpdatePatientDto } from '@app/common/dto/patients/update-patient.dto';
 import { PatientRepository } from './patients.repository';
 import { PATIENT_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class PatientsService {
@@ -11,29 +13,12 @@ export class PatientsService {
     private readonly patientsRepository: PatientRepository,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
-  ) {}
+  ) { }
 
   async createPatient(createPatientDto: CreatePatientDto, userId: string) {
-    // Validate các trường bắt buộc
-    // if (
-    //   !createPatientDto?.fullname ||
-    //   !createPatientDto?.patient_account_id ||
-    //   !createPatientDto?.phone ||
-    //   !createPatientDto?.address1 ||
-    //   createPatientDto?.gender === undefined ||
-    //   !createPatientDto?.ethnicity ||
-    //   !createPatientDto?.marital_status ||
-    //   !createPatientDto?.nation ||
-    //   !createPatientDto?.work_address ||
-    //   !createPatientDto?.relation
-    // ) {
-    //   throw new Error('Invalid Patient data');
-    // }
-
     const newPatient = new Patient();
     newPatient.fullname = createPatientDto.fullname;
     newPatient.patient_account_id = createPatientDto.patient_account_id;
-    newPatient.phone = createPatientDto.phone;
     newPatient.address1 = createPatientDto.address1;
     newPatient.gender = createPatientDto.gender;
     newPatient.ethnicity = createPatientDto.ethnicity;
@@ -43,6 +28,12 @@ export class PatientsService {
     newPatient.relation = createPatientDto.relation;
     newPatient.createdBy = userId;
     if (createPatientDto.address2) newPatient.address2 = createPatientDto.address2;
+
+    const existedPhone = await this.patientsRepository.findByPhone(createPatientDto.phone);
+    if (existedPhone) {
+      throw new BadRequestException('Số điện thoại đã tồn tại!');
+    }
+    newPatient.phone = createPatientDto.phone;
 
     try {
       const patient = await this.patientsRepository.create(newPatient);
@@ -62,9 +53,52 @@ export class PatientsService {
   //   return `This action returns a #${id} patient`;
   // }
 
-  // update(id: number, updatePatientDto: UpdatePatientDto) {
-  //   return `This action updates a #${id} patient`;
-  // }
+  async updatePatient(
+    patient_account_id: string,
+    updatePatientDto: UpdatePatientDto,
+    userId: string,
+  ) {
+    if (!patient_account_id) {
+      throw new NotFoundException('Invalid patient_account_id');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({
+        patient_account_id: parseInt(patient_account_id),
+      });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with patient_account_id ${patient_account_id} not found`);
+      }
+
+      if (updatePatientDto.phone) {
+        const existedPhone = await this.patientsRepository.findByPhone(updatePatientDto.phone);
+
+        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+        if (existedPhone && existedPhone.patient_account_id !== patient.patient_account_id) {
+          throw new BadRequestException('Số điện thoại đã tồn tại!');
+        }
+      }
+
+      const updatedPatient = await this.patientsRepository.update(
+        patient,
+        {
+          ...updatePatientDto,
+          updatedBy: userId,
+          updatedAt: new Date(),
+        },
+      );
+
+      if (!updatedPatient) {
+        throw new NotFoundException(`Patient with patient_account_id ${patient_account_id} not updated`);
+      }
+
+      return updatedPatient;
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      throw error;
+    }
+  }
 
   // remove(id: number) {
   //   return `This action removes a #${id} patient`;

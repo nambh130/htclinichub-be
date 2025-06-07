@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEmail, IsBoolean, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEmail, IsBoolean, MaxLength, Matches, Length } from 'class-validator';
 
 export class CreatePatientDto {
   @IsNumber()
@@ -35,9 +35,10 @@ export class CreatePatientDto {
   @MaxLength(500)
   address2: string;
 
-  @IsString()
   @IsOptional()
-  @MaxLength(500)
+  @IsString()
+  @Matches(/^\d+$/, { message: 'Phone must contain only numbers' })
+  @Length(10, 10, { message: 'Phone must be exactly 10 digits' })
   phone: string;
 
   @IsBoolean()

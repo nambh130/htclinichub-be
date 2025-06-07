@@ -1,30 +1,35 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto } from '@app/common/dto';
+import { CreatePatientDto, UpdatePatientDto } from '@app/common/dto';
 import { PatientCreatedEvent } from '@app/common/events/patients';
 
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(private readonly patientsService: PatientsService) { }
 
   @MessagePattern('create-patient')
   async createPatient(
-      @Payload()
-      payload: {
-        createPatientDto: CreatePatientDto;
-        userId: string;
-      },
-    ) {
-      console.log('Patient Controller: ', payload);
-      const { createPatientDto, userId } = payload;
-      return this.patientsService.createPatient(createPatientDto, userId);
+    @Payload()
+    data: {
+      createPatientDto: CreatePatientDto;
+      userId: string;
+    },
+  ) {
+    try {
+      const { createPatientDto, userId } = data;
+      const createPatient = await this.patientsService.createPatient(createPatientDto, userId);
+      return createPatient;
+    } catch (error) {
+      console.error('Error in createPatient:', error);
+      throw error;
     }
+  }
 
-    @EventPattern('patient-created')
-      handleCreatedPatient(@Payload() patientCreatedEvent: PatientCreatedEvent) {
-        patientCreatedEvent.toString();
-      }
+  @EventPattern('patient-created')
+  handleCreatedPatient(@Payload() patientCreatedEvent: PatientCreatedEvent) {
+    patientCreatedEvent.toString();
+  }
 
   // @MessagePattern('findAllPatients')
   // findAll() {
@@ -36,10 +41,35 @@ export class PatientsController {
   //   return this.patientsService.findOne(id);
   // }
 
-  // @MessagePattern('updatePatient')
-  // update(@Payload() updatePatientDto: UpdatePatientDto) {
-  //   return this.patientsService.update(updatePatientDto.id, updatePatientDto);
-  // }
+  @MessagePattern('update-patient')
+  async updatePatient(
+    @Payload()
+    data: {
+      patient_account_id: string;
+      updatePatientDto: UpdatePatientDto;
+      userId: string;
+    },
+  ) {
+    try {
+      const { patient_account_id, updatePatientDto, userId } = data;
+      const createPatient = await this.patientsService.updatePatient(
+        patient_account_id,
+        updatePatientDto,
+        userId);
+      //  return {
+      //   "Patient update successfully Patient Controller": createPatient,
+      // };
+      return createPatient;
+    } catch (error) {
+      console.error('Error in updatePatient:', error);
+      throw error;
+    }
+  }
+
+  @EventPattern('patient-updated')
+  handlUpdatedPatient(@Payload() patientCreatedEvent: PatientCreatedEvent) {
+    patientCreatedEvent.toString();
+  }
 
   // @MessagePattern('removePatient')
   // remove(@Payload() id: number) {

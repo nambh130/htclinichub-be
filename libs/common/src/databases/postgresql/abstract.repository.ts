@@ -17,7 +17,7 @@ export abstract class PostgresAbstractRepository<
   protected abstract readonly logger: Logger;
 
   constructor(
-    private readonly entityRepository: Repository<T>,
+    protected readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
   ) {}
 

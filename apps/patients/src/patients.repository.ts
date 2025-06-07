@@ -14,4 +14,8 @@ export class PatientRepository extends PostgresAbstractRepository<Patient> {
   ) {
     super(itemsRepository, entityManager);
   }
+
+  async findByPhone(phone: string) {
+    return this.entityRepository.findOne({ where: { phone } });
+  }
 }
