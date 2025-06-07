@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Put, Param, Delete, Get } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto } from '@app/common';
 import { CurrentUser, JwtAuthGuard, UserDocument } from '@app/common';
@@ -68,6 +68,65 @@ export class PatientsController {
       };
     } catch (error) {
       console.error('Error update patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-patient-by-id/:id')
+  @UseGuards(JwtAuthGuard)
+  async getPatientById(
+    @Param('id') id: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientById(id, user._id.toString());
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-patient-by-fullName/:fullName')
+  @UseGuards(JwtAuthGuard)
+  async getPatientByFullName(
+    @Param('fullName') fullName: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientByFullName(fullName, user._id.toString());
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-patient-by-phone/:phoneNumber')
+  @UseGuards(JwtAuthGuard)
+  async getPatientByPhoneNumber(
+    @Param('phoneNumber') phoneNumber: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientByPhoneNumber(phoneNumber, user._id.toString());
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-all-patients')
+  @UseGuards(JwtAuthGuard)
+  async getAllPatients(
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const patient = await this.patientService.getAllPatients(user._id.toString());
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
       throw error;
     }
   }

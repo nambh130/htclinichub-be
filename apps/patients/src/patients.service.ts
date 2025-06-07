@@ -6,6 +6,7 @@ import { PATIENT_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
 import { BadRequestException } from '@nestjs/common';
+import e from 'express';
 
 @Injectable()
 export class PatientsService {
@@ -121,6 +122,138 @@ export class PatientsService {
       };
     } catch (error) {
       console.error('Error deleting patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientById(id: string, userId: string) {
+    if (!id) {
+      throw new NotFoundException('Invalid id');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ id: parseInt(id) });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with id ${id} not found`);
+      }
+
+      return {
+        data: {
+          id: patient.id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ? patient.address2 : 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+        }
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByFullName(fullName: string, userId: string) {
+    if (!fullName) {
+      throw new NotFoundException('Invalid fullName');
+    }
+
+    try {
+      const patients = await this.patientsRepository.find({ fullname: fullName });
+
+      if (!patients || patients.length === 0) {
+        throw new NotFoundException(`Patient with name ${fullName} not found`);
+      }
+
+      return {
+        data: patients.map(patient => ({
+          id: patient.id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ?? 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+        }))
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByPhoneNumber(phoneNumber: string, userId: string) {
+    if (!phoneNumber) {
+      throw new NotFoundException('Invalid phoneNumber');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ phone: phoneNumber });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with phone ${phoneNumber} not found`);
+      }
+
+      return {
+        data: {
+          id: patient.id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ? patient.address2 : 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+        }
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getAllPatients(userId: string) {
+    try {
+      const patients = await this.patientsRepository.find({});
+
+      if (!patients || patients.length === 0) {
+        throw new NotFoundException(`Không có hồ sơ bệnh nhân nào`);
+      }
+
+      return {
+        data: patients.map(patient => ({
+          id: patient.id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ?? 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+        }))
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
       throw error;
     }
   }

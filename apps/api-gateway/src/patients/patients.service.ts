@@ -21,6 +21,10 @@ export class PatientService implements OnModuleInit {
     this.patientClient.subscribeToResponseOf('create-patient');
     this.patientClient.subscribeToResponseOf('update-patient');
     this.patientClient.subscribeToResponseOf('delete-patient');
+    this.patientClient.subscribeToResponseOf('get-patient-by-id');
+    this.patientClient.subscribeToResponseOf('get-patient-by-fullName');
+    this.patientClient.subscribeToResponseOf('get-patient-by-phone');
+    this.patientClient.subscribeToResponseOf('get-all-patients');
 
     this.authClient.subscribeToResponseOf('authenticate');
 
@@ -75,6 +79,65 @@ export class PatientService implements OnModuleInit {
       return result;
     } catch (error) {
       console.error('Error deleting patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientById(
+    id: string,
+    userId: string,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.patientClient.send('get-patient-by-id', { id, userId })
+      );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByFullName(
+    fullName: string,
+    userId: string,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.patientClient.send('get-patient-by-fullName', { fullName, userId })
+      );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByPhoneNumber(
+    phoneNumber: string,
+    userId: string,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.patientClient.send('get-patient-by-phone', { phoneNumber, userId })
+      );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getAllPatients(
+    userId: string,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.patientClient.send('get-all-patients', { userId })
+      );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
       throw error;
     }
   }

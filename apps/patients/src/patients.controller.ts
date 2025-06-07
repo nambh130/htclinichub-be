@@ -88,4 +88,75 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @MessagePattern('get-patient-by-id')
+  async getPatientById(
+    @Payload()
+    data: {
+      id: string;
+      userId: string;
+    },
+  ) {
+    try {
+      const { id, userId } = data;
+      const patient = await this.patientsService.getPatientById(id, userId);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+   @MessagePattern('get-patient-by-fullName')
+  async getPatientByFullName(
+    @Payload()
+    data: {
+      fullName: string;
+      userId: string;
+    },
+  ) {
+    try {
+      const { fullName, userId } = data;
+      const patient = await this.patientsService.getPatientByFullName(fullName, userId);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientByFullName:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern('get-patient-by-phone')
+  async getPatientByPhoneNumber(
+    @Payload()
+    data: {
+      phoneNumber: string;
+      userId: string;
+    },
+  ) {
+    try {
+      const { phoneNumber, userId } = data;
+      const patient = await this.patientsService.getPatientByPhoneNumber(phoneNumber, userId);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern('get-all-patients')
+  async getAllPatients(
+    @Payload()
+    data: {
+      userId: string;
+    },
+  ) {
+    try {
+      const { userId } = data;
+      const patient = await this.patientsService.getAllPatients(userId);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
 }
