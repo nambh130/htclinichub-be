@@ -1,21 +1,15 @@
-import {
-  Column,
-  Entity,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  JoinColumn,
-} from 'typeorm';
-import { Doctor } from './doctor.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Image } from './image.entity';
+import { Specialize } from './specialize.entity';
+import { Degree } from './degree.entity';
+import { PostgresAbstractEntity } from '@app/common';
 
-@Entity({ name: 'employee_info' })
-export class EmployeeInfo {
-  @PrimaryGeneratedColumn({ name: 'employee_info_id' })
-  id: number;
-
-  @Column({ name: 'full_name' })
-  fullName: string;
-
+@Entity()
+export class EmployeeInfo extends PostgresAbstractEntity<EmployeeInfo> {
   @Column()
+  full_name: string;
+
+  @Column({ type: 'date' })
   dob: Date;
 
   @Column()
@@ -25,18 +19,15 @@ export class EmployeeInfo {
   gender: string;
 
   @Column()
-  specialize: string;
-
-  @Column()
-  degree: string;
-
-  @Column()
   position: string;
 
-  @Column({ name: 'profile_pic' })
-  profilePicture: string;
+  @ManyToOne(() => Image)
+  @JoinColumn({ name: 'image_id' })
+  image: Image;
 
-  @OneToOne(() => Doctor, { nullable: false })
-  @JoinColumn({ name: 'doctor_id' })
-  doctor: Doctor;
+  @OneToOne(() => Specialize, (specialize) => specialize.employee_info)
+  specializes: Specialize;
+
+  @OneToOne(() => Degree, (degree) => degree.employee_info)
+  degrees: Degree;
 }

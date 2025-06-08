@@ -1,5 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { AUTH_SERVICE, CreateDoctorAccountDto } from '@app/common';
+import {
+  AUTH_SERVICE,
+  CreateDoctorAccountDto,
+  safeKafkaCall,
+} from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { STAFF_SERVICE } from '@app/common';
 
@@ -19,8 +23,10 @@ export class StaffService implements OnModuleInit {
     await this.staffClient.connect();
   }
 
-  create(dto: CreateDoctorAccountDto) {
-    return this.staffClient.send('create-doctor-account', dto);
+  async create(dto: CreateDoctorAccountDto): Promise<unknown> {
+    return await safeKafkaCall(
+      this.staffClient.send('create-doctor-account', dto),
+    );
   }
 
   findAll() {
