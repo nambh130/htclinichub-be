@@ -1,7 +1,11 @@
-import { AUTH_SERVICE, UserDto } from '@app/common';
+import {
+  AUTH_SERVICE,
+  safeKafkaCall,
+  UserDocument,
+  UserDto,
+} from '@app/common';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -17,11 +21,18 @@ export class AuthService implements OnModuleInit {
     await this.authClient.connect();
   }
 
-  async login(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('login', userDto));
+  async login(
+    userDto: UserDto,
+  ): Promise<{ user: UserDocument; token: string }> {
+    return safeKafkaCall<{ user: UserDocument; token: string }>(
+      this.authClient.send('login', userDto),
+    );
   }
 
-  async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('create-user', userDto));
+  async createUser(userDto: UserDto): Promise<{ user: any }> {
+    console.log('Sending create-user message:', userDto);
+    return safeKafkaCall<{ user: UserDocument }>(
+      this.authClient.send('create-user', userDto),
+    );
   }
 }

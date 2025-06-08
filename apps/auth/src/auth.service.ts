@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { UserDocument, UserDto } from '@app/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
 import { TokenPayload } from './interfaces/token-payload.interface';
 import { UsersRepository } from './users/users.repository';
+import { RpcException } from '@nestjs/microservices';
+import { UsersService } from './users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -12,26 +13,41 @@ export class AuthService {
     private readonly configService: ConfigService,
     private jwtService: JwtService,
     private readonly usersRepository: UsersRepository,
+    private readonly usersService: UsersService,
   ) {}
 
-  async login(userDto: UserDto): Promise<string> {
-    const user = (await this.usersRepository.findByEmail(
-      userDto.email,
-    )) as UserDocument;
+  async login(
+    userDto: UserDto,
+  ): Promise<{ user: UserDocument; token: string }> {
+    try {
+      const user = await this.usersRepository.findByEmail(userDto.email);
+      if (!user) {
+        throw new RpcException('Invalid credentials');
+      }
 
-    const tokenPayload: TokenPayload = {
-      userId: user._id.toHexString(),
-    };
+      // Verify user with raw password input
+      await this.usersService.verifyUser(userDto.email, userDto.password);
 
-    const expires = new Date();
-    const jwtExpiration = Number(
-      this.configService.get('JWT_EXPIRES_IN') ?? 3600,
-    );
-    expires.setSeconds(expires.getSeconds() + jwtExpiration);
+      // Create token payload
+      const tokenPayload = { userId: user._id.toHexString() };
 
-    const token = await this.jwtService.signAsync(tokenPayload);
+      const token = await this.jwtService.signAsync(tokenPayload);
 
-    return token;
+      return { user, token };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new RpcException({
+          message: error.message,
+          type: error.name,
+          stack: error.stack,
+        });
+      }
+
+      throw new RpcException({
+        message: 'Unknown error',
+        type: 'UnknownError',
+      });
+    }
   }
 
   async verifyToken(token: string): Promise<TokenPayload> {
