@@ -18,9 +18,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
               clientId: 'auth',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
-          },
-          consumer: {
-            groupId: AUTH_CONSUMER_GROUP,
+            consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
           },
         }),
         inject: [ConfigService],

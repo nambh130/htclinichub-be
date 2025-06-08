@@ -5,26 +5,51 @@ import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AllExceptionsFilter } from '@app/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(ApiGatewayModule);
-  const configService = app.get(ConfigService);
+  const app = await NestFactory.create(ApiGatewayModule, {
+    bufferLogs: true,
+  });
 
-  // Swagger configuration
+  // Get ConfigService and Logger
+  const configService = app.get(ConfigService);
+  app.useLogger(app.get(Logger));
+
+  // Global route prefix
+  app.setGlobalPrefix('api');
+
+  // Global middleware
+  app.use(cookieParser());
+
+  // Global pipes
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      // transform: true,
+    }),
+  );
+
+  // Global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Swagger setup
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Gateway')
     .setDescription('API documentation for the API Gateway')
     .setVersion('1.0')
-    .addBearerAuth() // Enables JWT auth button in Swagger UI
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api', app, document); // Available at /api
+  SwaggerModule.setup('api/docs', app, document);
 
-  // Global middleware and pipes
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  app.useLogger(app.get(Logger));
-  app.use(cookieParser());
-
-  await app.listen(configService.get<number>('PORT') || 3000);
+  // Start the app
+  const port = configService.get<number>('PORT') || 3000;
+  await app.listen(port);
+  app
+    .get(Logger)
+    .log(`🚀 API Gateway is running on http://localhost:${port}/api`);
 }
+
 void bootstrap();

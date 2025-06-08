@@ -1,6 +1,6 @@
 import { Controller, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDocument, UserDto } from '@app/common';
+import { UserDto } from '@app/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UsersRepository } from './users/users.repository';
@@ -14,11 +14,7 @@ export class AuthController {
 
   @MessagePattern('login')
   async login(userDto: UserDto) {
-    const token = await this.authService.login(userDto);
-    const user = (await this.usersRepository.findByEmail(
-      userDto.email,
-    )) as UserDocument;
-    return { user, token };
+    return this.authService.login(userDto);
   }
 
   @UseGuards(JwtAuthGuard)
