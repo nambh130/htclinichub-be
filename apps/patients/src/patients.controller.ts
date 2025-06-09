@@ -1,12 +1,16 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto, UpdatePatientDto } from '@app/common/dto';
+import { CreatePatientDto, FavouriteDoctorDto, UpdatePatientDto } from '@app/common/dto';
 import { PatientCreatedEvent } from '@app/common/events/patients';
+import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) { }
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly favouriteDoctorService: FavouriteDoctorService
+  ) { }
 
   @MessagePattern('create-patient')
   async createPatient(
@@ -107,7 +111,7 @@ export class PatientsController {
     }
   }
 
-   @MessagePattern('get-patient-by-fullName')
+  @MessagePattern('get-patient-by-fullName')
   async getPatientByFullName(
     @Payload()
     data: {
@@ -156,6 +160,24 @@ export class PatientsController {
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern('add-favourite-doctors')
+  async addFavouriteDoctor(
+    @Payload()
+    data: {
+      userId: string;
+      favouriteDoctorDto: FavouriteDoctorDto;
+    },
+  ) {
+    try {
+      const { userId, favouriteDoctorDto } = data;
+      const result = await this.favouriteDoctorService.addFavouriteDoctor(userId, favouriteDoctorDto);
+      return result;
+    } catch (error) {
+      console.error('Error in addFavouriteDoctor:', error);
       throw error;
     }
   }

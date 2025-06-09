@@ -1,11 +1,15 @@
 import { Controller, Post, Body, UseGuards, Put, Param, Delete, Get } from '@nestjs/common';
 import { PatientService } from './patients.service';
-import { CreatePatientDto, UpdatePatientDto } from '@app/common';
+import { CreatePatientDto, UpdatePatientDto, FavouriteDoctorDto } from '@app/common';
 import { CurrentUser, JwtAuthGuard, UserDocument } from '@app/common';
+import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientService: PatientService) { }
+  constructor(
+    private readonly patientService: PatientService,
+    private readonly favouriteDoctorService: FavouriteDoctorService,
+  ) { }
 
   // Patient routes
   @Post('/create-patient')
@@ -127,6 +131,35 @@ export class PatientsController {
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Post('/add-favourite-doctors')
+  @UseGuards(JwtAuthGuard)
+  async addFavouriteDoctor(
+    @CurrentUser() user: UserDocument,
+    @Body() favouriteDoctorDto: FavouriteDoctorDto
+  ) {
+    try {
+      const result = await this.favouriteDoctorService.addFavouriteDoctor(user._id.toString(), favouriteDoctorDto);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-favourite-doctors-list')
+  @UseGuards(JwtAuthGuard)
+  async getFavouriteDoctors(
+    @CurrentUser() user: UserDocument,
+  ) {
+    try {
+      const result = await this.favouriteDoctorService.getFavouriteDoctors(user._id.toString());
+      return result;
+    } catch (error) {
+      console.error('Error retrieving favourite doctors:', error);
       throw error;
     }
   }

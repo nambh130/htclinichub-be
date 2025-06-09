@@ -6,7 +6,6 @@ import { PATIENT_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
 import { BadRequestException } from '@nestjs/common';
-import e from 'express';
 
 @Injectable()
 export class PatientsService {

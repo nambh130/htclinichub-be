@@ -1,5 +1,5 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { FavouriteDoctor } from './favourite_doctor.entity';
 @Entity()
 export class Patient {
   @PrimaryGeneratedColumn()
@@ -7,7 +7,7 @@ export class Patient {
 
   @Column({ type: 'int' })
   patient_account_id: number;
-  
+
   @Column({ length: 500 })
   fullname: string;
 
@@ -25,16 +25,16 @@ export class Patient {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   address2: string;
-  
+
   @Column({ type: 'varchar', length: 255, unique: true })
   phone: string;
 
-  @Column({ type: 'boolean'})
+  @Column({ type: 'boolean' })
   gender: boolean;
 
   @Column({ type: 'varchar', length: 255 })
   nation: string;
-  
+
   @Column({ type: 'varchar', length: 255 })
   work_address: string;
 
@@ -53,4 +53,7 @@ export class Patient {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @OneToMany(() => FavouriteDoctor, (fav) => fav.patient)
+  favouriteDoctors: FavouriteDoctor[];
 }

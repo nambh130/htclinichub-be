@@ -10,6 +10,7 @@ import {
 } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
+import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule
   ],
   controllers: [PatientsController],
-  providers: [PatientService],
-  exports: [PatientService],
+  providers: [PatientService, FavouriteDoctorService],
+  exports: [PatientService, FavouriteDoctorService],
 })
 export class PatientsModule {}
