@@ -54,4 +54,19 @@ export class CreatePatientDto {
   @IsOptional()
   @MaxLength(500)
   work_address: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  allergies: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  personal_history: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  family_history: string;
 }

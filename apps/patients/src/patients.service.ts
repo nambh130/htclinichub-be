@@ -26,6 +26,9 @@ export class PatientsService {
     newPatient.nation = createPatientDto.nation;
     newPatient.work_address = createPatientDto.work_address;
     newPatient.relation = createPatientDto.relation;
+    newPatient.allergies = createPatientDto.allergies;
+    newPatient.personal_history = createPatientDto.personal_history;
+    newPatient.family_history = createPatientDto.family_history;
     newPatient.createdBy = userId;
     if (createPatientDto.address2) newPatient.address2 = createPatientDto.address2;
 

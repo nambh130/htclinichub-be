@@ -42,4 +42,16 @@ export class UpdatePatientDto {
   @IsOptional()
   @IsString()
   work_address?: string;
+
+  @IsString()
+  @IsOptional()
+  allergies: string;
+
+  @IsString()
+  @IsOptional()
+  personal_history: string;
+
+  @IsString()
+  @IsOptional()
+  family_history: string;
 }

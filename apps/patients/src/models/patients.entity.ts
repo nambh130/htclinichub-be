@@ -38,6 +38,15 @@ export class Patient {
   @Column({ type: 'varchar', length: 255 })
   work_address: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  allergies: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  personal_history: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  family_history: string;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   createdBy?: string;
 
