@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { UserDocument, UserDto } from '@app/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
+import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -46,5 +48,26 @@ export class AuthController {
   })
   async createUser(@Body() userDto: UserDto) {
     return this.authService.createUser(userDto);
+  }
+  @Post('/request-otp')
+  @ApiOperation({ summary: 'Patient login with phone number' })
+  @ApiBody({ type: LoginOtpRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+  })
+  async requestOtp(@Body() otpRequestDto: LoginOtpRequestDto) {
+    return this.authService.requestOtp(otpRequestDto);
+  }
+
+  @Post('/verify-otp')
+  @ApiOperation({ summary: 'Patient login with phone number' })
+  @ApiBody({ type: LoginOtpRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+  })
+  async verifyOtp(@Body() verifyOtpDto: LoginOtpVerifyDto) {
+    return this.authService.verifyOtp(verifyOtpDto);
   }
 }

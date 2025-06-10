@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { UserDocument, UserDto } from '@app/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
-import { TokenPayload } from './interfaces/token-payload.interface';
+import { TokenPayload, UserType } from './interfaces/token-payload.interface';
 import { UsersRepository } from './users/users.repository';
+import { PatientRepository } from './patients/patients.repository';
+import { Patient } from './patients/models/patient.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,17 +12,21 @@ export class AuthService {
     private readonly configService: ConfigService,
     private jwtService: JwtService,
     private readonly usersRepository: UsersRepository,
-  ) {}
+    private readonly patientRepository: PatientRepository
+  ) { }
 
-  async login(userDto: UserDto): Promise<string> {
-    const user = (await this.usersRepository.findByEmail(
-      userDto.email,
-    )) as UserDocument;
-
+  async patientLogin(phone: string) {
+    try {
+      var patient = await this.patientRepository.findOne({ phone }, {});
+    } catch (error) {
+      console.log("hello")
+      const newPatient = new Patient({ phone });
+      patient = await this.patientRepository.create(newPatient);
+    }
     const tokenPayload: TokenPayload = {
-      userId: user._id.toHexString(),
-    };
-
+      userId: patient.id.toString(),
+      userType: UserType.PATIENT
+    }
     const expires = new Date();
     const jwtExpiration = Number(
       this.configService.get('JWT_EXPIRES_IN') ?? 3600,

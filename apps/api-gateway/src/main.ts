@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { RpcToHttpFilter } from './filters/rpc-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
