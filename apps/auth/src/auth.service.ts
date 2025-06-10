@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserDocument, UserDto } from '@app/common';
+import { LoginDto, UserDocument } from '@app/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayload } from './interfaces/token-payload.interface';
@@ -16,17 +16,15 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  async login(
-    userDto: UserDto,
-  ): Promise<{ user: UserDocument; token: string }> {
+  async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
     try {
-      const user = await this.usersRepository.findByEmail(userDto.email);
+      const user = await this.usersRepository.findByEmail(dto.email);
       if (!user) {
         throw new RpcException('Invalid credentials');
       }
 
       // Verify user with raw password input
-      await this.usersService.verifyUser(userDto.email, userDto.password);
+      await this.usersService.verifyUser(dto.email, dto.password);
 
       // Create token payload
       const tokenPayload = { userId: user._id.toHexString() };

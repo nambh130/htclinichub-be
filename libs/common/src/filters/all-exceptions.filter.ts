@@ -17,51 +17,50 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | string[] = 'Internal server error';
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
+    let responseBody: Record<string, unknown> = {
+      message: 'Internal server error',
+    };
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const responseBody = exception.getResponse();
+      const body = exception.getResponse();
 
-      if (typeof responseBody === 'string') {
-        message = responseBody;
-      } else if (
-        typeof responseBody === 'object' &&
-        responseBody !== null &&
-        'message' in responseBody
-      ) {
-        const payload = responseBody as Record<string, unknown>;
-        if (
-          typeof payload.message === 'string' ||
-          Array.isArray(payload.message)
-        ) {
-          message = payload.message;
-        }
+      if (typeof body === 'string') {
+        responseBody.message = body;
+      } else if (typeof body === 'object' && body !== null) {
+        responseBody = {
+          ...body,
+        } as Record<string, unknown>;
       }
     } else if (
       typeof exception === 'object' &&
       exception !== null &&
       'message' in exception
     ) {
-      const error = exception as Record<string, unknown>;
+      const error = exception as { message?: unknown };
       if (typeof error.message === 'string') {
-        message = error.message;
+        responseBody.message = error.message;
       }
     }
 
-    const messageText = Array.isArray(message) ? message.join(', ') : message;
+    const messageText = Array.isArray(responseBody.message)
+      ? responseBody.message.join(', ')
+      : (responseBody.message as string);
 
     this.logger.error(
       `[${request.method}] ${request.url} - ${messageText}`,
       exception instanceof Error ? exception.stack : undefined,
     );
 
-    response.status(status).json({
-      statusCode: status,
-      message,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    // Ensure the response is sent
+    if (!response.headersSent) {
+      response.status(status).json({
+        statusCode: status,
+        ...responseBody,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
   }
 }

@@ -14,6 +14,9 @@ export class Employee extends PostgresAbstractEntity<Employee> {
   @Column()
   clinic_id: number;
 
+  @Column({ default: false })
+  is_locked: boolean;
+
   @OneToOne(() => EmployeeInfo)
   @JoinColumn({ name: 'employee_info_id' })
   employee_info: EmployeeInfo;

@@ -14,8 +14,12 @@ export class UsersRepository extends MongoAbstractRepository<UserDocument> {
     super(userModel);
   }
 
-  async createUser(email: string, password: string): Promise<UserDocument> {
-    const user = new this.model({ email, password });
+  async createUser(
+    email: string,
+    password: string,
+    type: string,
+  ): Promise<UserDocument> {
+    const user = new this.model({ email, password, type });
     return user.save();
   }
 

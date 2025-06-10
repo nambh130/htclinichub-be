@@ -17,8 +17,12 @@ export abstract class PostgresAbstractRepository<
     private readonly entityManager: EntityManager,
   ) {}
 
-  async create(entity: T): Promise<T> {
-    return this.entityManager.save(entity);
+  async findAll(): Promise<T[]> {
+    return this.entityRepository.find();
+  }
+
+  async find(where: FindOptionsWhere<T>): Promise<T[]> {
+    return this.entityRepository.findBy(where);
   }
 
   async findOne(
@@ -35,6 +39,10 @@ export abstract class PostgresAbstractRepository<
     return entity;
   }
 
+  async create(entity: T): Promise<T> {
+    return this.entityManager.save(entity);
+  }
+
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
@@ -49,10 +57,6 @@ export abstract class PostgresAbstractRepository<
       throw new NotFoundException('Entity not found');
     }
     return this.findOne(where);
-  }
-
-  async find(where: FindOptionsWhere<T>): Promise<T[]> {
-    return this.entityRepository.findBy(where);
   }
 
   async findOneAndDelete(where: FindOptionsWhere<T>) {

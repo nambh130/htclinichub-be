@@ -1,22 +1,27 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+
 import { LoggerModule, PostgresDatabaseModule } from '@app/common';
+
 import { StaffController } from './staff.controller';
 import { StaffService } from './staff.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { DoctorController } from './doctor/doctor.controller';
+import { DoctorService } from './doctor/doctor.service';
+import { DoctorRepository } from './repositories/doctor.repository';
+
 import { Doctor } from './models/doctor.entity';
-import { EmployeeInfo } from './models/employeeInfo.entity';
 import { Degree } from './models/degree.entity';
-import { Specialize } from './models/specialize.entity';
 import { DoctorServiceLink } from './models/doctorServiceLinks.entity';
 import { Employee } from './models/employee.entity';
+import { EmployeeInfo } from './models/employeeInfo.entity';
 import { EmployeeRoleLink } from './models/employeeRoleLinks.entity';
 import { Image } from './models/image.entity';
 import { Invitation } from './models/invitation.entity';
 import { Role } from './models/role.entity';
 import { Service } from './models/service.entity';
-import { DoctorRepository } from './repositories/doctor.repository';
+import { Specialize } from './models/specialize.entity';
 
 @Module({
   imports: [
@@ -35,26 +40,27 @@ import { DoctorRepository } from './repositories/doctor.repository';
       }),
     }),
 
+    // Database modules
     PostgresDatabaseModule,
     PostgresDatabaseModule.forFeature([
-      Doctor,
-      EmployeeInfo,
       Degree,
-      Specialize,
+      Doctor,
       DoctorServiceLink,
       Employee,
+      EmployeeInfo,
       EmployeeRoleLink,
       Image,
       Invitation,
       Role,
       Service,
+      Specialize,
     ]),
 
-    //Single imports
+    // Logger module
     LoggerModule,
   ],
-  controllers: [StaffController],
-  providers: [StaffService, DoctorRepository],
-  exports: [StaffService, TypeOrmModule],
+  controllers: [StaffController, DoctorController],
+  providers: [StaffService, DoctorService, DoctorRepository],
+  exports: [StaffService],
 })
 export class StaffModule {}
