@@ -1,24 +1,46 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { StaffService } from './staff.service';
-import { CreateDoctorAccountDto, JwtAuthGuard } from '@app/common';
+import {
+  CreateDoctorAccountDto,
+  CurrentUser,
+  JwtAuthGuard,
+  UserDocument,
+} from '@app/common';
 
-@Controller('staff')
+@Controller('admin/staff')
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
-  @Post()
+  @Get('doctor-account-list')
   @UseGuards(JwtAuthGuard)
-  createDoctorAccount(@Body() dto: CreateDoctorAccountDto) {
-    return this.staffService.create(dto);
+  async viewDoctorAccountList() {
+    return this.staffService.viewDoctorAccountList();
   }
 
-  @Get()
-  findAll() {
-    return this.staffService.findAll();
+  @Post('create-doctor-account')
+  @UseGuards(JwtAuthGuard)
+  async createDoctorAccount(
+    @Body() dto: CreateDoctorAccountDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.staffService.createDoctorAccount(dto, user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.staffService.findOne(+id);
+  @Post('lock-doctor-account/:id')
+  @UseGuards(JwtAuthGuard)
+  async lockDoctorAccount(
+    @Param('id') doctorId: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.staffService.lockDoctorAccount(doctorId, user);
+  }
+
+  @Post('create-doctor-profile')
+  @UseGuards(JwtAuthGuard)
+  async createDoctorProfile(
+    @Body() dto: CreateDoctorAccountDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.staffService.createDoctorAccount(dto, user);
   }
 }

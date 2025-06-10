@@ -20,9 +20,9 @@ import { HttpModule } from '@nestjs/axios';
               clientId: 'auth',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
-          },
-          consumer: {
-            groupId: AUTH_CONSUMER_GROUP,
+            consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
           },
         }),
         inject: [ConfigService],

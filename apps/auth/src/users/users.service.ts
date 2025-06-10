@@ -3,26 +3,37 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UsersRepository } from './users.repository';
 import bcrypt from 'bcryptjs';
 import { getUserDto } from './dto/get-user.dto';
+import { RpcException } from '@nestjs/microservices';
+import { UserDto } from '@app/common';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  async create(createUserDto: CreateUserDto) {
-    await this.validateCreateUserDto(createUserDto);
-    return this.usersRepository.create({
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, 10),
-    });
+  async create(dto: UserDto) {
+    try {
+      await this.validateCreateUserDto(dto);
+      return this.usersRepository.create({
+        ...dto,
+        password: await bcrypt.hash(dto.password, 10),
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new RpcException({
+          message: error.message,
+          type: error.name,
+          stack: error.stack,
+        });
+      }
+    }
   }
 
-  private async validateCreateUserDto(createUserDto: CreateUserDto) {
+  private async validateCreateUserDto(dto: UserDto) {
     try {
-      await this.usersRepository.findOne({ email: createUserDto.email });
+      await this.usersRepository.findOne({ email: dto.email });
     } catch (err) {
       return err as string;
     }

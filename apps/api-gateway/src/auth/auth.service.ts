@@ -1,11 +1,17 @@
-import { AUTH_SERVICE, UserDto } from '@app/common';
 import { HttpException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
 import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
+import {
+  AUTH_SERVICE,
+  LoginDto,
+  safeKafkaCall,
+  UserDocument,
+  UserDto,
+} from '@app/common';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -52,11 +58,16 @@ export class AuthService implements OnModuleInit {
     return response.data;
   }
 
-  async login(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('login', userDto));
+  async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
+    return safeKafkaCall<{ user: UserDocument; token: string }>(
+      this.authClient.send('login', dto),
+    );
   }
 
-  async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
-    return firstValueFrom(this.authClient.send('create-user', userDto));
+  async createUser(userDto: UserDto): Promise<{ user: any }> {
+    console.log('Sending create-user message:', userDto);
+    return safeKafkaCall<{ user: UserDocument }>(
+      this.authClient.send('create-user', userDto),
+    );
   }
 }

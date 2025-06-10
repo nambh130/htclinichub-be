@@ -1,16 +1,18 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { EmployeeInfo } from './employeeInfo.entity';
-import { Invitation } from './invitation.entity';
-import { DoctorServiceLink } from './doctorServiceLinks.entity';
+import { EmployeeRoleLink } from './employeeRoleLinks.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
 @Entity()
-export class Doctor extends PostgresAbstractEntity<Doctor> {
+export class Employee extends PostgresAbstractEntity<Employee> {
   @Column()
   email: string;
 
   @Column()
   password: string;
+
+  @Column()
+  clinic_id: number;
 
   @Column({ default: false })
   is_locked: boolean;
@@ -19,9 +21,6 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @JoinColumn({ name: 'employee_info_id' })
   employee_info: EmployeeInfo;
 
-  @OneToMany(() => Invitation, (invitation) => invitation.doctor)
-  invitations: Invitation[];
-
-  @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
-  services: DoctorServiceLink[];
+  @OneToMany(() => EmployeeRoleLink, (link) => link.employee)
+  roles: EmployeeRoleLink[];
 }

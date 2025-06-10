@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Inject, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ClientKafka, MessagePattern, Payload } from '@nestjs/microservices';
+import { LoginDto } from '@app/common';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UsersRepository } from './users/users.repository';
 import { CreatePatientDto } from './patients/dto/create-patient.dto';

@@ -33,10 +33,4 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
 
   @OneToMany(() => UserClinicLink, (link) => link.clinic)
   userClinicLinks: UserClinicLink[];
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt: Date;
 }

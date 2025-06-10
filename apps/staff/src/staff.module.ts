@@ -1,13 +1,27 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { LoggerModule } from '@app/common';
-import { DoctorModule } from './doctor/doctor.module';
+
+import { LoggerModule, PostgresDatabaseModule } from '@app/common';
+
 import { StaffController } from './staff.controller';
 import { StaffService } from './staff.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { DoctorController } from './doctor/doctor.controller';
+import { DoctorService } from './doctor/doctor.service';
+import { DoctorRepository } from './repositories/doctor.repository';
+
 import { Doctor } from './models/doctor.entity';
+import { Degree } from './models/degree.entity';
+import { DoctorServiceLink } from './models/doctorServiceLinks.entity';
+import { Employee } from './models/employee.entity';
 import { EmployeeInfo } from './models/employeeInfo.entity';
+import { EmployeeRoleLink } from './models/employeeRoleLinks.entity';
+import { Image } from './models/image.entity';
+import { Invitation } from './models/invitation.entity';
+import { Role } from './models/role.entity';
+import { Service } from './models/service.entity';
+import { Specialize } from './models/specialize.entity';
 
 @Module({
   imports: [
@@ -26,31 +40,27 @@ import { EmployeeInfo } from './models/employeeInfo.entity';
       }),
     }),
 
-    // TypeORM configuration for PostgreSQL
-    TypeOrmModule.forFeature([Doctor, EmployeeInfo]),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('POSTGRES_HOST'),
-        port: configService.get('POSTGRES_PORT'),
-        database: configService.get('POSTGRES_DB'),
-        username: configService.get('POSTGRES_USER'),
-        password: configService.get('POSTGRES_PASSWORD'),
-        autoLoadEntities: true,
-        synchronize: true, // chỉ dùng cho dev
-      }),
-      inject: [ConfigService],
-    }),
+    // Database modules
+    PostgresDatabaseModule,
+    PostgresDatabaseModule.forFeature([
+      Degree,
+      Doctor,
+      DoctorServiceLink,
+      Employee,
+      EmployeeInfo,
+      EmployeeRoleLink,
+      Image,
+      Invitation,
+      Role,
+      Service,
+      Specialize,
+    ]),
 
-    // MongoDB configuration
-    //to be continued with MongoDB configuration if needed
-
-    //Single imports
-    DoctorModule,
+    // Logger module
     LoggerModule,
   ],
-  controllers: [StaffController],
-  providers: [StaffService],
+  controllers: [StaffController, DoctorController],
+  providers: [StaffService, DoctorService, DoctorRepository],
+  exports: [StaffService],
 })
 export class StaffModule {}

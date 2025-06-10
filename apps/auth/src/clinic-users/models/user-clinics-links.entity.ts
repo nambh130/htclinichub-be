@@ -21,10 +21,4 @@ export class UserClinicLink {
   @ManyToOne(() => Clinic, (clinic) => clinic.id)
   @JoinColumn({ name: 'clinic' })
   clinic: Clinic;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
-  updatedAt: Date;
 }

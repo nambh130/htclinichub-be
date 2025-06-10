@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDocument, UserDto } from '@app/common';
+import { LoginDto, UserDocument, UserDto } from '@app/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
@@ -28,10 +28,10 @@ export class AuthController {
     },
   })
   async login(
-    @Body() userDto: UserDto,
+    @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { user, token } = (await this.authService.login(userDto)) as {
+    const { user, token } = (await this.authService.login(dto)) as {
       user: UserDocument;
       token: string;
     };

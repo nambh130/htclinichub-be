@@ -2,7 +2,7 @@ import { UserType } from "@app/common/enum/user-type.enum";
 
 export class UserCreatedEvent {
   constructor(
-    public readonly id: number,
+    public readonly id: string,
     public readonly email: string,
     public readonly userType: string,
   ) {}

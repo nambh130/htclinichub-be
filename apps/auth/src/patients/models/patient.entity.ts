@@ -14,10 +14,4 @@ export class Patient extends PostgresAbstractEntity<Patient> {
 
   @Column({ nullable: true })
   password: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }
