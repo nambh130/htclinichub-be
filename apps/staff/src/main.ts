@@ -3,7 +3,7 @@ import { StaffModule } from './staff.module';
 import { Logger } from 'nestjs-pino';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { STAFF_CONSUMER_GROUP } from '@app/common';
+import { KafkaExceptionFilter, STAFF_CONSUMER_GROUP } from '@app/common';
 
 async function bootstrap() {
   const appContext = await NestFactory.createApplicationContext(StaffModule);
@@ -28,7 +28,7 @@ async function bootstrap() {
       },
     },
   );
-
+  app.useGlobalFilters(new KafkaExceptionFilter());
   app.useLogger(app.get(Logger));
   await app.listen();
 }
