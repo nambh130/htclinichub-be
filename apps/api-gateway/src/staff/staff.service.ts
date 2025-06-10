@@ -1,8 +1,8 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
-  AUTH_SERVICE,
   CreateDoctorAccountDto,
   safeKafkaCall,
+  UserDocument,
 } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { STAFF_SERVICE } from '@app/common';
@@ -11,29 +11,53 @@ import { STAFF_SERVICE } from '@app/common';
 export class StaffService implements OnModuleInit {
   constructor(
     @Inject(STAFF_SERVICE) private readonly staffClient: ClientKafka,
-    @Inject(AUTH_SERVICE)
-    private readonly authClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
     this.staffClient.subscribeToResponseOf('create-doctor-account');
-    this.authClient.subscribeToResponseOf('authenticate');
+    this.staffClient.subscribeToResponseOf('view-doctor-account-list');
+    this.staffClient.subscribeToResponseOf('lock-doctor-account');
 
-    await this.authClient.connect();
     await this.staffClient.connect();
   }
 
-  async create(dto: CreateDoctorAccountDto): Promise<unknown> {
+  async viewDoctorAccountList(): Promise<unknown> {
     return await safeKafkaCall(
-      this.staffClient.send('create-doctor-account', dto),
+      this.staffClient.send('view-doctor-account-list', {}),
     );
   }
 
-  findAll() {
-    return `This action returns all staff`;
+  async createDoctorAccount(
+    dto: CreateDoctorAccountDto,
+    user: UserDocument,
+  ): Promise<unknown> {
+    const payload = {
+      dto,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    return await safeKafkaCall(
+      this.staffClient.send('create-doctor-account', payload),
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} staff`;
+  async lockDoctorAccount(
+    doctorId: string,
+    user: UserDocument,
+  ): Promise<unknown> {
+    const payload = {
+      doctorId,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    return await safeKafkaCall(
+      this.staffClient.send('lock-doctor-account', payload),
+    );
   }
 }

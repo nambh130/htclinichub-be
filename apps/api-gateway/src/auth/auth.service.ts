@@ -1,5 +1,6 @@
 import {
   AUTH_SERVICE,
+  LoginDto,
   safeKafkaCall,
   UserDocument,
   UserDto,
@@ -21,11 +22,9 @@ export class AuthService implements OnModuleInit {
     await this.authClient.connect();
   }
 
-  async login(
-    userDto: UserDto,
-  ): Promise<{ user: UserDocument; token: string }> {
+  async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
     return safeKafkaCall<{ user: UserDocument; token: string }>(
-      this.authClient.send('login', userDto),
+      this.authClient.send('login', dto),
     );
   }
 
