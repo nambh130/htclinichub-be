@@ -15,6 +15,9 @@ export class OtpService {
     // Store OTP in cache: key is phone number, value is code
     await this.cacheManager.set(dto.phone, code, ttlSeconds);
     const check = await this.cacheManager.get(dto.phone);
+    if(check){
+      return new Error();
+    }
 
     // Here, integrate SMS sending logic, e.g., Twilio
     console.log(`Sending OTP ${code} to ${dto.phone}`);

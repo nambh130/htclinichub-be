@@ -1,15 +1,11 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
   OneToMany,
 } from 'typeorm';
 import { UserClinicLink } from './user-clinics-links.entity';
 import { PostgresAbstractEntity } from '@app/common';
+import { Clinic } from '../../clinics/models/clinic.entity';
 
 @Entity({ name: 'clinic_users' })
 export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
@@ -18,19 +14,18 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
     if (user) Object.assign(this, user);
   }
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ name: "user_type", type: 'varchar', length: 50 })
   userType: string;
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @ManyToOne(() => ClinicUser)
-  @JoinColumn({ name: 'owner_id' })
-  owner?: ClinicUser;
+  @OneToMany(() => Clinic, (clinic) => clinic.owner)
+  clinics: Clinic[];
 
-  @OneToMany(() => UserClinicLink, (link) => link.clinic)
+  @OneToMany(() => UserClinicLink, (link) => link.user)
   userClinicLinks: UserClinicLink[];
 }

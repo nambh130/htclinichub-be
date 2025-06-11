@@ -3,8 +3,6 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { ClinicUser } from './clinic-user.entity';
 import { Clinic } from '../../clinics/models/clinic.entity';

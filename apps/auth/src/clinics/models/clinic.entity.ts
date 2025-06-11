@@ -2,8 +2,8 @@ import {
   Entity,
   Column,
   OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ClinicUser } from '../../clinic-users/models/clinic-user.entity';
 import { UserClinicLink } from '../../clinic-users/models/user-clinics-links.entity';
@@ -22,10 +22,10 @@ export class Clinic extends PostgresAbstractEntity<Clinic> {
   @Column({ type: 'varchar', length: 255 })
   location: string;
 
-  @Column()
-  @OneToMany(() => ClinicUser, (user) => user.id)
-  ownerId: number;
+  @ManyToOne(() => ClinicUser, (user) => user.clinics)
+  @JoinColumn({ name: 'owner_id' })
+  owner: ClinicUser;
 
-  @OneToMany(() => UserClinicLink, (link) => link.user)
+  @OneToMany(() => UserClinicLink, (link) => link.clinic)
   userClinicLinks: UserClinicLink[];
 }
