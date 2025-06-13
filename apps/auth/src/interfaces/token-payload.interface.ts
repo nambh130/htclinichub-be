@@ -1,13 +1,11 @@
-export enum UserType {
-  EMPLOYEE = "employee",
-  DOCTOR = "doctor",
-  PATIENT = "patient",
-  // add other user types here
-}
+import { ActorType } from "../clinic-users/models/clinic-user.entity";
 
 export interface TokenPayload {
   userId: string,
-  userType: UserType,
-  role?: string,
-  isAdmin?: string
+  actorType: ActorType,
+  roles?: string[],
+  permissions?: string[],
+  isAdmin?: string,
+  currentClinics?: string[],
+  adminOf?: string[]
 }

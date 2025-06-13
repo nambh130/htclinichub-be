@@ -39,16 +39,6 @@ export class AuthController {
     return { user, token };
   }
 
-  @Post('create-user')
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiBody({ type: UserDto })
-  @ApiResponse({
-    status: 201,
-    description: 'User created successfully',
-  })
-  async createUser(@Body() userDto: UserDto) {
-    return this.authService.createUser(userDto);
-  }
   @Post('/request-otp')
   @ApiOperation({ summary: 'Patient login with phone number' })
   @ApiBody({ type: LoginOtpRequestDto })

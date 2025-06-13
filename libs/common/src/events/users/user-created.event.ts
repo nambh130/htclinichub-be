@@ -1,10 +1,10 @@
-import { UserType } from "@app/common/enum/user-type.enum";
+import { ActorType } from "apps/auth/src/clinic-users/models/clinic-user.entity";
 
 export class UserCreatedEvent {
   constructor(
     public readonly id: string,
     public readonly email: string,
-    public readonly userType: string,
+    public readonly userType: ActorType,
   ) {}
 
   toString() {

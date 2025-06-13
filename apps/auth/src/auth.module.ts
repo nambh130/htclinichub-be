@@ -13,18 +13,12 @@ import { OtpModule } from './otp/otp.module';
 import { ClinicUsersModule } from './clinic-users/clinic-users.module';
 import { ClinicsModule } from './clinics/clinics.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { InvitationsModule } from './invitations/invitations.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ //dotenv setup
-      isGlobal: true,
-      envFilePath: './apps/auth/.env',
-      validationSchema: Joi.object({
-        MONGODB_URI: Joi.string().required(),
-        JWT_SECRET: Joi.string().required(),
-        JWT_EXPIRES_IN: Joi.number().default(3600),
-      }),
-    }),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -58,7 +52,10 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     PatientsModule,
     OtpModule,
     ClinicUsersModule,
-    ClinicsModule
+    ClinicsModule,
+    InvitationsModule,
+    RolesModule,
+    PermissionsModule
   ],
   controllers: [AuthController],
   exports: [AuthService],

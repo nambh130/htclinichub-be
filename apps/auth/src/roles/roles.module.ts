@@ -1,19 +1,19 @@
-import { Module } from '@nestjs/common';
-import { ClinicUsersService } from './clinic-users.service';
 import { LoggerModule, PostgresDatabaseModule } from '@app/common';
+import { Module } from '@nestjs/common';
+import { Role } from './models/role.entity';
 import { ConfigModule } from '@nestjs/config';
+import { RolesService } from './roles.service';
+import { RolesController } from './roles.controller';
 import * as Joi from 'joi';
-import { ClinicUser } from './models/clinic-user.entity';
-import { ClinicUserRepository } from './clinic-users.repository';
-import { ClinicsModule } from '../clinics/clinics.module';
-import { RolesModule } from '../roles/roles.module';
+import { RoleRepository } from './roles.repository';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     PostgresDatabaseModule,
-    PostgresDatabaseModule.forFeature([ClinicUser]),
-
+    PostgresDatabaseModule.forFeature([Role]),
     LoggerModule,
+
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',
@@ -28,10 +28,11 @@ import { RolesModule } from '../roles/roles.module';
         POSTGRES_SYNC: Joi.boolean().default(false),
       }),
     }),
-    ClinicsModule,
-    RolesModule
+    PermissionsModule
   ],
-  providers: [ClinicUsersService, ClinicUserRepository],
-  exports: [ClinicUsersService, ClinicUserRepository]
+  providers: [RolesService, RoleRepository],
+  controllers: [RolesController],
+  exports: [RolesService, RoleRepository]
 })
-export class ClinicUsersModule { }
+export class RolesModule {
+}

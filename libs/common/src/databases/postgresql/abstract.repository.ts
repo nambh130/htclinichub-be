@@ -15,7 +15,7 @@ export abstract class PostgresAbstractRepository<
   constructor(
     private readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
-  ) {}
+  ) { }
 
   async findAll(): Promise<T[]> {
     return this.entityRepository.find();
@@ -27,7 +27,7 @@ export abstract class PostgresAbstractRepository<
 
   async findOne(
     where: FindOptionsWhere<T>,
-    relations?: FindOptionsRelations<T>,
+    relations?: string[] | FindOptionsRelations<T>,
   ): Promise<T> {
     const entity = await this.entityRepository.findOne({ where, relations });
 
@@ -61,5 +61,19 @@ export abstract class PostgresAbstractRepository<
 
   async findOneAndDelete(where: FindOptionsWhere<T>) {
     await this.entityRepository.delete(where);
+  }
+
+  async findAndCount(
+    where: FindOptionsWhere<T>,
+    skip?: number,
+    take?: number,
+    relations?: string[]
+  ): Promise<[T[], number]> {
+    return this.entityRepository.findAndCount({
+      where,
+      skip,
+      take,
+      relations
+    });
   }
 }
