@@ -6,12 +6,11 @@ import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
 import {
   AUTH_SERVICE,
-  LoginDto,
   safeKafkaCall,
-  UserDocument,
-  UserDto,
 } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
+import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -29,10 +28,10 @@ export class AuthService implements OnModuleInit {
     await this.authClient.connect();
   }
 
-  async requestOtp(requestLoginOtp: LoginOtpRequestDto): Promise<{ user: any; token: string }> {
+  async requestOtp(requestLoginOtp: LoginOtpRequestDto): Promise<{ success: boolean }> {
     console.log("Test env: ", this.configService.get("AUTH_SERVICE_URL"))
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/request-otp`, requestLoginOtp)
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/request-otp`, requestLoginOtp)
         .pipe(
           catchError(error => {
             const e = error.response;
@@ -46,7 +45,7 @@ export class AuthService implements OnModuleInit {
 
   async verifyOtp(verifyOtpDto: LoginOtpVerifyDto): Promise<{ user: any; token: string }> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/verify-otp`, verifyOtpDto)
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/verify-otp`, verifyOtpDto)
         .pipe(
           catchError(error => {
             const e = error.response;
@@ -58,16 +57,53 @@ export class AuthService implements OnModuleInit {
     return response.data;
   }
 
-  async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
-    return safeKafkaCall<{ user: UserDocument; token: string }>(
-      this.authClient.send('login', dto),
+  async clinicUserLogin(loginDto: ClinicUserLoginDto): Promise<{ user: string, token: string }> {
+    const response = await firstValueFrom(
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, loginDto, {
+        withCredentials: true
+      })
+        .pipe(
+          catchError(error => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          })
+        )
     );
+    return response.data;
   }
 
-  async createUser(userDto: UserDto): Promise<{ user: any }> {
-    console.log('Sending create-user message:', userDto);
-    return safeKafkaCall<{ user: UserDocument }>(
-      this.authClient.send('create-user', userDto),
-    );
+  async createInvitation(invitationDto: CreateInvitationDto): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/invitation`, invitationDto, {
+          withCredentials: true
+        })
+          .pipe(
+            catchError(error => {
+              console.log(error)
+              const e = error.response;
+              // Rethrow downstream error status/message
+              throw new HttpException(e.data, e.status);
+            })
+          )
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
   }
+
+  //async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
+  //  return safeKafkaCall<{ user: UserDocument; token: string }>(
+  //    this.authClient.send('login', dto),
+  //  );
+  //}
+
+  //async createUser(userDto: UserDto): Promise<{ user: any }> {
+  //  console.log('Sending create-user message:', userDto);
+  //  return safeKafkaCall<{ user: UserDocument }>(
+  //    this.authClient.send('create-user', userDto),
+  //  );
+  //}
 }

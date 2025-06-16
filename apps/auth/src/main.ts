@@ -5,6 +5,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { AUTH_CONSUMER_GROUP } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // 1. Create the HTTP application
@@ -27,6 +28,7 @@ async function bootstrap() {
   // 3. Add your logger (optional)
   app.useLogger(app.get(Logger));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.use(cookieParser());
 
   // 4. Start both
   await app.startAllMicroservices();
