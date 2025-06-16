@@ -1,30 +1,21 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   CreateDoctorAccountDto,
-  safeKafkaCall,
+  CreateEmployeeAccountDto,
   UserDocument,
 } from '@app/common';
-import { ClientKafka } from '@nestjs/microservices';
-import { STAFF_SERVICE } from '@app/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class StaffService implements OnModuleInit {
-  constructor(
-    @Inject(STAFF_SERVICE) private readonly staffClient: ClientKafka,
-  ) {}
-
-  async onModuleInit() {
-    this.staffClient.subscribeToResponseOf('create-doctor-account');
-    this.staffClient.subscribeToResponseOf('view-doctor-account-list');
-    this.staffClient.subscribeToResponseOf('lock-doctor-account');
-
-    await this.staffClient.connect();
-  }
+export class StaffService {
+  constructor(private readonly httpService: HttpService) {}
 
   async viewDoctorAccountList(): Promise<unknown> {
-    return await safeKafkaCall(
-      this.staffClient.send('view-doctor-account-list', {}),
+    const response = await firstValueFrom(
+      this.httpService.get('/staff/doctor-account-list'),
     );
+    return response.data;
   }
 
   async createDoctorAccount(
@@ -39,25 +30,116 @@ export class StaffService implements OnModuleInit {
       },
     };
 
-    return await safeKafkaCall(
-      this.staffClient.send('create-doctor-account', payload),
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/create-doctor-account', payload),
     );
+    return response.data;
   }
 
-  async lockDoctorAccount(
-    doctorId: string,
-    user: UserDocument,
-  ): Promise<unknown> {
+  async lockDoctorAccount(id: string, user: UserDocument): Promise<unknown> {
     const payload = {
-      doctorId,
+      id,
       user: {
         id: user._id,
         type: user.type,
       },
     };
 
-    return await safeKafkaCall(
-      this.staffClient.send('lock-doctor-account', payload),
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/lock-doctor-account', payload),
     );
+    return response.data;
+  }
+
+  async unlockDoctorAccount(id: string, user: UserDocument): Promise<unknown> {
+    const payload = {
+      id,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/unlock-doctor-account', payload),
+    );
+    return response.data;
+  }
+
+  async createDoctorProfile(
+    dto: CreateDoctorAccountDto,
+    user: UserDocument,
+  ): Promise<unknown> {
+    const payload = {
+      dto,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/create-doctor-account', payload),
+    );
+    return response.data;
+  }
+
+  //Employee services
+  async viewEmployeeAccountList(): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.httpService.get('/staff/employee-account-list'),
+    );
+    return response.data;
+  }
+
+  async createEmployeeAccount(
+    dto: CreateEmployeeAccountDto,
+    user: UserDocument,
+  ): Promise<unknown> {
+    const payload = {
+      dto,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/create-employee-account', payload),
+    );
+    return response.data;
+  }
+
+  async lockEmployeeAccount(id: string, user: UserDocument): Promise<unknown> {
+    const payload = {
+      id,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/lock-employee-account', payload),
+    );
+    return response.data;
+  }
+
+  async unlockEmployeeAccount(
+    id: string,
+    user: UserDocument,
+  ): Promise<unknown> {
+    const payload = {
+      id,
+      user: {
+        id: user._id,
+        type: user.type,
+      },
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.post('/staff/unlock-employee-account', payload),
+    );
+    return response.data;
   }
 }

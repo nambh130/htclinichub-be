@@ -28,7 +28,7 @@ export abstract class PostgresAbstractRepository<
   async findOne(
     where: FindOptionsWhere<T>,
     relations?: FindOptionsRelations<T>,
-  ): Promise<T> {
+  ): Promise<T | null> {
     const entity = await this.entityRepository.findOne({ where, relations });
 
     if (!entity) {
@@ -46,7 +46,7 @@ export abstract class PostgresAbstractRepository<
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
-  ): Promise<T> {
+  ): Promise<T | null> {
     const updateResult = await this.entityRepository.update(
       where,
       partialEntity,

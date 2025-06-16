@@ -1,29 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PostgresAbstractRepository } from '@app/common';
-import { Doctor } from '../models/doctor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
+import { Employee } from '../models/employee.entity';
 
 @Injectable()
-export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
-  protected readonly logger = new Logger(DoctorRepository.name);
+export class EmployeeRepository extends PostgresAbstractRepository<Employee> {
+  protected readonly logger = new Logger(EmployeeRepository.name);
 
-  private readonly itemsRepository: Repository<Doctor>;
+  private readonly itemsRepository: Repository<Employee>;
 
   constructor(
-    @InjectRepository(Doctor)
-    itemsRepository: Repository<Doctor>,
+    @InjectRepository(Employee)
+    itemsRepository: Repository<Employee>,
     entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
     this.itemsRepository = itemsRepository;
   }
 
-  async checkDoctorEmailExists(email: string): Promise<boolean> {
+  async checkEmployeeEmailExists(email: string): Promise<boolean> {
     const normalizedEmail = email.trim().toLowerCase();
-    const doctor = await this.itemsRepository.findOne({
+    const employee = await this.itemsRepository.findOne({
       where: { email: normalizedEmail },
     });
-    return doctor !== null;
+    return employee !== null;
   }
 }

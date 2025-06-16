@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
-import { EmployeeInfo } from './employeeInfo.entity';
+import { StaffInfo } from './staffInfo.entity';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
 import { PostgresAbstractEntity } from '@app/common';
@@ -15,9 +15,9 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @Column({ default: false })
   is_locked: boolean;
 
-  @OneToOne(() => EmployeeInfo)
-  @JoinColumn({ name: 'employee_info_id' })
-  employee_info: EmployeeInfo;
+  @OneToOne(() => StaffInfo)
+  @JoinColumn({ name: 'staff_info_id' })
+  staff_info: StaffInfo;
 
   @OneToMany(() => Invitation, (invitation) => invitation.doctor)
   invitations: Invitation[];

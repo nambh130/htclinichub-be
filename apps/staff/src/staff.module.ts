@@ -4,32 +4,37 @@ import * as Joi from 'joi';
 
 import { LoggerModule, PostgresDatabaseModule } from '@app/common';
 
-import { StaffController } from './staff.controller';
-import { StaffService } from './staff.service';
-
-import { DoctorController } from './doctor/doctor.controller';
-import { DoctorService } from './doctor/doctor.service';
-import { DoctorRepository } from './repositories/doctor.repository';
-
-import { Doctor } from './models/doctor.entity';
 import { Degree } from './models/degree.entity';
+import { Doctor } from './models/doctor.entity';
 import { DoctorServiceLink } from './models/doctorServiceLinks.entity';
 import { Employee } from './models/employee.entity';
-import { EmployeeInfo } from './models/employeeInfo.entity';
 import { EmployeeRoleLink } from './models/employeeRoleLinks.entity';
 import { Image } from './models/image.entity';
 import { Invitation } from './models/invitation.entity';
 import { Role } from './models/role.entity';
 import { Service } from './models/service.entity';
 import { Specialize } from './models/specialize.entity';
+import { StaffInfo } from './models/staffInfo.entity';
+
+import { DoctorController } from './doctor/doctor.controller';
+import { DoctorService } from './doctor/doctor.service';
+import { EmployeeController } from './employee/employee.controller';
+import { EmployeeService } from './employee/employee.service';
+import { StaffController } from './staff.controller';
+import { StaffService } from './staff.service';
+
+import { CommonRepository } from './repositories/common.repository';
+import { DoctorRepository } from './repositories/doctor.repository';
+import { EmployeeRepository } from './repositories/employee.repository';
+import { StaffInfoRepository } from './repositories/staffInfo.repository';
 
 @Module({
   imports: [
-    // Global configuration module with environment variables validation
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/staff/.env',
       validationSchema: Joi.object({
+        HTTP_PORT: Joi.number().default(3003),
         KAFKA_BROKER: Joi.required(),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
@@ -39,28 +44,32 @@ import { Specialize } from './models/specialize.entity';
         POSTGRES_SYNC: Joi.boolean().default(false),
       }),
     }),
-
-    // Database modules
+    LoggerModule,
     PostgresDatabaseModule,
     PostgresDatabaseModule.forFeature([
       Degree,
       Doctor,
       DoctorServiceLink,
       Employee,
-      EmployeeInfo,
       EmployeeRoleLink,
       Image,
       Invitation,
       Role,
       Service,
       Specialize,
+      StaffInfo,
     ]),
-
-    // Logger module
-    LoggerModule,
   ],
-  controllers: [StaffController, DoctorController],
-  providers: [StaffService, DoctorService, DoctorRepository],
+  controllers: [StaffController, DoctorController, EmployeeController],
+  providers: [
+    StaffService,
+    DoctorService,
+    EmployeeService,
+    CommonRepository,
+    DoctorRepository,
+    EmployeeRepository,
+    StaffInfoRepository,
+  ],
   exports: [StaffService],
 })
 export class StaffModule {}

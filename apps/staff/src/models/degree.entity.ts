@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { EmployeeInfo } from './employeeInfo.entity';
+import { StaffInfo } from './staffInfo.entity';
 import { Image } from './image.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
@@ -11,9 +11,9 @@ export class Degree extends PostgresAbstractEntity<Degree> {
   @Column()
   description: string;
 
-  @OneToOne(() => EmployeeInfo, (employeeInfo) => employeeInfo.degrees)
+  @OneToOne(() => StaffInfo, (staffInfo) => staffInfo.degrees)
   @JoinColumn({ name: 'employee_info_id' })
-  employee_info: EmployeeInfo;
+  employee_info: StaffInfo;
 
   @ManyToOne(() => Image)
   @JoinColumn({ name: 'image_id' })
