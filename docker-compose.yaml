@@ -56,6 +56,20 @@ services:
       timeout: 5s
       retries: 10
 
+  postgres-test:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: authservice
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   api-gateway:
     build:
       context: .
@@ -141,6 +155,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    ports:
+      - '3001:3001'
 
   staff:
     build:

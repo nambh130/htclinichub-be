@@ -3,31 +3,28 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { TokenPayload } from '../interfaces/token-payload.interface';
-import { UsersService } from '../users/users.service';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
-    private readonly usersService: UsersService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: any) => {
-          /* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access */
+        (request: Request) => {
           return (
             request?.cookies?.Authentication ||
-            request?.Authentication ||
-            request?.headers?.Authentication
+            request?.headers?.authentication
           );
-          /* eslint-enable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access */
         },
       ]),
       secretOrKey: configService.get<string>('JWT_SECRET')!,
     });
   }
 
-  async validate({ userId }: TokenPayload) {
-    return this.usersService.getUser({ _id: userId });
+  async validate(payload: TokenPayload) {
+    // JWT is already verified and decoded here
+    return payload;
   }
 }
