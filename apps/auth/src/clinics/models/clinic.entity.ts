@@ -1,7 +1,6 @@
 import {
   Entity,
   Column,
-  OneToMany,
   ManyToOne,
   JoinColumn,
   ManyToMany,
@@ -22,10 +21,10 @@ export class Clinic extends PostgresAbstractEntity<Clinic> {
   @Column({ type: 'varchar', length: 255 })
   location: string;
 
-  @ManyToOne(() => ClinicUser, (user) => user.clinics)
+  @ManyToOne(() => ClinicUser, (user) => user.ownerOf, { nullable: true })
   @JoinColumn()
   owner: ClinicUser;
 
-  @ManyToMany(() => ClinicUser, (user) => user.currentClinics)
+  @ManyToMany(() => ClinicUser, (user) => user.clinics)
   users: ClinicUser[]
 }

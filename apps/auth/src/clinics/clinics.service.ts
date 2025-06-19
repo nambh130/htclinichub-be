@@ -12,18 +12,27 @@ export class ClinicsService {
   ) { }
 
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
-    try {
-      const owner = await this.clinicUserRepository.findOne(
-        { id: createClinicDto.owner },
-      );
-      const newClinic = new Clinic({
-        ...createClinicDto,
-        owner
-      });
-      return await this.clinicRepository.create(newClinic);
-    } catch (error) {
-      throw new NotFoundException('Clinic owner not found');
+    const newClinic: Partial<Clinic> = {};
+    newClinic.name = createClinicDto.name;
+    newClinic.location = createClinicDto.location;
+
+    if (createClinicDto.owner) {
+      try {
+        const owner = await this.clinicUserRepository.findOne(
+          { id: createClinicDto.owner },
+        );
+        newClinic.owner = owner;
+      }
+      catch (error) {
+        throw new NotFoundException('Clinic owner not found');
+      }
     }
+
+    //const newClinic = new Clinic({
+    //  location, name,
+    //  owner
+    //});
+    return await this.clinicRepository.create(new Clinic(newClinic));
   }
 
   async getClinics() {

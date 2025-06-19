@@ -1,11 +1,12 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { JwtAuthGuard } from '@app/common';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -78,7 +79,7 @@ export class AuthController {
     const response = await this.authService.clinicUserLogin(loginDto);
 
     // Set cookie
-    res.cookie('token', response?.token, {
+    res.cookie('Authentication', response?.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -93,7 +94,13 @@ export class AuthController {
 
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
-  async createInvitation(@Body() invitationDto: CreateInvitationDto){
-    this.authService.createInvitation(invitationDto);
+  async createInvitation(@Body() invitationDto: CreateInvitationDto, @Req() req: Request) {
+    const response = await this.authService.createInvitation(invitationDto, req);
+    return response;
+  }
+
+  @Post('invitation/check') 
+  async invitationCheck(@Req() req: Request){
+    return await this.authService.invitationCheck(req);
   }
 }

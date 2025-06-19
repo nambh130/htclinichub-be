@@ -4,12 +4,11 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  Unique,
 } from 'typeorm';
-import { UserClinicLink } from './user-clinics-links.entity';
 import { PostgresAbstractEntity } from '@app/common';
 import { Clinic } from '../../clinics/models/clinic.entity';
 import { Role } from '../../roles/models/role.entity';
-import { Exclude } from 'class-transformer';
 
 export enum ActorEnum {
   DOCTOR = "doctor",
@@ -20,13 +19,14 @@ export enum ActorEnum {
 export type ActorType = "doctor" | "employee" | "patient"
 
 @Entity({ name: 'clinic_users' })
+@Unique(['email', 'actorType'])
 export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   constructor(user?: Partial<ClinicUser>) {
     super();
     if (user) Object.assign(this, user);
   }
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255 })
   email: string;
 
   @Column({ name: "actor_type",
@@ -47,7 +47,7 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   roles: Role[];
 
   @OneToMany(() => Clinic, (clinic) => clinic.owner)
-  clinics: Clinic[];
+  ownerOf: Clinic[];
 
   @ManyToMany(() => Clinic, (clinic) => clinic.owner, { cascade: true })
   @JoinTable({
@@ -55,5 +55,5 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
     joinColumn: {name: 'user_id', referencedColumnName: 'id'},
     inverseJoinColumn: {name: 'clinic_id', referencedColumnName: 'id'},
   })
-  currentClinics: Clinic[];
+  clinics: Clinic[];
 }

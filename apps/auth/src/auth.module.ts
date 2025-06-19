@@ -7,7 +7,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { LocalStrategy } from './strategies/local.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { PatientsModule } from './patients/patients.module';
 import { OtpModule } from './otp/otp.module';
 import { ClinicUsersModule } from './clinic-users/clinic-users.module';
@@ -16,9 +15,17 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: './apps/auth/.env',
+      validationSchema: Joi.object({
+        KAFKA_BROKER: Joi.required(),
+      }),
+    }),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -61,4 +68,4 @@ import { PermissionsModule } from './permissions/permissions.module';
   exports: [AuthService],
   providers: [AuthService, LocalStrategy, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }

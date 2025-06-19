@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsUUID } from "class-validator";
+import { IsNumber, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreateClinicDto {
   @IsString()
@@ -8,5 +8,6 @@ export class CreateClinicDto {
   location: string
 
   @IsUUID()
+  @IsOptional()
   owner: string
 }
