@@ -1,13 +1,22 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { UserDocument } from '@app/common';
+import { ActorType } from '../databases';
 
+export interface TokenPayload {
+  userId: string,
+  actorType: ActorType,
+  roles?: string[],
+  permissions?: string[],
+  isAdmin?: string,
+  currentClinics?: string[],
+  adminOf?: string[]
+}
 // Extend the Express Request interface to include the user property
 interface RequestWithUser extends Request {
-  user: UserDocument;
+  user: TokenPayload;
 }
 
-const getCurrentUserByContext = (context: ExecutionContext): UserDocument => {
+const getCurrentUserByContext = (context: ExecutionContext): TokenPayload => {
   const request = context.switchToHttp().getRequest<RequestWithUser>();
   return request.user;
 };

@@ -4,9 +4,11 @@ import { AuthController } from './auth.controller';
 import { AUTH_CONSUMER_GROUP, AUTH_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,

@@ -1,11 +1,17 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+// staffInfo.entity.ts
+import { Column, Entity, JoinColumn, OneToOne, ManyToOne } from 'typeorm';
 import { Image } from './image.entity';
 import { Specialize } from './specialize.entity';
 import { Degree } from './degree.entity';
+import { Doctor } from './doctor.entity';
+import { Employee } from './employee.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
 @Entity()
 export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
+  @Column()
+  staff_id: string;
+
   @Column()
   full_name: string;
 
@@ -34,4 +40,12 @@ export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
   @OneToOne(() => Degree, (degree) => degree.employee_info, { nullable: true })
   @JoinColumn({ name: 'degree_id' })
   degrees?: Degree;
+
+  @OneToOne(() => Doctor, (doctor) => doctor.staff_info, { nullable: true })
+  doctor?: Doctor;
+
+  @OneToOne(() => Employee, (employee) => employee.staff_info, {
+    nullable: true,
+  })
+  employee?: Employee;
 }
