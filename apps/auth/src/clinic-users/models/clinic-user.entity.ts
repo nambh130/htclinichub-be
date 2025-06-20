@@ -9,6 +9,7 @@ import {
 import { PostgresAbstractEntity } from '@app/common';
 import { Clinic } from '../../clinics/models/clinic.entity';
 import { Role } from '../../roles/models/role.entity';
+import { AccountStatus, AccountStatusType } from '@app/common/enum/account-type.enum';
 
 export enum ActorEnum {
   DOCTOR = "doctor",
@@ -37,6 +38,9 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
+
+  @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.ACTIVE })
+  status: AccountStatusType;
 
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({

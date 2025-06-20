@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PatientRepository } from './patients/patients.repository';
 import { Patient } from './patients/models/patient.entity';
 import { ConfigService } from '@nestjs/config';
 import { TokenPayload } from './interfaces/token-payload.interface';
-import { RpcException } from '@nestjs/microservices';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
 import { ClinicUsersService } from './clinic-users/clinic-users.service';
@@ -12,12 +12,15 @@ import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import * as bcrypt from 'bcrypt'
 import { ActorEnum } from './clinic-users/models/clinic-user.entity';
 import { InvitationEnum } from './invitations/models/invitation.entity';
-import { RoleRepository } from './roles/roles.repository';
 import { ClinicRepository } from './clinics/clinics.repository';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { AUTH_SERVICE } from '@app/common';
+import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
+import { ClinicOwnerAdded } from '@app/common/events/auth/clinic-owner-added.event';
+import { PatientCreated } from '@app/common/events/auth/patient-created.event';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private jwtService: JwtService,
@@ -25,7 +28,13 @@ export class AuthService {
     private readonly invitationService: InvitationsService,
     private readonly clinicUserService: ClinicUsersService,
     private readonly clinicRepository: ClinicRepository,
+    @Inject(AUTH_SERVICE)
+    private readonly kafkaClient: ClientKafka
   ) { }
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
+  }
 
   // ------------------------------ PATIENT ---------------------------------
   async patientLogin(phone: string) {
@@ -35,6 +44,11 @@ export class AuthService {
       // Create a new patient account if the patient is not found
       const newPatient = new Patient({ phone });
       patient = await this.patientRepository.create(newPatient);
+      if (patient) {
+        // Emit an event that a new patient is added
+        const patientSignupEvent = new PatientCreated(patient)
+        this.kafkaClient.emit('patient-created', patientSignupEvent.toString());
+      }
     }
     const tokenPayload: TokenPayload = {
       userId: patient.id.toString(),
@@ -48,19 +62,6 @@ export class AuthService {
     const token = await this.jwtService.signAsync(tokenPayload);
 
     return { user: patient, token };
-  } catch(error: unknown) {
-    if (error instanceof Error) {
-      throw new RpcException({
-        message: error.message,
-        type: error.name,
-        stack: error.stack,
-      });
-    }
-
-    throw new RpcException({
-      message: 'Unknown error',
-      type: 'UnknownError',
-    });
   }
 
   async verifyToken(token: string): Promise<TokenPayload> {
@@ -72,17 +73,17 @@ export class AuthService {
   async invitationSignup(invitationSignupDto: InvitationSignupDto) {
     const { token, email, password } = invitationSignupDto;
     const invitation = await this.invitationService.getInvitationByToken({ token, email });
-    // Check if the token is still valid
-    if (invitation.status != "pending") {
-      throw new BadRequestException("Invitation is invalid or expired!");
+
+    if (invitation.status !== 'pending') {
+      throw new BadRequestException('Invitation is invalid or expired!');
     }
 
-    // Check if the email provided and the email in the invitation matches
-    if (email != invitation.email) {
-      throw new BadRequestException("Invitation is invalid or expired!");
+    if (email !== invitation.email) {
+      throw new BadRequestException('Invitation is invalid or expired!');
     }
-    if (invitation.actorType != invitation.role.roleType) {
-      throw new BadRequestException("Invitation is invalid or expired, please request a new one!");
+
+    if (invitation.actorType !== invitation.role.roleType) {
+      throw new BadRequestException('Invitation is invalid or expired, please request a new one!');
     }
 
     const clinicUser = {
@@ -90,22 +91,51 @@ export class AuthService {
       password,
       actorType: invitation.actorType,
       role: invitation.role.id,
-      clinic: invitation.clinic.id
+      clinic: invitation.clinic.id,
     };
+
     const newClinicUser = await this.clinicUserService.createUser(clinicUser);
 
-    // Add this user as the owner to the clinic
-    if (invitation.isOwnerInvitation) {
-      this.clinicRepository.findOneAndUpdate({ id: invitation.clinic.id }, { owner: newClinicUser });
+    // Emit `clinc-user-created` event
+    if (newClinicUser) {
+      this.kafkaClient.emit('clinic-user-created', new ClinicUserCreated(
+        {
+          id: newClinicUser.id,
+          email: newClinicUser.email,
+          actorType: newClinicUser.actorType,
+          clinicId: invitation.clinic.id,
+        }
+      ));
     }
 
-    // If new user has been created, update the status of the invitation
+    // If the user is the owner, update clinic and emit owner-added event
+    if (invitation.isOwnerInvitation) {
+      const updateResult = await this.clinicRepository.findOneAndUpdate(
+        { id: invitation.clinic.id },
+        { owner: newClinicUser }
+      );
+
+      if (updateResult) {
+        this.kafkaClient.emit('clinic-owner-added',
+          new ClinicOwnerAdded(
+            {
+              clinicId: invitation.clinic.id,
+              ownerId: newClinicUser.id,
+            }
+          ));
+      }
+    }
+
     if (newClinicUser) {
-      this.invitationService.updateInvitationStatus(invitation.id, InvitationEnum.ACCEPTED);
+      await this.invitationService.updateInvitationStatus(
+        invitation.id,
+        InvitationEnum.ACCEPTED
+      );
     }
 
     return newClinicUser;
   }
+
 
   async acceptInvitation(userId: string, acceptInvitationDto: AcceptInvitationDto) {
     const { token, email, accept } = acceptInvitationDto;
@@ -121,7 +151,7 @@ export class AuthService {
     }
 
     const clinicToAdd = invitation.clinic;
-    const user = await this.clinicUserService.findUserByEmail(email);
+    const user = await this.clinicUserService.find({ email, actorType: invitation.actorType });
     // Check if the user from token is the same as the user from the invitation
     console.log(user.id, userId)
     if (
@@ -134,54 +164,83 @@ export class AuthService {
 
     // Check the user has already in the invted clinic
     const alreadyExists = user.clinics.some(c => c.id === clinicToAdd.id);
+
     if (!alreadyExists) {
       user.clinics.push(clinicToAdd);
-      await this.clinicUserService.updateUser(user.id, user);
+      const joinResult = await this.clinicUserService.updateUser(user.id, user);
+
+      if (joinResult) {
+        // Emit user-clinic-joined event
+        this.kafkaClient.emit('user-clinic-joined', {
+          userId: user.id,
+          clinicId: clinicToAdd.id
+        });
+      }
+    }
+
+    if (invitation.isOwnerInvitation) {
+      await this.clinicRepository.findOneAndUpdate(
+        { id: invitation.clinic.id },
+        { owner: user }
+      );
+
+      // Emit clinic-owner-assigned event
+      this.kafkaClient.emit('clinic-owner-added',
+        new ClinicOwnerAdded(
+          {
+            clinicId: invitation.clinic.id,
+            ownerId: user.id,
+          }
+        ));
     }
 
     await this.invitationService.updateInvitationStatus(invitation.id, 'accepted');
-    return { message: 'Invitation accepted', user };
 
+    return { message: 'Invitation accepted', user };
   }
 
   async clinicUserLogin(dto: ClinicUserLoginDto) {
-    const user = await this.clinicUserService.findUserByEmail(dto.email);
-
+    const { email, userType } = dto;
+    const user = await this.clinicUserService.find({ email, actorType: userType });
     if (!user) throw new BadRequestException("User not found");
+
     const isMatch = await bcrypt.compare(dto.password, user.password);
+    if (!isMatch) throw new BadRequestException("Invalid credentials");
 
+    const tokenPayload: TokenPayload = {
+      userId: user.id,
+      actorType: user.actorType as ActorEnum,
+      permissions: Array.from(new Set(user.roles.flatMap(role => role.permissions.map(p => p.name)))),
+      roles: user.roles.map(r => r.name),
+    };
+    const currentClinics = user.clinics;
+    tokenPayload.currentClinics = currentClinics.map((clinic) => clinic.id);
+    const adminOf = user.ownerOf.map((clinic) => clinic.id);
+    tokenPayload.isAdminOf = adminOf
+    //if (user.clinics && user.clinics.length > 0) {
+    //  const currentClinic = user.clinics[0];
+    //  if (currentClinic) {
+    //    tokenPayload.currentClinic = currentClinic.id;
+    //    if (currentClinic.owner?.id === user.id) {
+    //      tokenPayload.isAdmin = true;
+    //    }
+    //  }
+    //}
 
-    if (isMatch) {
-      const tokenPayload: TokenPayload = {
-        userId: user.id,
-        actorType: user.actorType as ActorEnum,
-      }
+    const token = await this.createJWT(tokenPayload);
 
-      // Create an array of permissions from roles
-      const permissions = Array.from( new Set( // Use set to ensure uniqueness of permissions in the token
-          user.roles.flatMap((role) => role.permissions.map((p) => p.name)) // or p.id
-        )
-      );
-      tokenPayload.permissions = permissions;
-
-      const roles = user.roles.map((role) => role.name);
-      tokenPayload.roles = roles;
-
-      // Get all clinics that this user is currently working at
-      const currentClinics = user.clinics[0];
-      tokenPayload.currentClinics = currentClinics.id;
-      if(currentClinics.owner.id == user.id){
-        tokenPayload.isAdmin = true
-      }
-
-      //const adminOf = user.clinics;
-      //tokenPayload.adminOf = adminOf.map((clinic) => clinic.id);
-
-      const token = await this.createJWT(tokenPayload);
-
-      return { user: user.id, token };
-    }
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        roles: tokenPayload.roles,
+        currentClinics: tokenPayload.currentClinics,
+        adminOf
+      },
+      token,
+    };
   }
+
 
   async createJWT(payload: TokenPayload) {
     const expires = new Date();

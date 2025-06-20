@@ -14,7 +14,7 @@ import { InvitationCheckDto } from './dto/invitation-check.dto';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthorizationGuard } from '@app/common/auth/authorization.guard';
 import { Authorizations } from '@app/common/decorators/authorizations.decorator';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
@@ -41,16 +41,28 @@ export class AuthController {
 
   //Patient login (or signup) with otp
   @Post('patient/verify-otp')
-  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto, @Res() res: Response) {
     const isOtpValid = await this.otpService.verifyOtp(verifyOtpDto);
-    if (isOtpValid) {
-      const token = await this.authService.patientLogin(verifyOtpDto.phone);
-      return { success: true, token };
+
+    if (!isOtpValid) {
+      throw new UnauthorizedException('Invalid or expired OTP');
     }
 
-    throw new UnauthorizedException('Invalid or expired OTP');
-  }
+    const response = await this.authService.patientLogin(verifyOtpDto.phone);
 
+    // Set cookie securely
+    res.cookie('Authentication', response.token, {
+      httpOnly: true,        // Prevent JS access
+      secure: true,          // Use HTTPS only
+      sameSite: 'lax',       // Or 'strict' depending on your needs
+    });
+
+    // Respond with JSON
+    return res.status(200).json({
+      success: true,
+      response, // Optional: If you want the client to access it as well
+    });
+  }
   // ------------------------------ STAFF AND DOCTOR ------------------------------
   // Check if the email in the invitation already has an account
   @Post("invitation/check")
@@ -89,13 +101,14 @@ export class AuthController {
   @Post("clinic/login")
   async clinicUserLogin(
     @Body() dto: ClinicUserLoginDto,
-    //@Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response
   ) {
     const response = await this.authService.clinicUserLogin(dto);
-    //res.cookie('token', response?.token);
+    res.cookie('Authentication', response?.token);
     return response;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post("test-clinic")
   async createClinic(@Body() createClinicDto: CreateClinicDto) {
     return await this.clinicService.createClinic(createClinicDto)
