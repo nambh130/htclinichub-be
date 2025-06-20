@@ -5,7 +5,7 @@ import { Degree } from './degree.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
 @Entity()
-export class EmployeeInfo extends PostgresAbstractEntity<EmployeeInfo> {
+export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
   @Column()
   full_name: string;
 
@@ -21,13 +21,17 @@ export class EmployeeInfo extends PostgresAbstractEntity<EmployeeInfo> {
   @Column()
   position: string;
 
-  @ManyToOne(() => Image)
+  @ManyToOne(() => Image, { nullable: true })
   @JoinColumn({ name: 'image_id' })
-  image: Image;
+  image?: Image;
 
-  @OneToOne(() => Specialize, (specialize) => specialize.employee_info)
-  specializes: Specialize;
+  @OneToOne(() => Specialize, (specialize) => specialize.employee_info, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'specialize_id' })
+  specializes?: Specialize;
 
-  @OneToOne(() => Degree, (degree) => degree.employee_info)
-  degrees: Degree;
+  @OneToOne(() => Degree, (degree) => degree.employee_info, { nullable: true })
+  @JoinColumn({ name: 'degree_id' })
+  degrees?: Degree;
 }
