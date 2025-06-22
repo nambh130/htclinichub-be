@@ -16,6 +16,9 @@ import { StaffModule } from './staff/staff.module';
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.string().required(),
         PORT: Joi.number().default(3000),
+
+        STAFF_SERVICE_HOST: Joi.string(),
+        STAFF_SERVICE_PORT: Joi.number(),
       }),
     }),
 

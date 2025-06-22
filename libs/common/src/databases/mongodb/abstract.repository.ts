@@ -35,7 +35,7 @@ export abstract class MongoAbstractRepository<
   async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,
     update: UpdateQuery<TDocument>,
-  ): Promise<TDocument> {
+  ): Promise<TDocument | null> {
     const updatedDocument = await this.model
       .findOneAndUpdate(filterQuery, update, {
         new: true,

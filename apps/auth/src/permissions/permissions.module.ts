@@ -13,20 +13,6 @@ import { PermissionsController } from './permissions.controller';
     PostgresDatabaseModule.forFeature([Permission]),
     LoggerModule,
 
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/auth/.env',
-      validationSchema: Joi.object({
-        KAFKA_BROKER: Joi.required(),
-        POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
-        POSTGRES_USER: Joi.string().required(),
-        POSTGRES_PASSWORD: Joi.string().required(),
-        // Synchronize should only use in development, not in production
-        POSTGRES_SYNC: Joi.boolean().default(false),
-      }),
-    }),
   ],
   providers: [PermissionsService, PermissionRepository],
   controllers: [PermissionsController],

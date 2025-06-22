@@ -7,28 +7,45 @@ import { EmployeeInvitation, InvitationType } from './models/invitation.entity';
 import { Clinic } from '../clinics/models/clinic.entity';
 import { Role, RoleEnum } from '../roles/models/role.entity';
 import { RoleRepository } from '../roles/roles.repository';
+import { ClinicUsersService } from '../clinic-users/clinic-users.service';
+import { ActorEnum } from '../clinic-users/models/clinic-user.entity';
+import { ClinicUserRepository } from '../clinic-users/clinic-users.repository';
 
 @Injectable()
 export class InvitationsService extends BaseService {
   constructor(
     private readonly invitationRepository: InvitationRepository,
-    private readonly roleRepository: RoleRepository
+    private readonly userRepository: ClinicUserRepository,
   ) { super() }
 
   async createInvitation(createInvitationDto: CreateInvitationDto) {
-    const { email, clinic, role } = createInvitationDto;
+    const { email, clinic, role, userType, isOwnerInvitation } = createInvitationDto;
     const token = randomBytes(32).toString('hex');
     const hashedToken = createHash('sha256').update(token).digest('hex');
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 *24 * 7); // 7 days in ms
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms
 
-    // Only doctor roles can be invited
-    const invitedRole = await this.roleRepository.findOne({id: role});
-    if(invitedRole.roleType != RoleEnum.DOCTOR){
-      throw new BadRequestException("This role can not be invited!");
+    // Check if user exist because you can't invite employee account into multiple clinics
+    // But doctor account can be invited to multiple clinics
+    if (userType == ActorEnum.EMPLOYEE) {
+      var checkEmployee: any;
+      try {
+        checkEmployee = await this.userRepository.findOne({ email, actorType: userType });
+      } catch (error) {
+        checkEmployee = null
+      }
+      if (checkEmployee) {
+        throw new BadRequestException("Account already exists!");
+      }
     }
+    if (isOwnerInvitation && userType != ActorEnum.DOCTOR) {
+      throw new BadRequestException("Only doctor account can be owner!");
+    }
+
     // Create new Invitation object
     const newInvitation = new EmployeeInvitation({
       email,
+      actorType: userType,
+      isOwnerInvitation,
       expires_at: expiresAt,
       role: { id: role } as Role,
       clinic: { id: clinic } as Clinic,
@@ -53,7 +70,7 @@ export class InvitationsService extends BaseService {
     return invitation;
   }
 
-  async updateInvitationStatus(id: string, status: InvitationType){
-    return await this.invitationRepository.findOneAndUpdate({id},{status});
+  async updateInvitationStatus(id: string, status: InvitationType) {
+    return await this.invitationRepository.findOneAndUpdate({ id }, { status });
   }
 }

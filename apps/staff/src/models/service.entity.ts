@@ -11,7 +11,7 @@ export class Service extends PostgresAbstractEntity<Service> {
   description: string;
 
   @Column()
-  clinic_id: number;
+  clinic_id: string;
 
   @OneToMany(() => DoctorServiceLink, (link) => link.service)
   doctor_links: DoctorServiceLink[];

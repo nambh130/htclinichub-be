@@ -1,11 +1,13 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { JwtAuthGuard } from '@app/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -52,6 +54,11 @@ export class AuthController {
     return this.authService.requestOtp(otpRequestDto);
   }
 
+  @EventPattern('user_created')
+  async handleUserCreated(@Payload() data: any) {
+    console.log('User created event:', data);
+  }
+
   @Post('patient/login/verify-otp')
   @ApiOperation({ summary: 'Patient login with phone number' })
   @ApiBody({ type: LoginOtpRequestDto })
@@ -59,8 +66,8 @@ export class AuthController {
     status: 201,
     description: 'User created successfully',
   })
-  async verifyOtp(@Body() verifyOtpDto: LoginOtpVerifyDto) {
-    return this.authService.verifyOtp(verifyOtpDto);
+  async verifyOtp(@Req() req: Request, @Res() res: Response) {
+    return await this.authService.verifyOtp(req, res);
   }
 
   // ------------------------------ STAFF AND DOCTOR ------------------------------
@@ -72,28 +79,30 @@ export class AuthController {
     description: 'User created successfully',
   })
   async clinicUserLogin(
-    @Body() loginDto: ClinicUserLoginDto,
+    @Req() req: Request,
     @Res() res: Response
   ) {
-    const response = await this.authService.clinicUserLogin(loginDto);
-
-    // Set cookie
-    res.cookie('token', response?.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
-
-    // Send response manually
-    res.json({
-      user: response.user,
-      message: 'Login successful',
-    });
+    const response = await this.authService.clinicUserLogin(req, res);
+    return response;
   }
 
+  @Post('admin/login')
+  async adminLogin(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const response = await this.authService.adminLogin(req, res);
+    return response;
+  }
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
-  async createInvitation(@Body() invitationDto: CreateInvitationDto){
-    this.authService.createInvitation(invitationDto);
+  async createInvitation(@Body() invitationDto: CreateInvitationDto, @Req() req: Request) {
+    const response = await this.authService.createInvitation(invitationDto, req);
+    return response;
+  }
+
+  @Post('invitation/check')
+  async invitationCheck(@Req() req: Request) {
+    return await this.authService.invitationCheck(req);
   }
 }

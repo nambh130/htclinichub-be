@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { EmployeeInfo } from './employeeInfo.entity';
+import { StaffInfo } from './staffInfo.entity';
 import { Image } from './image.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
@@ -11,9 +11,9 @@ export class Specialize extends PostgresAbstractEntity<Specialize> {
   @Column()
   description: string;
 
-  @OneToOne(() => EmployeeInfo, (employeeInfo) => employeeInfo.specializes)
-  @JoinColumn({ name: 'employee_info_id' })
-  employee_info: EmployeeInfo;
+  @OneToOne(() => StaffInfo, (staffInfo) => staffInfo.specializes)
+  @JoinColumn({ name: 'staff_info_id' })
+  employee_info: StaffInfo;
 
   @ManyToOne(() => Image)
   @JoinColumn({ name: 'image_id' })

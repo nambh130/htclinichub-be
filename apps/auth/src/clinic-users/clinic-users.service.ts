@@ -34,7 +34,7 @@ export class ClinicUsersService {
     // Add clinic to user_clinic_links table
     if (clinicId) {
       const clinic = await this.clinicRepository.findOne({ id: clinicId });
-      newUser.currentClinics = [clinic]
+      newUser.clinics = [clinic]
     }
 
     return await this.userRepository.create(newUser);
@@ -47,9 +47,29 @@ export class ClinicUsersService {
         roles: {
           permissions: true
         },
-        clinics: true,
-        currentClinics: true
+        clinics: {
+          owner: true
+        },
+        ownerOf: true
       }
     );
+  }
+
+  async find(query: Partial<ClinicUser>) {
+    return await this.userRepository.findOne(
+      query,
+      {
+        roles: {
+          permissions: true
+        },
+        clinics: {
+          owner: true
+        },
+        ownerOf: true
+      }
+    );
+  }
+  async updateUser(email: string, updateData: Partial<ClinicUser>): Promise<ClinicUser> {
+    return await this.userRepository.create(new ClinicUser(updateData));
   }
 }

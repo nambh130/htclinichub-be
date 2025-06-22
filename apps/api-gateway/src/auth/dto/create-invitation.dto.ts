@@ -12,5 +12,8 @@ export class CreateInvitationDto{
   @IsUUID()
   @IsNotEmpty()
   role: string
+
+  @IsNotEmpty()
+  userType: string
 }
 

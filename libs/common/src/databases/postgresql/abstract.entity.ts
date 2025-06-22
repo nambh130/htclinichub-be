@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 // Define allowed actor types
-export type ActorType = 'doctor' | 'employee' | 'patient';
+export type ActorType = 'doctor' | 'employee' | 'patient' | 'admin';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export abstract class PostgresAbstractEntity<T> {

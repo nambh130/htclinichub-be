@@ -16,4 +16,7 @@ export class CreateDoctorAccountDto {
     message: 'Password must contain at least one number',
   })
   password: string;
+
+  @IsString()
+  clinic?: string
 }

@@ -42,9 +42,15 @@ export class EmployeeInvitation extends PostgresAbstractEntity<EmployeeInvitatio
     name: 'actor_type',
     type: 'enum',
     enum: ActorEnum,
-    default: 'doctor' //Please don't change this
   })
   actorType: ActorType;
+
+  @Column({
+    name: 'is_owner_invitation',
+    type: 'boolean',
+    default: false
+  })
+  isOwnerInvitation: boolean
 
   @ManyToOne(() => ClinicUser, { nullable: true })
   @JoinColumn({ name: 'invited_by' })

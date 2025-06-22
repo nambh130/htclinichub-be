@@ -7,6 +7,7 @@ import {
 import { Permission } from '../../permissions/models/permission.entity';
 import { PostgresAbstractEntity } from '@app/common';
 import { ClinicUser } from '../../clinic-users/models/clinic-user.entity';
+import { ActorEnum, ActorType } from '@app/common/enum/actor-type';
 
 export enum RoleEnum {
   DOCTOR = 'doctor',
@@ -32,9 +33,9 @@ export class Role extends PostgresAbstractEntity<Role> {
   @Column({
     name: 'role_type',
     type: 'enum',
-    enum: RoleEnum
+    enum: ActorEnum
   })
-  roleType: RoleType
+  roleType: ActorType
 
   @ManyToMany(() => Permission, permission => permission.roles)
   @JoinTable({
