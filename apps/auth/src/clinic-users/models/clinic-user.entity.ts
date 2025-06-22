@@ -14,12 +14,13 @@ import { AccountStatus, AccountStatusType } from '@app/common/enum/account-type.
 export enum ActorEnum {
   DOCTOR = "doctor",
   EMPLOYEE = "employee",
-  PATIENT = "patient"
+  PATIENT = "patient",
+  ADMIN = "admin"
 }
 
-export type ActorType = "doctor" | "employee" | "patient"
+export type ActorType = "doctor" | "employee" | "patient"  | "admin"
 
-@Entity({ name: 'clinic_users' })
+@Entity({ name: 'users' })
 @Unique(['email', 'actorType'])
 export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   constructor(user?: Partial<ClinicUser>) {
@@ -53,7 +54,7 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   @OneToMany(() => Clinic, (clinic) => clinic.owner)
   ownerOf: Clinic[];
 
-  @ManyToMany(() => Clinic, (clinic) => clinic.owner, { cascade: true })
+  @ManyToMany(() => Clinic, (clinic) => clinic.users, { cascade: true })
   @JoinTable({
     name: 'user_clinics',
     joinColumn: {name: 'user_id', referencedColumnName: 'id'},

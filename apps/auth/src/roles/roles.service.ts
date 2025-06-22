@@ -23,6 +23,7 @@ export class RolesService extends BaseService {
     const permissions = await this.permissionRepository.find(
       { id: In(permissionIds) },
     );
+    console.log("pers: ", permissions)
 
     const role = new Role({ ...rest, permissions });
     return await this.roleRepository.create(role);

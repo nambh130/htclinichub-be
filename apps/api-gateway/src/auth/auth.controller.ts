@@ -86,6 +86,14 @@ export class AuthController {
     return response;
   }
 
+  @Post('admin/login')
+  async adminLogin(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const response = await this.authService.adminLogin(req, res);
+    return response;
+  }
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
   async createInvitation(@Body() invitationDto: CreateInvitationDto, @Req() req: Request) {

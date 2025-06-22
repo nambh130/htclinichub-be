@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import {
   IsEmail,
   IsString,
@@ -7,6 +8,8 @@ import {
 } from 'class-validator';
 
 export class CreateEmployeeAccountDto {
+  @Optional()
+  id?: string;
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 

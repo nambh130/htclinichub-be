@@ -100,6 +100,27 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
 
+  async adminLogin(req: Request, res: Response): Promise<any> {
+    console.log("body: ", req.body)
+    const response = await firstValueFrom(
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/admin/login`, req.body, {
+        withCredentials: true,
+        timeout: 1000 * 20,
+      }).pipe(
+        catchError(error => {
+          const e = error.response;
+          throw new HttpException(e?.data || 'Error', e?.status || 500);
+        })
+      )
+    );
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
+  }
+
   async createInvitation(invitationDto: CreateInvitationDto, req: Request): Promise<any> {
     const cookie = req.headers.cookie; // Grab incoming cookies
 

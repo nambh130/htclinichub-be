@@ -12,6 +12,7 @@ import { CommonRepository } from '../repositories/common.repository';
 import { StaffInfoRepository } from '../repositories/staffInfo.repository';
 import { CreateDoctorProfileDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 import { StaffInfo } from '../models/staffInfo.entity';
+import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -70,6 +71,13 @@ export class DoctorService extends BaseService {
     const doctor = new Doctor();
     doctor.email = email;
     doctor.password = await bcrypt.hash(dto.password, 10);
+    if (dto.clinic) {
+      const clinicMap = new DoctorClinicMap();
+      clinicMap.clinic = dto.clinic; // assign the clinic ID
+      clinicMap.doctor = doctor;     // establish relation to current doctor
+
+      doctor.clinics = [clinicMap];
+    }
 
     // Add audit fields
     applyAuditFields(doctor, user);

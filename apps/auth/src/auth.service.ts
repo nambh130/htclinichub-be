@@ -74,11 +74,7 @@ export class AuthService implements OnModuleInit {
     const { token, email, password } = invitationSignupDto;
     const invitation = await this.invitationService.getInvitationByToken({ token, email });
 
-    if (invitation.status !== 'pending') {
-      throw new BadRequestException('Invitation is invalid or expired!');
-    }
-
-    if (email !== invitation.email) {
+    if (invitation.status !== 'pending' || email !== invitation.email) {
       throw new BadRequestException('Invitation is invalid or expired!');
     }
 
@@ -96,45 +92,36 @@ export class AuthService implements OnModuleInit {
 
     const newClinicUser = await this.clinicUserService.createUser(clinicUser);
 
-    // Emit `clinc-user-created` event
-    if (newClinicUser) {
-      this.kafkaClient.emit('clinic-user-created', new ClinicUserCreated(
-        {
-          id: newClinicUser.id,
-          email: newClinicUser.email,
-          actorType: newClinicUser.actorType,
-          clinicId: invitation.clinic.id,
-        }
-      ));
-    }
-
-    // If the user is the owner, update clinic and emit owner-added event
+    // If the user is the owner, update clinic
     if (invitation.isOwnerInvitation) {
-      const updateResult = await this.clinicRepository.findOneAndUpdate(
+      await this.clinicRepository.findOneAndUpdate(
         { id: invitation.clinic.id },
         { owner: newClinicUser }
       );
-
-      if (updateResult) {
-        this.kafkaClient.emit('clinic-owner-added',
-          new ClinicOwnerAdded(
-            {
-              clinicId: invitation.clinic.id,
-              ownerId: newClinicUser.id,
-            }
-          ));
-      }
     }
 
-    if (newClinicUser) {
-      await this.invitationService.updateInvitationStatus(
-        invitation.id,
-        InvitationEnum.ACCEPTED
-      );
-    }
+    // Emit `clinic-user-created` event
+    this.kafkaClient.emit('clinic-user-created', new ClinicUserCreated({
+      id: newClinicUser.id,
+      email: newClinicUser.email,
+      actorType: newClinicUser.actorType,
+      clinicId: invitation.clinic.id,
+      ownerOf: invitation.isOwnerInvitation ? invitation.clinic.id : undefined,
+    })).subscribe({
+      error: (err) => {
+        console.error('Failed to emit event:', err);
+      },
+    });
+
+    // Update invitation status
+    await this.invitationService.updateInvitationStatus(
+      invitation.id,
+      InvitationEnum.ACCEPTED
+    );
 
     return newClinicUser;
   }
+
 
 
   async acceptInvitation(userId: string, acceptInvitationDto: AcceptInvitationDto) {

@@ -40,13 +40,14 @@ export abstract class PostgresAbstractRepository<
   }
 
   async create(entity: T): Promise<T> {
+    console.log("enity",entity)
     return this.entityManager.save(entity);
   }
 
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
-  ): Promise<T | null> {
+  ): Promise<T> {
     const updateResult = await this.entityRepository.update(
       where,
       partialEntity,

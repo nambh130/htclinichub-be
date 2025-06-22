@@ -11,11 +11,6 @@ async function bootstrap() {
   // 1. Create the HTTP application
   const app = await NestFactory.create(AuthModule);
   const configService = app.get<ConfigService>(ConfigService);
-  app.enableCors({
-    origin: ['http://localhost:8080'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // allow cookies/auth headers
-  });
 
   // 2. Configure Kafka as a "connected" microservice
   const kafkaBroker = configService.get<string>('KAFKA_BROKER');
