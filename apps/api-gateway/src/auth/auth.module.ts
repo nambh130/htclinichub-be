@@ -24,6 +24,9 @@ import { HttpModule } from '@nestjs/axios';
               groupId: AUTH_CONSUMER_GROUP,
             },
           },
+          consumer: {
+            groupId: AUTH_CONSUMER_GROUP,
+          },
         }),
         inject: [ConfigService],
       },

@@ -6,6 +6,7 @@ import { LoggerModule } from '@app/common';
 import { AuthModule } from './auth/auth.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { StaffModule } from './staff/staff.module';
+import { ClinicModule } from './clinics/clinic.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { StaffModule } from './staff/staff.module';
     ReservationsModule,
     HttpModule,
     LoggerModule,
+    ClinicModule,
+    
   ],
 })
 export class ApiGatewayModule {}

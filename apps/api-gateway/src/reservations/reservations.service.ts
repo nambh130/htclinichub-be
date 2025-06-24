@@ -1,10 +1,19 @@
 import {
   AUTH_SERVICE,
+  CLINIC_SERVICE,
   CreateReservationDto,
   RESERVATIONS_SERVICE,
+  UserDto,
 } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
+import {
+  AddClinicDto,
+  ClinicDto,
+  UpdateClinicDto,
+} from '@app/common/dto/clinic';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ReservationsService {
@@ -20,6 +29,11 @@ export class ReservationsService {
     this.reservationsClient.subscribeToResponseOf(
       'create-reservation-postgres',
     );
+
+    // Auth-related subscriptions
+    this.authClient.subscribeToResponseOf('login');
+    this.authClient.subscribeToResponseOf('authenticate');
+    this.authClient.subscribeToResponseOf('create-user');
 
     this.authClient.subscribeToResponseOf('authenticate');
 
@@ -45,5 +59,13 @@ export class ReservationsService {
       createReservationDto,
       userId,
     });
+  }
+
+  async login(userDto: UserDto): Promise<{ user: any; token: string }> {
+    return firstValueFrom(this.authClient.send('login', userDto));
+  }
+
+  async createUser(userDto: UserDto): Promise<{ user: any; token: string }> {
+    return firstValueFrom(this.authClient.send('create-user', userDto));
   }
 }

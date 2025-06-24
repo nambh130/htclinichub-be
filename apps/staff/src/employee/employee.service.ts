@@ -23,7 +23,7 @@ export class EmployeeService extends BaseService {
     const employees = await this.employeeRepository.findAll();
 
     const enrichedEmployees = await Promise.all(
-      employees.map(async (employee) => {
+      employees.data.map(async (employee) => {
         const createdBy = await this.commonRepository.findActorWithIdAndType(
           employee.createdByType,
           employee.createdById,
