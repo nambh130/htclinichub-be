@@ -1,0 +1,14 @@
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { FavouriteDoctor } from "../models";
+import { FavouriteDoctorService } from "./favourite_doctor.service";
+import { FavouriteDoctorRepository } from "./favourite_doctor.repository";
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([FavouriteDoctor]),
+  ],
+  providers: [FavouriteDoctorService, FavouriteDoctorRepository],
+  exports: [FavouriteDoctorService, FavouriteDoctorRepository],
+})
+export class FavouriteDoctorModule {}

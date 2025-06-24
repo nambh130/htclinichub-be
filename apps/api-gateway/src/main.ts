@@ -10,6 +10,12 @@ async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
   const configService = app.get(ConfigService);
 
+  app.enableCors({
+    origin: 'http://localhost:8080',
+    credentials: true, // nếu bạn gửi cookies hoặc Authorization header
+  });
+
+
   // Swagger configuration
   const swaggerConfig = new DocumentBuilder()
     .setTitle('API Gateway')

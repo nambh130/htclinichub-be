@@ -11,6 +11,7 @@ import {
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
+import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.serv
     AuthModule
   ],
   controllers: [PatientsController],
-  providers: [PatientService, FavouriteDoctorService],
-  exports: [PatientService, FavouriteDoctorService],
+  providers: [PatientService, FavouriteDoctorService, DownLoadMedicalReportService],
+  exports: [PatientService, FavouriteDoctorService, DownLoadMedicalReportService],
 })
 export class PatientsModule {}

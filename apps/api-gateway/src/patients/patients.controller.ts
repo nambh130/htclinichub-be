@@ -3,12 +3,15 @@ import { PatientService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto, FavouriteDoctorDto } from '@app/common';
 import { CurrentUser, JwtAuthGuard, UserDocument } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
+import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
 
 @Controller('patients')
 export class PatientsController {
   constructor(
     private readonly patientService: PatientService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
+    private readonly downLoadMedicalReport: DownLoadMedicalReportService,
+
   ) { }
 
   // Patient routes
@@ -77,13 +80,13 @@ export class PatientsController {
   }
 
   @Get('/get-patient-by-id/:id')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async getPatientById(
     @Param('id') id: string,
-    @CurrentUser() user: UserDocument,
+    // @CurrentUser() user: UserDocument,
   ) {
     try {
-      const patient = await this.patientService.getPatientById(id, user._id.toString());
+      const patient = await this.patientService.getPatientById(id, "1");
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -160,6 +163,21 @@ export class PatientsController {
       return result;
     } catch (error) {
       console.error('Error retrieving favourite doctors:', error);
+      throw error;
+    }
+  }
+
+  @Post('/download-medical-report/:patient_account_id')
+  @UseGuards(JwtAuthGuard)
+  async downloadMedicalReport(
+    @CurrentUser() user: UserDocument,
+    @Param('patient_account_id') patient_account_id: string
+  ) {
+    try {
+       const result = await this.downLoadMedicalReport.downloadMedicalReport(user._id.toString(), patient_account_id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
       throw error;
     }
   }
