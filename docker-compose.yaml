@@ -100,33 +100,33 @@ services:
     ports:
       - '3000:3000'
 
-  reservations:
-    build:
-      context: .
-      dockerfile: ./apps/reservations/Dockerfile
-      target: development
-    command: sh -c "sleep 10 && pnpm run start:dev reservations"
-    develop:
-      watch:
-        - action: sync
-          path: ./apps/reservations/src
-          target: /app/apps/reservations/src
-          ignore:
-            - node_modules/
-        - action: sync
-          path: ./libs
-          target: /app/libs
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./package.json
-    env_file:
-      - ./apps/reservations/.env
-    depends_on:
-      kafka:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
+  #reservations:
+  #  build:
+  #    context: .
+  #    dockerfile: ./apps/reservations/Dockerfile
+  #    target: development
+  #  command: sh -c "sleep 10 && pnpm run start:dev reservations"
+  #  develop:
+  #    watch:
+  #      - action: sync
+  #        path: ./apps/reservations/src
+  #        target: /app/apps/reservations/src
+  #        ignore:
+  #          - node_modules/
+  #      - action: sync
+  #        path: ./libs
+  #        target: /app/libs
+  #        ignore:
+  #          - node_modules/
+  #      - action: rebuild
+  #        path: ./package.json
+  #  env_file:
+  #    - ./apps/reservations/.env
+  #  depends_on:
+  #    kafka:
+  #      condition: service_healthy
+  #    mongo:
+  #      condition: service_healthy
 
   auth:
     build:

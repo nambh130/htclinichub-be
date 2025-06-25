@@ -38,12 +38,12 @@ export class EmployeeInvitation extends PostgresAbstractEntity<EmployeeInvitatio
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column({
-    name: 'actor_type',
-    type: 'enum',
-    enum: ActorEnum,
-  })
-  actorType: ActorType;
+  //@Column({
+  //  name: 'actor_type',
+  //  type: 'enum',
+  //  enum: ActorEnum,
+  //})
+  //actorType: ActorType;
 
   @Column({
     name: 'is_owner_invitation',
