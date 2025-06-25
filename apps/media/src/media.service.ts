@@ -124,6 +124,10 @@ export class MediaService {
       { $set: updatedData },
     );
 
+    if (!updatedDoc) {
+      throw new NotFoundException(`Failed to update media with id ${id}`);
+    }
+
     return this.mapToDto(updatedDoc);
   }
 
@@ -140,6 +144,10 @@ export class MediaService {
       { _id: id },
       { $set: media },
     );
+
+    if (!updatedDoc) {
+      throw new NotFoundException(`Failed to update media with id ${id}`);
+    }
 
     return this.mapToDto(updatedDoc);
   }

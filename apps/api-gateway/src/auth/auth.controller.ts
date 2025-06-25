@@ -7,6 +7,7 @@ import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { JwtAuthGuard } from '@app/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,6 +54,11 @@ export class AuthController {
     return this.authService.requestOtp(otpRequestDto);
   }
 
+  @EventPattern('user_created')
+  async handleUserCreated(@Payload() data: any) {
+    console.log('User created event:', data);
+  }
+
   @Post('patient/login/verify-otp')
   @ApiOperation({ summary: 'Patient login with phone number' })
   @ApiBody({ type: LoginOtpRequestDto })
@@ -60,8 +66,8 @@ export class AuthController {
     status: 201,
     description: 'User created successfully',
   })
-  async verifyOtp(@Body() verifyOtpDto: LoginOtpVerifyDto) {
-    return this.authService.verifyOtp(verifyOtpDto);
+  async verifyOtp(@Req() req: Request, @Res() res: Response) {
+    return await this.authService.verifyOtp(req, res);
   }
 
   // ------------------------------ STAFF AND DOCTOR ------------------------------
@@ -73,25 +79,21 @@ export class AuthController {
     description: 'User created successfully',
   })
   async clinicUserLogin(
-    @Body() loginDto: ClinicUserLoginDto,
-    @Res() res: Response,
+    @Req() req: Request,
+    @Res() res: Response
   ) {
-    const response = await this.authService.clinicUserLogin(loginDto);
-
-    // Set cookie
-    res.cookie('Authentication', response?.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
-
-    // Send response manually
-    res.json({
-      user: response.user,
-      message: 'Login successful',
-    });
+    const response = await this.authService.clinicUserLogin(req, res);
+    return response;
   }
 
+  @Post('admin/login')
+  async adminLogin(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const response = await this.authService.adminLogin(req, res);
+    return response;
+  }
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
   async createInvitation(

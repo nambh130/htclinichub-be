@@ -39,7 +39,10 @@ export class EmployeeService extends BaseService {
     }
 
     const employee = new Employee();
+    //If user-created event, insert with id
+    if (dto.id) employee.id = dto.id;
     employee.email = email;
+    employee.clinic_id = dto.clinic_id;
     employee.password = await bcrypt.hash(dto.password, 10);
 
     // Add audit fields

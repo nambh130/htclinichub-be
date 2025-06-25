@@ -150,6 +150,8 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    ports:
+      - '3003:3003'
     env_file:
       - .env
     depends_on:

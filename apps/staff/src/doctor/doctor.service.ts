@@ -23,6 +23,7 @@ import { Degree } from '../models/degree.entity';
 import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { Specialize } from '../models/specialize.entity';
+import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -73,6 +74,13 @@ export class DoctorService extends BaseService {
     const doctor = new Doctor();
     doctor.email = email;
     doctor.password = await bcrypt.hash(dto.password, 10);
+    if (dto.clinic) {
+      const clinicMap = new DoctorClinicMap();
+      clinicMap.clinic = dto.clinic; // assign the clinic ID
+      clinicMap.doctor = doctor; // establish relation to current doctor
+
+      doctor.clinics = [clinicMap];
+    }
 
     setAudit(doctor, currentUser);
 

@@ -54,7 +54,22 @@ export class ClinicUsersService {
       },
     );
   }
-  async updateUser(email: string, updateData: Partial<ClinicUser>) {
-    this.userRepository.create(new ClinicUser(updateData));
+
+  async find(query: Partial<ClinicUser>) {
+    return await this.userRepository.findOne(query, {
+      roles: {
+        permissions: true,
+      },
+      clinics: {
+        owner: true,
+      },
+      ownerOf: true,
+    });
+  }
+  async updateUser(
+    email: string,
+    updateData: Partial<ClinicUser>,
+  ): Promise<ClinicUser> {
+    return await this.userRepository.create(new ClinicUser(updateData));
   }
 }

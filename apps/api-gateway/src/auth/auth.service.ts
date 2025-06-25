@@ -54,15 +54,9 @@ export class AuthService implements OnModuleInit {
     return response.data;
   }
 
-  async verifyOtp(
-    verifyOtpDto: LoginOtpVerifyDto,
-  ): Promise<{ user: any; token: string }> {
+  async verifyOtp(req: Request, res: Response): Promise<any> {
     const response = await firstValueFrom(
-      this.http
-        .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/auth/patient/verify-otp`,
-          verifyOtpDto,
-        )
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/verify-otp`, req.body)
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -71,31 +65,70 @@ export class AuthService implements OnModuleInit {
           }),
         ),
     );
-    return response.data;
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
   }
 
-  async clinicUserLogin(
-    loginDto: ClinicUserLoginDto,
-  ): Promise<{ user: string; token: string }> {
+  //async clinicUserLogin(loginDto: ClinicUserLoginDto): Promise<{ user: string, token: string }> {
+  //  const response = await firstValueFrom(
+  //    this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, loginDto, {
+  //      withCredentials: true
+  //    })
+  //      .pipe(
+  //        catchError(error => {
+  //          const e = error.response;
+  //          // Rethrow downstream error status/message
+  //          throw new HttpException(e.data, e.status);
+  //        })
+  //      )
+  //  );
+  //  return response.data;
+  //}
+
+  async clinicUserLogin(req: Request, res: Response): Promise<any> {
+    console.log("body: ", req.body)
     const response = await firstValueFrom(
-      this.http
-        .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/auth/clinic/login`,
-          loginDto,
-          {
-            withCredentials: true,
-          },
-        )
-        .pipe(
-          catchError((error) => {
-            const e = error.response;
-            // Rethrow downstream error status/message
-            throw new HttpException(e.data, e.status);
-          }),
-        ),
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, req.body, {
+        withCredentials: true,
+        timeout: 1000 * 20,
+      }).pipe(
+        catchError(error => {
+          const e = error.response;
+          throw new HttpException(e?.data || 'Error', e?.status || 500);
+        })
+      )
     );
-    console.log(response);
-    return response?.data;
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
+  }
+
+  async adminLogin(req: Request, res: Response): Promise<any> {
+    console.log("body: ", req.body)
+    const response = await firstValueFrom(
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/admin/login`, req.body, {
+        withCredentials: true,
+        timeout: 1000 * 20,
+      }).pipe(
+        catchError(error => {
+          const e = error.response;
+          throw new HttpException(e?.data || 'Error', e?.status || 500);
+        })
+      )
+    );
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
   }
 
   async createInvitation(
@@ -155,21 +188,15 @@ export class AuthService implements OnModuleInit {
   async invitationCheck(req: Request): Promise<any> {
     console.log('body: ', req.body);
     const response = await firstValueFrom(
-      this.http
-        .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/check`,
-          req.body,
-          {
-            withCredentials: false,
-            timeout: 1000 * 10,
-          },
-        )
-        .pipe(
-          catchError((error) => {
-            const e = error.response;
-            throw new HttpException(e?.data || 'Error', e?.status || 500);
-          }),
-        ),
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/check`, req.body, {
+        withCredentials: true,
+        timeout: 1000 * 20,
+      }).pipe(
+        catchError(error => {
+          const e = error.response;
+          throw new HttpException(e?.data || 'Error', e?.status || 500);
+        })
+      )
     );
     return response.data;
   }

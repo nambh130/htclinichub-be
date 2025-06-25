@@ -5,6 +5,7 @@ export interface TokenPayload {
   actorType: ActorType;
   roles?: string[];
   permissions?: string[];
-  isAdmin?: boolean;
-  currentClinics?: string;
+  isAdminOf?: string[];
+  //isAdmin?: boolean,
+  currentClinics?: string[];
 }

@@ -1,7 +1,8 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Column, Entity, OneToMany } from 'typeorm';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { DoctorClinicMap } from './doctor-clinic-map.entity';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -19,4 +20,9 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
 
   @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
   services: DoctorServiceLink[];
+
+  @OneToMany(() => DoctorClinicMap, (clinic) => clinic.doctor, {
+    cascade: true,
+  })
+  clinics: DoctorClinicMap[];
 }

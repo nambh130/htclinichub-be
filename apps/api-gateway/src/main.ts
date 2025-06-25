@@ -11,6 +11,11 @@ async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule, {
     bufferLogs: true,
   });
+  app.enableCors({
+    origin: ['http://localhost:8080'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // allow cookies/auth headers
+  });
 
   // Get ConfigService and Logger
   const configService = app.get(ConfigService);

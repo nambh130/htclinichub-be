@@ -74,6 +74,7 @@ export abstract class PostgresAbstractRepository<
   }
 
   async create(entity: T): Promise<T> {
+    console.log("enity",entity)
     return this.entityManager.save(entity);
   }
 
