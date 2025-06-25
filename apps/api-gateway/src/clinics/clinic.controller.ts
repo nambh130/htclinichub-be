@@ -12,6 +12,7 @@
   import {
     CurrentUser,
     JwtAuthGuard,
+    TokenPayload,
     UserDocument,
   } from '@app/common';
   import {
@@ -28,9 +29,10 @@
     @UseGuards(JwtAuthGuard)
     async addClinic(
       @Body() addClinicDto: AddClinicDto,
-      @CurrentUser() user: UserDocument,
+      @CurrentUser() user: TokenPayload,
     ) {
-      return this.clinicService.addClinic(addClinicDto, user._id.toString());
+      console.log(user);
+      return this.clinicService.addClinic(addClinicDto, user.userId);
     }
 
     @Get('')

@@ -12,6 +12,7 @@ import {
   UpdateClinicDto,
 } from '@app/common/dto/clinic';
 import { firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class ClinicService implements OnModuleInit {
@@ -27,7 +28,6 @@ export class ClinicService implements OnModuleInit {
     this.clinicClient.subscribeToResponseOf('delete-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
-
 
     this.authClient.subscribeToResponseOf('authenticate');
 

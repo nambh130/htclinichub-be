@@ -1,12 +1,13 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { LoggerModule } from '@app/common';
 import { AuthModule } from './auth/auth.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { StaffModule } from './staff/staff.module';
 import { ClinicModule } from './clinics/clinic.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -22,6 +23,15 @@ import { ClinicModule } from './clinics/clinic.module';
         STAFF_SERVICE_PORT: Joi.number(),
       }),
     }),
+    JwtModule.registerAsync({
+          useFactory: (configService: ConfigService) => ({
+            secret: configService.get<string>('JWT_SECRET'),
+            signOptions: {
+              expiresIn: `${configService.get('JWT_EXPIRES_IN')}s`,
+            },
+          }),
+          inject: [ConfigService],
+        }),
 
     //Single imports
     StaffModule,
