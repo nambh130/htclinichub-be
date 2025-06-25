@@ -6,17 +6,17 @@ import { UsersRepository } from './users.repository';
 
 @Module({
   imports: [
-    MongoDatabaseModule,
-    MongoDatabaseModule.forFeature([
-      {
-        name: UserDocument.name,
-        schema: UserSchema,
-      },
-    ]),
+    MongoDatabaseModule.forRoot({
+      envKey: 'AUTH_SERVICE_URI',
+      connectionName: 'authService',
+    }),
+    MongoDatabaseModule.forFeature(
+      [{ name: UserDocument.name, schema: UserSchema }],
+      'authService',
+    ),
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
   exports: [UsersService, UsersRepository],
 })
 export class UsersModule {}
-

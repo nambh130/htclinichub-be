@@ -11,7 +11,7 @@ import { JwtAuthGuard } from '@app/common';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   //@Post('login')
   //@ApiOperation({ summary: 'Login user and return token' })
@@ -74,7 +74,7 @@ export class AuthController {
   })
   async clinicUserLogin(
     @Body() loginDto: ClinicUserLoginDto,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     const response = await this.authService.clinicUserLogin(loginDto);
 
@@ -94,13 +94,19 @@ export class AuthController {
 
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
-  async createInvitation(@Body() invitationDto: CreateInvitationDto, @Req() req: Request) {
-    const response = await this.authService.createInvitation(invitationDto, req);
+  async createInvitation(
+    @Body() invitationDto: CreateInvitationDto,
+    @Req() req: Request,
+  ) {
+    const response = await this.authService.createInvitation(
+      invitationDto,
+      req,
+    );
     return response;
   }
 
-  @Post('invitation/check') 
-  async invitationCheck(@Req() req: Request){
+  @Post('invitation/check')
+  async invitationCheck(@Req() req: Request) {
     return await this.authService.invitationCheck(req);
   }
 }

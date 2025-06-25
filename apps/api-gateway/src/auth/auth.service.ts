@@ -1,13 +1,17 @@
-import { HttpException, Inject, Injectable, OnModuleInit, Req, Res } from '@nestjs/common';
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  OnModuleInit,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
-import {
-  AUTH_SERVICE,
-  safeKafkaCall,
-} from '@app/common';
+import { AUTH_SERVICE, safeKafkaCall } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -19,8 +23,8 @@ export class AuthService implements OnModuleInit {
     @Inject(AUTH_SERVICE)
     private readonly authClient: ClientKafka,
     private readonly http: HttpService,
-    private configService: ConfigService
-  ) { }
+    private configService: ConfigService,
+  ) {}
 
   async onModuleInit() {
     this.authClient.subscribeToResponseOf('login');
@@ -29,118 +33,167 @@ export class AuthService implements OnModuleInit {
     await this.authClient.connect();
   }
 
-  async requestOtp(requestLoginOtp: LoginOtpRequestDto): Promise<{ success: boolean }> {
-    console.log("Test env: ", this.configService.get("AUTH_SERVICE_URL"))
+  async requestOtp(
+    requestLoginOtp: LoginOtpRequestDto,
+  ): Promise<{ success: boolean }> {
+    console.log('Test env: ', this.configService.get('AUTH_SERVICE_URL'));
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/request-otp`, requestLoginOtp)
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/patient/request-otp`,
+          requestLoginOtp,
+        )
         .pipe(
-          catchError(error => {
+          catchError((error) => {
             const e = error.response;
             // Rethrow downstream error status/message
             throw new HttpException(e.data, e.status);
-          })
-        )
+          }),
+        ),
     );
     return response.data;
   }
 
-  async verifyOtp(verifyOtpDto: LoginOtpVerifyDto): Promise<{ user: any; token: string }> {
+  async verifyOtp(
+    verifyOtpDto: LoginOtpVerifyDto,
+  ): Promise<{ user: any; token: string }> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/verify-otp`, verifyOtpDto)
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/patient/verify-otp`,
+          verifyOtpDto,
+        )
         .pipe(
-          catchError(error => {
+          catchError((error) => {
             const e = error.response;
             // Rethrow downstream error status/message
             throw new HttpException(e.data, e.status);
-          })
-        )
+          }),
+        ),
     );
     return response.data;
   }
 
-  async clinicUserLogin(loginDto: ClinicUserLoginDto): Promise<{ user: string, token: string }> {
+  async clinicUserLogin(
+    loginDto: ClinicUserLoginDto,
+  ): Promise<{ user: string; token: string }> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, loginDto, {
-        withCredentials: true
-      })
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/clinic/login`,
+          loginDto,
+          {
+            withCredentials: true,
+          },
+        )
         .pipe(
-          catchError(error => {
+          catchError((error) => {
             const e = error.response;
             // Rethrow downstream error status/message
             throw new HttpException(e.data, e.status);
-          })
-        )
+          }),
+        ),
     );
-    return response.data;
+    console.log(response);
+    return response?.data;
   }
 
-  async createInvitation(invitationDto: CreateInvitationDto, req: Request): Promise<any> {
+  async createInvitation(
+    invitationDto: CreateInvitationDto,
+    req: Request,
+  ): Promise<any> {
     const cookie = req.headers.cookie; // Grab incoming cookies
 
     const response = await firstValueFrom(
-      this.http.post(
-        `${this.configService.get("AUTH_SERVICE_URL")}/invitation`,
-        invitationDto,
-        {
-          headers: {
-            Cookie: cookie, // Forward the original cookie
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/invitation`,
+          invitationDto,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true, // optional but doesn't hurt
           },
-          withCredentials: true, // optional but doesn't hurt
-        }
-      ).pipe(
-        catchError(error => {
-          const e = error.response;
-          throw new HttpException(e?.data || 'Upstream error', e?.status || 500);
-        })
-      )
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
     );
     return response.data;
   }
 
-
-  async invitationSignup(@Req() req: Request, @Res() res: Response): Promise<any> {
+  async invitationSignup(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/signup`, req.body, {
-        withCredentials: true
-      })
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/signup`,
+          req.body,
+          {
+            withCredentials: true,
+          },
+        )
         .pipe(
-          catchError(error => {
+          catchError((error) => {
             const e = error.response;
             // Rethrow downstream error status/message
             throw new HttpException(e.data, e.status);
-          })
-        )
+          }),
+        ),
     );
     return response.data;
   }
   async invitationCheck(req: Request): Promise<any> {
-    console.log("body: ", req.body)
+    console.log('body: ', req.body);
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/check`, req.body, {
-        withCredentials: false,
-        timeout: 1000 * 10,
-      }).pipe(
-        catchError(error => {
-          const e = error.response;
-          throw new HttpException(e?.data || 'Error', e?.status || 500);
-        })
-      )
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/check`,
+          req.body,
+          {
+            withCredentials: false,
+            timeout: 1000 * 10,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(e?.data || 'Error', e?.status || 500);
+          }),
+        ),
     );
     return response.data;
   }
-  async invitationAccept(@Req() req: Request, @Res() res: Response): Promise<any> {
+  async invitationAccept(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/accept`, req.body, {
-        headers: req.headers,
-        withCredentials: true
-      })
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/accept`,
+          req.body,
+          {
+            headers: req.headers,
+            withCredentials: true,
+          },
+        )
         .pipe(
-          catchError(error => {
+          catchError((error) => {
             const e = error.response;
             // Rethrow downstream error status/message
             throw new HttpException(e.data, e.status);
-          })
-        )
+          }),
+        ),
     );
     return response.data;
   }

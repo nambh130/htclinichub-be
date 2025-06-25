@@ -13,8 +13,8 @@ export class ClinicUsersService {
   constructor(
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
-    private readonly roleRepository: RoleRepository
-  ) { }
+    private readonly roleRepository: RoleRepository,
+  ) {}
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
@@ -23,18 +23,18 @@ export class ClinicUsersService {
 
     const newUser = new ClinicUser({
       ...createUserDto,
-      actorType: actorType as ActorType,
-      password: hash
-    })
+      actorType: actorType,
+      password: hash,
+    });
 
     if (roleId) {
       const role = await this.roleRepository.findOne({ id: roleId });
-      newUser.roles = [role]
+      newUser.roles = [role];
     }
     // Add clinic to user_clinic_links table
     if (clinicId) {
       const clinic = await this.clinicRepository.findOne({ id: clinicId });
-      newUser.clinics = [clinic]
+      newUser.clinics = [clinic];
     }
 
     return await this.userRepository.create(newUser);
@@ -45,11 +45,13 @@ export class ClinicUsersService {
       { email },
       {
         roles: {
-          permissions: true
+          permissions: true,
         },
-        clinics: true,
-        ownerOf: true
-      }
+        clinics: {
+          owner: true,
+        },
+        ownerOf: true,
+      },
     );
   }
   async updateUser(email: string, updateData: Partial<ClinicUser>) {

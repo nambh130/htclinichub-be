@@ -1,4 +1,4 @@
-import { ActorType } from "apps/auth/src/clinic-users/models/clinic-user.entity";
+import { ActorType } from '@app/common';
 
 export class UserCreatedEvent {
   constructor(
@@ -15,4 +15,3 @@ export class UserCreatedEvent {
     });
   }
 }
-

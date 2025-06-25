@@ -8,7 +8,7 @@ export class UsersRepository extends MongoAbstractRepository<UserDocument> {
   protected readonly logger = new Logger(UsersRepository.name);
 
   constructor(
-    @InjectModel(UserDocument.name)
+    @InjectModel(UserDocument.name, 'authService')
     private readonly userModel: Model<UserDocument>,
   ) {
     super(userModel);

@@ -34,7 +34,7 @@ async function bootstrap() {
   // Use Kafka exception filter for Kafka context only
   app.useGlobalFilters(new KafkaExceptionFilter());
 
-  const port = configService.get<number>('HTTP_PORT') || 3003;
+  const port = configService.get<number>('STAFF_SERVICE_PORT') as number;
 
   // Start both HTTP and Kafka servers
   await app.startAllMicroservices();

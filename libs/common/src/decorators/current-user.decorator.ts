@@ -1,15 +1,15 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
-import { ActorType } from '../databases';
+import { ActorType } from '@app/common';
 
 export interface TokenPayload {
-  userId: string,
-  actorType: ActorType,
-  roles?: string[],
-  permissions?: string[],
-  isAdmin?: string,
-  currentClinics?: string[],
-  adminOf?: string[]
+  userId: string;
+  actorType: ActorType;
+  roles?: string[];
+  permissions?: string[];
+  isAdmin?: string;
+  currentClinics?: string[];
+  adminOf?: string[];
 }
 // Extend the Express Request interface to include the user property
 interface RequestWithUser extends Request {

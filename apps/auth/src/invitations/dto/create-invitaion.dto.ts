@@ -1,22 +1,30 @@
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID } from "class-validator"
-import { ActorEnum, ActorType } from "../../clinic-users/models/clinic-user.entity"
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
+import { ActorEnum } from '../../clinic-users/models/clinic-user.entity';
+import { ActorType } from '@app/common';
 
-export class CreateInvitationDto{
+export class CreateInvitationDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string
+  email: string;
 
   @IsUUID()
   @IsNotEmpty()
-  clinic: string
+  clinic: string;
 
   @IsUUID()
   @IsOptional()
-  role: string
+  role: string;
 
   @IsEnum(ActorEnum)
-  userType: ActorType
+  userType: ActorType;
 
   @IsBoolean()
-  isOwnerInvitation: boolean
+  isOwnerInvitation: boolean;
 }

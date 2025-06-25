@@ -1,65 +1,68 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { DoctorRepository } from '../repositories/doctor.repository';
 import {
-  ActorType,
-  applyAuditFields,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import {
   BaseService,
   CreateDoctorAccountDto,
+  DoctorDegreeDto,
+  DoctorSpecializeDto,
+  DoctorStepOneDto,
+  setAudit,
+  TokenPayload,
+  updateAudit,
 } from '@app/common';
 import { Doctor } from '../models/doctor.entity';
-import * as bcrypt from 'bcrypt';
-import { CommonRepository } from '../repositories/common.repository';
-import { StaffInfoRepository } from '../repositories/staffInfo.repository';
-import { CreateDoctorProfileDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 import { StaffInfo } from '../models/staffInfo.entity';
+import { DoctorRepository } from '../repositories/doctor.repository';
+import { StaffInfoRepository } from '../repositories/staffInfo.repository';
+import { IsNull } from 'typeorm';
+import { Degree } from '../models/degree.entity';
+import { DegreeRepository } from '../repositories/degree.repository';
+import { SpecializeRepository } from '../repositories/specialize.repository';
+import { Specialize } from '../models/specialize.entity';
 
 @Injectable()
 export class DoctorService extends BaseService {
   constructor(
     private readonly doctorRepository: DoctorRepository,
-    private readonly commonRepository: CommonRepository,
     private readonly staffInfoRepository: StaffInfoRepository,
+    private readonly degreeRepository: DegreeRepository,
+    private readonly specializeRepository: SpecializeRepository,
   ) {
     super();
   }
 
-  async viewDoctorAccountList(): Promise<any[]> {
-    const doctors = await this.doctorRepository.findAll();
+  async getDoctorAccountList(
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.doctorRepository.paginate({
+      where: {
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      },
+      page,
+      limit,
+    });
+  }
 
-    const enrichedDoctors = await Promise.all(
-      doctors.map(async (doctor) => {
-        const createdBy = await this.commonRepository.findActorWithIdAndType(
-          doctor.createdByType,
-          doctor.createdById,
-        );
-        const updatedBy = await this.commonRepository.findActorWithIdAndType(
-          doctor.updatedByType,
-          doctor.updatedById,
-        );
+  async getDoctorById(doctorId: string): Promise<Doctor> {
+    const doctor = await this.doctorRepository.findOne({ id: doctorId });
 
-        const {
-          createdById: _createdById,
-          createdByType: _createdByType,
-          updatedById: _updatedById,
-          updatedByType: _updatedByType,
-          password: _password,
-          ...rest
-        } = doctor;
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
 
-        return {
-          ...rest,
-          createdBy,
-          updatedBy,
-        };
-      }),
-    );
-
-    return enrichedDoctors;
+    return doctor;
   }
 
   async createDoctorAccount(
     dto: CreateDoctorAccountDto,
-    user: { id: string; type: ActorType },
+    currentUser: TokenPayload,
   ): Promise<Doctor> {
     const email = dto.email.trim().toLowerCase();
 
@@ -71,50 +74,27 @@ export class DoctorService extends BaseService {
     doctor.email = email;
     doctor.password = await bcrypt.hash(dto.password, 10);
 
-    // Add audit fields
-    applyAuditFields(doctor, user);
+    setAudit(doctor, currentUser);
 
     return await this.doctorRepository.create(doctor);
   }
 
-  async lockDoctorAccount(
-    doctorId: string,
-    user: { id: string; type: ActorType },
-  ) {
-    const doctor = await this.doctorRepository.findOne({ id: doctorId });
-
-    if (!doctor) {
-      throw new Error(`Doctor with ID ${doctorId} not found`);
-    }
-
-    if (doctor.is_locked) {
-      return {
-        message: `Doctor account ${doctorId} is already locked`,
-        doctor,
-      };
-    }
+  async lockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
+    const updateData = updateAudit({ is_locked: true }, currentUser);
 
     const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
       { id: doctorId },
-      {
-        is_locked: true,
-        updatedById: user.id.toString(),
-        updatedByType: user.type,
-        updatedAt: new Date(),
-      },
+      updateData,
     );
 
     return {
       message: `Doctor account ${doctorId} has been locked`,
-      lockedBy: user,
+      lockedBy: currentUser,
       doctor: updatedDoctor,
     };
   }
 
-  async unlockDoctorAccount(
-    doctorId: string,
-    user: { id: string; type: ActorType },
-  ) {
+  async unlockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
     const doctor = await this.doctorRepository.findOne({ id: doctorId });
 
     if (!doctor) {
@@ -128,37 +108,99 @@ export class DoctorService extends BaseService {
       };
     }
 
+    const updateData = updateAudit({ is_locked: false }, currentUser);
+
     const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
       { id: doctorId },
-      {
-        is_locked: false,
-        updatedById: user.id.toString(),
-        updatedByType: user.type,
-        updatedAt: new Date(),
-      },
+      updateData,
     );
 
     return {
       message: `Doctor account ${doctorId} has been unlocked`,
-      unlockedBy: user,
+      unlockedBy: currentUser,
       doctor: updatedDoctor,
     };
   }
 
-  async createDoctorProfile(
-    payload: CreateDoctorProfileDto,
-    user: { id: string; type: ActorType },
+  async getStaffInfoByDoctorId(doctorId: string): Promise<StaffInfo> {
+    const staffInfo = await this.staffInfoRepository.findOne(
+      { staff_id: doctorId },
+      ['image', 'specializes', 'degrees'],
+    );
+
+    if (!staffInfo) {
+      throw new NotFoundException('Staff info not found for this doctor');
+    }
+
+    return staffInfo;
+  }
+
+  async createDoctorProfileStepOne(
+    staffId: string,
+    dto: DoctorStepOneDto,
+    currentUser: TokenPayload,
   ): Promise<StaffInfo> {
     const staffInfo = new StaffInfo();
 
-    staffInfo.full_name = payload.full_name;
-    staffInfo.dob = payload.dob;
-    staffInfo.phone = payload.phone;
-    staffInfo.gender = payload.gender;
-    staffInfo.position = payload.position;
+    staffInfo.staff_id = staffId;
+    staffInfo.full_name = dto.full_name;
+    staffInfo.dob = dto.dob;
+    staffInfo.phone = dto.phone;
+    staffInfo.gender = dto.gender;
+    staffInfo.position = dto.position;
 
-    applyAuditFields(staffInfo, user);
+    if (dto.type === 'doctor') {
+      staffInfo.staff_type = 'doctor';
+    } else {
+      staffInfo.staff_type = 'employee';
+    }
+
+    setAudit(staffInfo, currentUser);
 
     return await this.staffInfoRepository.create(staffInfo);
   }
+
+  async addDoctorDegree(
+    staffInfoId: string,
+    dto: DoctorDegreeDto,
+    currentUser: TokenPayload,
+  ): Promise<Degree> {
+    const staff = await this.staffInfoRepository.findOne({ id: staffInfoId });
+
+    const degree = new Degree();
+    degree.name = dto.name;
+    degree.description = dto.description;
+    degree.image_id = dto.image_id;
+    degree.staff_info = staff;
+
+    setAudit(degree, currentUser);
+
+    return await this.degreeRepository.create(degree);
+  }
+
+  async addDoctorSpecialize(
+    staffInfoId: string,
+    dto: DoctorSpecializeDto,
+    currentUser: TokenPayload,
+  ): Promise<Specialize> {
+    const staff = await this.staffInfoRepository.findOne({ id: staffInfoId });
+
+    const specialize = new Specialize();
+    specialize.name = dto.name;
+    specialize.description = dto.description;
+    specialize.image_id = dto.image_id;
+    specialize.staff_info = staff;
+
+    setAudit(specialize, currentUser);
+
+    return await this.specializeRepository.create(specialize);
+  }
+
+  // async createDoctorProfileStepTwo(
+  //   payload: any,
+  //   user: { id: string; type: ActorType },
+  // ): Promise<StaffInfo> {
+  //   const staffInfo = await this.staffInfoRepository.findOne({});
+  //   return null;
+  // }
 }

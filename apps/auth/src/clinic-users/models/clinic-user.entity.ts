@@ -6,17 +6,15 @@ import {
   JoinTable,
   Unique,
 } from 'typeorm';
-import { PostgresAbstractEntity } from '@app/common';
+import { ActorType, PostgresAbstractEntity } from '@app/common';
 import { Clinic } from '../../clinics/models/clinic.entity';
 import { Role } from '../../roles/models/role.entity';
 
 export enum ActorEnum {
-  DOCTOR = "doctor",
-  EMPLOYEE = "employee",
-  PATIENT = "patient"
+  DOCTOR = 'doctor',
+  EMPLOYEE = 'employee',
+  PATIENT = 'patient',
 }
-
-export type ActorType = "doctor" | "employee" | "patient"
 
 @Entity({ name: 'clinic_users' })
 @Unique(['email', 'actorType'])
@@ -29,11 +27,8 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Column({ name: "actor_type",
-    type: 'enum',
-    enum: ActorEnum
-  })
-  actorType: ActorType
+  @Column({ name: 'actor_type', type: 'enum', enum: ActorEnum })
+  actorType: ActorType;
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
@@ -41,8 +36,8 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
-    joinColumn: {name: 'user_id', referencedColumnName: 'id'},
-    inverseJoinColumn: {name: 'permission_id', referencedColumnName: 'id'},
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   roles: Role[];
 
@@ -52,8 +47,8 @@ export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
   @ManyToMany(() => Clinic, (clinic) => clinic.owner, { cascade: true })
   @JoinTable({
     name: 'user_clinics',
-    joinColumn: {name: 'user_id', referencedColumnName: 'id'},
-    inverseJoinColumn: {name: 'clinic_id', referencedColumnName: 'id'},
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'clinic_id', referencedColumnName: 'id' },
   })
   clinics: Clinic[];
 }

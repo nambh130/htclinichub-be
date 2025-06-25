@@ -1,9 +1,7 @@
-// doctor.entity.ts
-import { Column, Entity, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { PostgresAbstractEntity } from '@app/common';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
-import { StaffInfo } from './staffInfo.entity';
-import { PostgresAbstractEntity } from '@app/common';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -21,12 +19,4 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
 
   @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
   services: DoctorServiceLink[];
-
-  @OneToOne(() => StaffInfo, (staffInfo) => staffInfo.doctor, {
-    cascade: true,
-    eager: true,
-    nullable: true,
-  })
-  @JoinColumn({ name: 'staff_info_id' })
-  staff_info: StaffInfo;
 }

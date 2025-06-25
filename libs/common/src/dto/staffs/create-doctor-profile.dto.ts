@@ -1,11 +1,17 @@
+// doctor-step-one.dto.ts
 import {
   IsDateString,
+  IsIn,
   IsPhoneNumber,
   IsString,
   MaxLength,
 } from 'class-validator';
 
-export class CreateDoctorProfileDto {
+export class DoctorStepOneDto {
+  @IsString()
+  @IsIn(['doctor', 'employee'])
+  type: string;
+
   @IsString()
   @MaxLength(100)
   full_name: string;
@@ -13,7 +19,7 @@ export class CreateDoctorProfileDto {
   @IsDateString()
   dob: Date;
 
-  @IsPhoneNumber('VN') // or 'ZZ' for any country
+  @IsPhoneNumber('VN')
   phone: string;
 
   @IsString()

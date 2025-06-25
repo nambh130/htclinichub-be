@@ -2,6 +2,7 @@ import { Logger, NotFoundException } from '@nestjs/common';
 import { PostgresAbstractEntity } from './abstract.entity';
 import {
   EntityManager,
+  FindOptionsOrder,
   FindOptionsRelations,
   FindOptionsWhere,
   Repository,
@@ -15,7 +16,7 @@ export abstract class PostgresAbstractRepository<
   constructor(
     private readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
-  ) { }
+  ) {}
 
   async findAll(): Promise<T[]> {
     return this.entityRepository.find();
@@ -39,6 +40,39 @@ export abstract class PostgresAbstractRepository<
     return entity;
   }
 
+  async paginate(
+    options: {
+      where?: FindOptionsWhere<T>;
+      page?: number;
+      limit?: number;
+      order?: FindOptionsOrder<T>;
+      relations?: string[];
+    } = {},
+  ): Promise<{
+    data: T[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      where = {},
+      page = 1,
+      limit = 10,
+      order = { createdAt: 'DESC' } as FindOptionsOrder<T>,
+      relations = [],
+    } = options;
+
+    const [data, total] = await this.entityRepository.findAndCount({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order,
+      relations,
+    });
+
+    return { data, total, page, limit };
+  }
+
   async create(entity: T): Promise<T> {
     return this.entityManager.save(entity);
   }
@@ -46,7 +80,7 @@ export abstract class PostgresAbstractRepository<
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
-  ): Promise<T | null> {
+  ): Promise<T> {
     const updateResult = await this.entityRepository.update(
       where,
       partialEntity,
@@ -67,13 +101,13 @@ export abstract class PostgresAbstractRepository<
     where: FindOptionsWhere<T>,
     skip?: number,
     take?: number,
-    relations?: string[]
+    relations?: string[],
   ): Promise<[T[], number]> {
     return this.entityRepository.findAndCount({
       where,
       skip,
       take,
-      relations
+      relations,
     });
   }
 }

@@ -91,7 +91,7 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/api-gateway/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
@@ -151,7 +151,35 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/staff/.env
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  media:
+    build:
+      context: .
+      dockerfile: ./apps/media/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev media"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/media/src
+          target: /app/apps/media/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    env_file:
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
