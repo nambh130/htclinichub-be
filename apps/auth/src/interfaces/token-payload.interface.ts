@@ -8,4 +8,5 @@ export interface TokenPayload {
   isAdminOf?: string[];
   //isAdmin?: boolean,
   currentClinics?: string[];
+  email?: string;
 }

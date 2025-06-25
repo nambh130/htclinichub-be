@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Inject, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ClientKafka, MessagePattern, Payload } from '@nestjs/microservices';
+import { ClientKafka } from '@nestjs/microservices';
 import { OtpService } from './otp/otp.service';
 import { RequestOtpDto } from './otp/dto/request-otp.dto';
 import { VerifyOtpDto } from './otp/dto/verify-otp.dto';

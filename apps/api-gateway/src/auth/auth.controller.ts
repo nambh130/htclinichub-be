@@ -78,19 +78,13 @@ export class AuthController {
     status: 201,
     description: 'User created successfully',
   })
-  async clinicUserLogin(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async clinicUserLogin(@Req() req: Request, @Res() res: Response) {
     const response = await this.authService.clinicUserLogin(req, res);
     return response;
   }
 
   @Post('admin/login')
-  async adminLogin(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async adminLogin(@Req() req: Request, @Res() res: Response) {
     const response = await this.authService.adminLogin(req, res);
     return response;
   }

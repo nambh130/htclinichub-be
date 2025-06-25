@@ -7,10 +7,10 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @MessagePattern('view-employee-account-list')
-  viewEmployeeAccountList() {
-    return this.employeeService.viewEmployeeAccountList();
-  }
+  // @MessagePattern('view-employee-account-list')
+  // viewEmployeeAccountList() {
+  //   return this.employeeService.viewEmployeeAccountList();
+  // }
 
   @MessagePattern('create-employee-account')
   createEmployeeAccount(

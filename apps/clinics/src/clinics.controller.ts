@@ -1,0 +1,58 @@
+import { Controller } from '@nestjs/common';
+import { ClinicsService } from './clinics.service';
+import { CreateReservationDto, ReservationCreatedEvent } from '@app/common';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import { AddClinicDto } from '@app/common/dto/clinic';
+import { ClinicAddedEvent } from '@app/common/events/clinics';
+
+@Controller('clinics')
+export class ClinicsController {
+  constructor(private readonly clinicsService: ClinicsService) {}
+  @MessagePattern('add-clinic')
+  async addClinic(
+    @Payload()
+    payload: {
+      addClinicDto: AddClinicDto;
+      userId: string;
+    },
+  ) {
+    const { addClinicDto, userId } = payload;
+    return this.clinicsService.addClinic(addClinicDto, userId);
+  }
+
+  @MessagePattern('get-clinics')
+  async getClinics(@Payload() userId: string) {
+    return this.clinicsService.getClinics(userId);
+  }
+
+  @MessagePattern('get-clinic-by-id')
+  async getClinicById(@Payload() payload: { id: string; userId: string }) {
+    const { id, userId } = payload;
+    return this.clinicsService.getClinicById(id, userId);
+  }
+
+  @MessagePattern('update-clinic')
+  async updateClinic(
+    @Payload()
+    payload: {
+      id: string;
+      updateClinicDto: AddClinicDto;
+      userId: string;
+    },
+  ) {
+    const { id, updateClinicDto, userId } = payload;
+    return this.clinicsService.updateClinic(id, updateClinicDto, userId);
+  }
+
+  @MessagePattern('delete-clinic')
+  async deleteClinic(@Payload() payload: { id: string; userId: string }) {
+    const { id, userId } = payload;
+    return this.clinicsService.deleteClinic(id, userId);
+  }
+
+  // Event handlers
+  @EventPattern('clinic-added')
+  handleClinicAdded(@Payload() clinicAddedEvent: ClinicAddedEvent) {
+    clinicAddedEvent.toString();
+  }
+}

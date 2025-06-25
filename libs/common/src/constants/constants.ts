@@ -6,6 +6,7 @@ export const AUTH_SERVICE = 'auth';
 export const RESERVATIONS_SERVICE = 'reservations';
 export const STAFF_SERVICE = 'staff';
 export const MEDIA_SERVICE = 'media';
+export const CLINIC_SERVICE = 'clinic';
 
 //Consumer group names
 export const RESERVATIONS_CONSUMER_GROUP = 'reservations-consumer';
@@ -15,3 +16,4 @@ export const MEDIA_CONSUMER_GROUP = 'media-consumer';
 
 //cloudinary
 export const CLOUDINARY = 'cloudinary';
+export const CLINIC_CONSUMER_GROUP = 'clinic-consumer';

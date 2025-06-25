@@ -18,6 +18,7 @@ export enum ActorEnum {
   DOCTOR = 'doctor',
   EMPLOYEE = 'employee',
   PATIENT = 'patient',
+  ADMIN = 'admin',
 }
 
 @Entity({ name: 'clinic_users' })

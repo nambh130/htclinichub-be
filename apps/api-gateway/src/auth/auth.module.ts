@@ -27,6 +27,9 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
               groupId: AUTH_CONSUMER_GROUP,
             },
           },
+          consumer: {
+            groupId: AUTH_CONSUMER_GROUP,
+          },
         }),
         inject: [ConfigService],
       },

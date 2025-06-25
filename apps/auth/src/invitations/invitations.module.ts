@@ -13,7 +13,8 @@ import { ClinicUsersModule } from '../clinic-users/clinic-users.module';
     PostgresDatabaseModule.forFeature([EmployeeInvitation]),
 
     RolesModule,
-    ClinicUsersModule
+    ClinicUsersModule,
+    RolesModule
   ],
   controllers: [InvitationsController],
   providers: [InvitationsService, InvitationRepository ],

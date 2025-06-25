@@ -9,10 +9,10 @@ import { ActorEnum } from '@app/common/enum/actor-type';
 export class EmployeeEventController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @MessagePattern('view-employee-account-list')
-  viewEmployeeAccountList() {
-    return this.employeeService.viewEmployeeAccountList();
-  }
+  // @MessagePattern('view-employee-account-list')
+  // viewEmployeeAccountList() {
+  //   return this.employeeService.viewEmployeeAccountList();
+  // }
 
   @EventPattern('clinic-user-created')
   createEmployeeAccount(@Payload() data: ClinicUserCreated) {
