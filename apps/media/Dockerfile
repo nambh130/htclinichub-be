@@ -1,5 +1,5 @@
-# Go to root directory each services: cd apps/reservations
-# Build command: docker build -t reservations:v1.0.0 -f Dockerfile ../../
+# Go to root directory each services: cd apps/media
+# Build command: docker build -t media:v1.0.0 -f Dockerfile ../../
 FROM node:alpine AS development
 
 WORKDIR /app
@@ -15,10 +15,10 @@ RUN npm install -g pnpm
 
 RUN pnpm install
 
-COPY apps/reservations apps/reservations
+COPY apps/media apps/media
 COPY libs libs
 
-RUN pnpm run build reservations
+RUN pnpm run build media
 
 FROM node:alpine AS production
 
@@ -37,4 +37,4 @@ RUN pnpm install --prod
 
 COPY --from=development /app/dist ./dist
 
-CMD ["node", "dist/apps/reservations/main"]
+CMD ["node", "dist/apps/media/main"]

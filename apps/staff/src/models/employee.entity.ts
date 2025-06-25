@@ -1,7 +1,6 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
-import { StaffInfo } from './staffInfo.entity';
-import { EmployeeRoleLink } from './employeeRoleLinks.entity';
 import { PostgresAbstractEntity } from '@app/common';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { EmployeeRoleLink } from './employeeRoleLinks.entity';
 
 @Entity()
 export class Employee extends PostgresAbstractEntity<Employee> {
@@ -16,10 +15,6 @@ export class Employee extends PostgresAbstractEntity<Employee> {
 
   @Column({ default: false })
   is_locked: boolean;
-
-  @OneToOne(() => StaffInfo)
-  @JoinColumn({ name: 'employee_info_id' })
-  employee_info: StaffInfo;
 
   @OneToMany(() => EmployeeRoleLink, (link) => link.employee)
   roles: EmployeeRoleLink[];

@@ -17,8 +17,7 @@ export class ClinicUserCreated {
     this.email = data.email;
     this.actorType = data.actorType;
     this.clinicId = data.clinicId;
-    if (data.ownerOf)
-      this.ownerOf = data.ownerOf;
+    if (data.ownerOf) this.ownerOf = data.ownerOf;
   }
 
   toString() {
@@ -27,8 +26,7 @@ export class ClinicUserCreated {
       email: this.email,
       actorType: this.actorType,
       clinicId: this.clinicId,
-      ownerOf: this.ownerOf
+      ownerOf: this.ownerOf,
     });
   }
 }
-

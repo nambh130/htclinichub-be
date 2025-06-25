@@ -1,58 +1,109 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { StaffService } from './staff.service';
 import {
   CreateDoctorAccountDto,
   CreateEmployeeAccountDto,
   CurrentUser,
+  DoctorDegreeDto,
+  DoctorSpecializeDto,
   JwtAuthGuard,
-  UserDocument,
+  TokenPayload,
 } from '@app/common';
+import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 
-@Controller('admin/staff')
+@Controller('staff')
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   //Doctor-enpoints
-  @Get('doctor-account-list')
+  @Get('doctor/account-list')
   @UseGuards(JwtAuthGuard)
-  async viewDoctorAccountList() {
-    return this.staffService.viewDoctorAccountList();
+  async getDoctorAccountList(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.staffService.getDoctorAccountList(+page, +limit);
   }
 
-  @Post('create-doctor-account')
+  @Get('doctor/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorById(@Param('id') doctorId: string) {
+    return await this.staffService.getDoctorById(doctorId);
+  }
+
+  @Post('doctor/create-account')
   @UseGuards(JwtAuthGuard)
   async createDoctorAccount(
     @Body() dto: CreateDoctorAccountDto,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createDoctorAccount(dto, user);
+    return this.staffService.createDoctorAccount(dto, currentUser);
   }
 
-  @Post('lock-doctor-account/:id')
+  @Post('doctor/lock/:id')
   @UseGuards(JwtAuthGuard)
   async lockDoctorAccount(
     @Param('id') id: string,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.lockDoctorAccount(id, user);
+    return this.staffService.lockDoctorAccount(id, currentUser);
   }
 
-  @Post('unlock-doctor-account/:id')
+  @Post('doctor/unlock/:id')
   @UseGuards(JwtAuthGuard)
   async unlockDoctorAccount(
     @Param('id') id: string,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.unlockDoctorAccount(id, user);
+    return this.staffService.unlockDoctorAccount(id, currentUser);
   }
 
-  @Post('create-doctor-profile')
+  @Get('doctor/:id/profile')
   @UseGuards(JwtAuthGuard)
-  async createDoctorProfile(
-    @Body() dto: CreateDoctorAccountDto,
-    @CurrentUser() user: UserDocument,
+  async getStaffInfoByDoctorId(@Param('id') doctorId: string) {
+    return this.staffService.getStaffInfoByDoctorId(doctorId);
+  }
+
+  @Post('doctor/:id/create-profile/step-one')
+  @UseGuards(JwtAuthGuard)
+  async createDoctorProfileStepOne(
+    @Param('id') staffId: string,
+    @Body() dto: DoctorStepOneDto,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createDoctorProfile(dto, user);
+    return this.staffService.createDoctorProfileStepOne(
+      staffId,
+      dto,
+      currentUser,
+    );
+  }
+
+  @Post('doctor/:id/add-degree')
+  @UseGuards(JwtAuthGuard)
+  addDoctorDegree(
+    @Param('id') staffInfoId: string,
+    @Body() dto: DoctorDegreeDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.staffService.addDoctorDegree(staffInfoId, dto, currentUser);
+  }
+
+  @Post('doctor/:id/add-specialize')
+  @UseGuards(JwtAuthGuard)
+  addDoctorSpecialize(
+    @Param('id') staffInfoId: string,
+    @Body() dto: DoctorSpecializeDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.staffService.addDoctorSpecialize(staffInfoId, dto, currentUser);
   }
 
   //Employee-endpoints
@@ -66,26 +117,26 @@ export class StaffController {
   @UseGuards(JwtAuthGuard)
   async createEmployeeAccount(
     @Body() dto: CreateEmployeeAccountDto,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createEmployeeAccount(dto, user);
+    return this.staffService.createEmployeeAccount(dto, currentUser);
   }
 
   @Post('lock-employee-account/:id')
   @UseGuards(JwtAuthGuard)
   async lockEmployeeAccount(
     @Param('id') id: string,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.lockEmployeeAccount(id, user);
+    return this.staffService.lockEmployeeAccount(id, currentUser);
   }
 
   @Post('unlock-employee-account/:id')
   @UseGuards(JwtAuthGuard)
   async unlockEmployeeAccount(
     @Param('id') id: string,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.unlockEmployeeAccount(id, user);
+    return this.staffService.unlockEmployeeAccount(id, currentUser);
   }
 }

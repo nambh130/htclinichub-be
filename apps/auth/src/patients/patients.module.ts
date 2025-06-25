@@ -1,4 +1,10 @@
-import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, PostgresDatabaseModule, RESERVATIONS_CONSUMER_GROUP, RESERVATIONS_SERVICE } from '@app/common';
+import {
+  AUTH_CONSUMER_GROUP,
+  AUTH_SERVICE,
+  PostgresDatabaseModule,
+  RESERVATIONS_CONSUMER_GROUP,
+  RESERVATIONS_SERVICE,
+} from '@app/common';
 import { Module } from '@nestjs/common';
 import { Patient } from './models/patient.entity';
 import { LoggerModule } from 'nestjs-pino';
@@ -11,29 +17,12 @@ import { PatientRepository } from './patients.repository';
 @Module({
   imports: [
     //PostgreSQL
-    PostgresDatabaseModule,
+    PostgresDatabaseModule.register('AUTH_SERVICE_DB'),
     PostgresDatabaseModule.forFeature([Patient]),
 
     LoggerModule,
 
     ClientsModule.registerAsync([
-      {
-        name: RESERVATIONS_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'reservations',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: RESERVATIONS_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
       {
         name: AUTH_SERVICE,
         imports: [ConfigModule],
@@ -55,6 +44,6 @@ import { PatientRepository } from './patients.repository';
   ],
   controllers: [],
   providers: [PatientsService, PatientRepository],
-  exports: [PatientsService, PatientRepository]
+  exports: [PatientsService, PatientRepository],
 })
 export class PatientsModule {}

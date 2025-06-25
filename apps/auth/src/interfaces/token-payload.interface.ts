@@ -1,12 +1,12 @@
-import { ActorType } from "../clinic-users/models/clinic-user.entity";
+import { ActorType } from '@app/common';
 
 export interface TokenPayload {
-  userId: string,
-  actorType: ActorType,
-  roles?: string[],
-  permissions?: string[],
-  isAdminOf?: string[],
+  userId: string;
+  actorType: ActorType;
+  roles?: string[];
+  permissions?: string[];
+  isAdminOf?: string[];
   //isAdmin?: boolean,
-  currentClinics?: string[]
-  email?: string
+  currentClinics?: string[];
+  email?: string;
 }

@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { EmployeeRepository } from '../repositories/employee.repository';
 import {
-  ActorType,
-  applyAuditFields,
+  setAudit,
   BaseService,
   CreateEmployeeAccountDto,
+  TokenPayload,
+  updateAudit,
 } from '@app/common';
 import { Employee } from '../models/employee.entity';
 import * as bcrypt from 'bcrypt';
@@ -19,43 +20,15 @@ export class EmployeeService extends BaseService {
     super();
   }
 
-  async viewEmployeeAccountList(): Promise<any[]> {
-    const employees = await this.employeeRepository.findAll();
+  // async viewEmployeeAccountList(): Promise<any[]> {
+  //   const employees = await this.employeeRepository.findAll();
 
-    const enrichedEmployees = await Promise.all(
-      employees.data.map(async (employee) => {
-        const createdBy = await this.commonRepository.findActorWithIdAndType(
-          employee.createdByType,
-          employee.createdById,
-        );
-        const updatedBy = await this.commonRepository.findActorWithIdAndType(
-          employee.updatedByType,
-          employee.updatedById,
-        );
-
-        const {
-          createdById: _createdById,
-          createdByType: _createdByType,
-          updatedById: _updatedById,
-          updatedByType: _updatedByType,
-          password: _password,
-          ...rest
-        } = employee;
-
-        return {
-          ...rest,
-          createdBy,
-          updatedBy,
-        };
-      }),
-    );
-
-    return enrichedEmployees;
-  }
+  //   return employees;
+  // }
 
   async createEmployeeAccount(
     dto: CreateEmployeeAccountDto,
-    user: { id: string; type: ActorType },
+    currentUser: TokenPayload,
   ): Promise<Employee> {
     const email = dto.email.trim().toLowerCase();
 
@@ -67,82 +40,57 @@ export class EmployeeService extends BaseService {
 
     const employee = new Employee();
     //If user-created event, insert with id
-    if(dto.id) employee.id = dto.id;
+    if (dto.id) employee.id = dto.id;
     employee.email = email;
     employee.clinic_id = dto.clinic_id;
     employee.password = await bcrypt.hash(dto.password, 10);
 
     // Add audit fields
-    //applyAuditFields(Employee, user);
+    setAudit(Employee, currentUser);
 
     return await this.employeeRepository.create(employee);
   }
 
-  async lockEmployeeAccount(
-    employeeId: string,
-    user: { id: string; type: ActorType },
-  ) {
-    const employee = await this.employeeRepository.findOne({ id: employeeId });
-
-    if (!employee) {
-      throw new Error(`Employee with ID ${employeeId} not found`);
-    }
-
-    if (employee.is_locked) {
-      return {
-        message: `Employee account ${employeeId} is already locked`,
-        employee,
-      };
-    }
+  async lockEmployeeAccount(employeeId: string, currentUser: TokenPayload) {
+    const updateData = updateAudit({ is_locked: true }, currentUser);
 
     const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
       { id: employeeId },
-      {
-        is_locked: true,
-        updatedById: user.id.toString(),
-        updatedByType: user.type,
-        updatedAt: new Date(),
-      },
+      updateData,
     );
 
     return {
       message: `Employee account ${employeeId} has been locked`,
-      lockedBy: user,
+      lockedBy: currentUser,
       employee: updatedEmployee,
     };
   }
 
-  async unlockEmployeeAccount(
-    employeeId: string,
-    user: { id: string; type: ActorType },
-  ) {
-    const employee = await this.employeeRepository.findOne({ id: employeeId });
+  async unlockEmployeeAccount(employeeId: string, currentUser: TokenPayload) {
+    const doctor = await this.employeeRepository.findOne({ id: employeeId });
 
-    if (!employee) {
+    if (!doctor) {
       throw new Error(`Employee with ID ${employeeId} not found`);
     }
 
-    if (!employee.is_locked) {
+    if (!doctor.is_locked) {
       return {
         message: `Employee account ${employeeId} is already unlocked`,
-        employee,
+        doctor,
       };
     }
 
-    const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
+    const updateData = updateAudit({ is_locked: false }, currentUser);
+
+    const updatedDoctor = await this.employeeRepository.findOneAndUpdate(
       { id: employeeId },
-      {
-        is_locked: false,
-        updatedById: user.id.toString(),
-        updatedByType: user.type,
-        updatedAt: new Date(),
-      },
+      updateData,
     );
 
     return {
-      message: `Employee account ${employeeId} has been unlocked`,
-      unlockedBy: user,
-      employee: updatedEmployee,
+      message: `Doctor account ${employeeId} has been unlocked`,
+      unlockedBy: currentUser,
+      employee: updatedDoctor,
     };
   }
 }

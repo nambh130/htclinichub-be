@@ -12,7 +12,7 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   //@Post('login')
   //@ApiOperation({ summary: 'Login user and return token' })
@@ -78,26 +78,26 @@ export class AuthController {
     status: 201,
     description: 'User created successfully',
   })
-  async clinicUserLogin(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async clinicUserLogin(@Req() req: Request, @Res() res: Response) {
     const response = await this.authService.clinicUserLogin(req, res);
     return response;
   }
 
   @Post('admin/login')
-  async adminLogin(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async adminLogin(@Req() req: Request, @Res() res: Response) {
     const response = await this.authService.adminLogin(req, res);
     return response;
   }
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
-  async createInvitation(@Body() invitationDto: CreateInvitationDto, @Req() req: Request) {
-    const response = await this.authService.createInvitation(invitationDto, req);
+  async createInvitation(
+    @Body() invitationDto: CreateInvitationDto,
+    @Req() req: Request,
+  ) {
+    const response = await this.authService.createInvitation(
+      invitationDto,
+      req,
+    );
     return response;
   }
 

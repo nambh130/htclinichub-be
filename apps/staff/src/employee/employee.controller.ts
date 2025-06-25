@@ -1,28 +1,28 @@
 import { Controller } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
-import { ActorType, CreateEmployeeAccountDto } from '@app/common';
+import { CreateEmployeeAccountDto, TokenPayload } from '@app/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller()
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @MessagePattern('view-employee-account-list')
-  viewEmployeeAccountList() {
-    return this.employeeService.viewEmployeeAccountList();
-  }
+  // @MessagePattern('view-employee-account-list')
+  // viewEmployeeAccountList() {
+  //   return this.employeeService.viewEmployeeAccountList();
+  // }
 
   @MessagePattern('create-employee-account')
   createEmployeeAccount(
     @Payload()
     payload: {
       dto: CreateEmployeeAccountDto;
-      user: { id: string; type: ActorType };
+      currentUser: TokenPayload;
     },
   ) {
     return this.employeeService.createEmployeeAccount(
       payload.dto,
-      payload.user,
+      payload.currentUser,
     );
   }
 
@@ -31,10 +31,10 @@ export class EmployeeController {
     @Payload()
     data: {
       id: string;
-      user: { id: string; type: ActorType };
+      currentUser: TokenPayload;
     },
   ) {
-    return this.employeeService.lockEmployeeAccount(data.id, data.user);
+    return this.employeeService.lockEmployeeAccount(data.id, data.currentUser);
   }
 
   @MessagePattern('unlock-employee-account')
@@ -42,9 +42,12 @@ export class EmployeeController {
     @Payload()
     data: {
       id: string;
-      user: { id: string; type: ActorType };
+      currentUser: TokenPayload;
     },
   ) {
-    return this.employeeService.unlockEmployeeAccount(data.id, data.user);
+    return this.employeeService.unlockEmployeeAccount(
+      data.id,
+      data.currentUser,
+    );
   }
 }

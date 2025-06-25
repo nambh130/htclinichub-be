@@ -16,16 +16,25 @@ export class InvitationsService extends BaseService {
     private readonly invitationRepository: InvitationRepository,
     private readonly userRepository: ClinicUserRepository,
     private readonly roleRepository: RoleRepository,
-  ) { super() }
+  ) {
+    super();
+  }
 
-  async createInvitation(createInvitationDto: CreateInvitationDto,
-    user: { id: string, type: ActorType }) {
-    const { email, clinic, role: roleId, isOwnerInvitation } = createInvitationDto;
+  async createInvitation(
+    createInvitationDto: CreateInvitationDto,
+    user: { id: string; type: ActorType },
+  ) {
+    const {
+      email,
+      clinic,
+      role: roleId,
+      isOwnerInvitation,
+    } = createInvitationDto;
     const token = randomBytes(32).toString('hex');
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms
     const role = await this.roleRepository.findOne({ id: roleId });
-    const userType = role.roleType
+    const userType = role.roleType;
 
     if (user.type != ActorEnum.ADMIN && role.roleType == ActorEnum.ADMIN) {
       throw new BadRequestException();
@@ -36,16 +45,19 @@ export class InvitationsService extends BaseService {
     if (userType == ActorEnum.EMPLOYEE) {
       var checkEmployee: any;
       try {
-        checkEmployee = await this.userRepository.findOne({ email, actorType: userType });
+        checkEmployee = await this.userRepository.findOne({
+          email,
+          actorType: userType,
+        });
       } catch (error) {
-        checkEmployee = null
+        checkEmployee = null;
       }
       if (checkEmployee) {
-        throw new BadRequestException("Account already exists!");
+        throw new BadRequestException('Account already exists!');
       }
     }
     if (isOwnerInvitation && userType != ActorEnum.DOCTOR) {
-      throw new BadRequestException("Only doctor account can be owner!");
+      throw new BadRequestException('Only doctor account can be owner!');
     }
 
     // Create new Invitation object
@@ -58,23 +70,36 @@ export class InvitationsService extends BaseService {
       clinic: { id: clinic } as Clinic,
       hashedToken,
       createdById: user.id,
-      createdByType: user.type
+      createdByType: user.type,
     });
 
     // Save to database
     return {
       token: token,
-      invitation: await this.invitationRepository.create(newInvitation)
+      invitation: await this.invitationRepository.create(newInvitation),
     };
   }
 
-  async getInvitationByToken({ token, email }: { token: string, email: string }) {
+  async getInvitationByToken({
+    token,
+    email,
+  }: {
+    token: string;
+    email: string;
+  }) {
     const hashedToken = createHash('sha256').update(token).digest('hex');
-    var invitation = await this.invitationRepository.findOne({ hashedToken, email }, ['clinic', 'role']);
-    if (invitation.status == "pending" &&
+    var invitation = await this.invitationRepository.findOne(
+      { hashedToken, email },
+      ['clinic', 'role'],
+    );
+    if (
+      invitation.status == 'pending' &&
       new Date(invitation.expires_at) < new Date()
     ) {
-      invitation = await this.invitationRepository.findOneAndUpdate({ id: invitation.id }, { status: "expired" });
+      invitation = await this.invitationRepository.findOneAndUpdate(
+        { id: invitation.id },
+        { status: 'expired' },
+      );
     }
     return invitation;
   }

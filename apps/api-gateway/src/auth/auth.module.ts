@@ -5,10 +5,13 @@ import { AUTH_CONSUMER_GROUP, AUTH_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 
 @Module({
   imports: [
     HttpModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,
@@ -33,7 +36,7 @@ import { HttpModule } from '@nestjs/axios';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService, ClientsModule],
 })
 export class AuthModule {}
