@@ -6,3 +6,5 @@ export * from './decorators';
 export * from './dto';
 export * from './models';
 export * from './events';
+export * from './filters';
+export * from './utils';

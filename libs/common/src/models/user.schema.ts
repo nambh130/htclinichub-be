@@ -10,6 +10,9 @@ export class UserDocument extends MongoAbstractDocument {
   password: string;
 
   @Prop()
+  type: string;
+
+  @Prop()
   role?: string[];
 }
 

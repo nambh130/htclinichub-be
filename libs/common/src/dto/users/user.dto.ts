@@ -4,6 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UserDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
+  @IsString()
   email: string;
 
   @ApiProperty({ example: 'securePassword123' })
@@ -11,7 +12,12 @@ export class UserDto {
   @IsNotEmpty()
   password: string;
 
+  @ApiProperty({ example: 'doctor' })
+  @IsString()
+  @IsNotEmpty()
+  type: string;
+
   @ApiProperty({ example: 'admin', required: false })
   @IsOptional()
-  role?: string | string[];
+  role?: string[];
 }

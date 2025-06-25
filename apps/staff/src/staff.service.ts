@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DoctorRepository } from './repositories/doctor.repository';
 
 @Injectable()
 export class StaffService {
-  getHello(): string {
-    return 'Hello World!';
-  }
+  constructor(private readonly doctorRepository: DoctorRepository) {}
 }

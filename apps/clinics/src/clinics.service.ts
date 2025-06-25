@@ -41,7 +41,7 @@ export class ClinicsService {
       newClinic.name = addClinicDto.name;
       newClinic.location = addClinicDto.location;
       newClinic.ownerId = addClinicDto.ownerId;
-      newClinic.createdBy = userId;
+      newClinic.createdById = userId;
       newClinic.token = nanoid(32);
 
       const clinic = await this.clinicsRepository.create(newClinic);
@@ -56,7 +56,7 @@ export class ClinicsService {
         name: clinic.name,
         location: clinic.location,
         ownerId: clinic.ownerId,
-        createdBy: userId,
+        createdById: userId,
         payload: addClinicDto,
         businessData: {
           clinicCreated: clinic,
@@ -74,7 +74,7 @@ export class ClinicsService {
         name: clinic.name,
         location: clinic.location,
         ownerId: clinic.ownerId,
-        createdBy: clinic.createdBy,
+        createdById: clinic.createdById,
       });
 
       return JSON.parse(JSON.stringify(clinic));
@@ -171,7 +171,7 @@ export class ClinicsService {
     }
 
     try {
-      const clinic = await this.clinicsRepository.findOne({ id: parseInt(id) });
+      const clinic = await this.clinicsRepository.findOne({ id: id });
 
       if (!clinic) {
         this.logger.warn({
@@ -235,7 +235,7 @@ export class ClinicsService {
     }
 
     try {
-      const clinic = await this.clinicsRepository.findOne({ id: parseInt(id) });
+      const clinic = await this.clinicsRepository.findOne({ id: id });
       if (!clinic) {
         this.logger.warn({
           msg: 'Clinic not found for update',
@@ -250,14 +250,14 @@ export class ClinicsService {
       }
 
       const clinicToUpdate = new Clinic();
-      clinicToUpdate.id = parseInt(id);
+      clinicToUpdate.id = id;
 
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
           ...clinic,
           ...updateClinicDto,
-          updatedBy: userId,
+          updatedById: userId,
         }, // data to update
       );
 
@@ -306,7 +306,7 @@ export class ClinicsService {
     }
 
     try {
-      await this.clinicsRepository.delete({ id: parseInt(clinicId) });
+      await this.clinicsRepository.delete({ id: clinicId });
 
       this.logger.info({
         msg: 'Clinic deleted successfully',
