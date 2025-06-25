@@ -9,7 +9,7 @@ import { FindOptionsWhere } from 'typeorm';
 export class BaseClinicService<T extends BaseClinic> {
   constructor(private readonly baseClinicRepo: BaseClinicRepository<T>) {}
 
-  async getAllClinics(): Promise<T[]> {
+  async getAllClinics(): Promise<any> {
     return this.baseClinicRepo.findAll();
   }
 

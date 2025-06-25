@@ -4,7 +4,7 @@ import { PatientRepository } from './patients/patients.repository';
 import { Patient } from './patients/models/patient.entity';
 import { ConfigService } from '@nestjs/config';
 import { TokenPayload } from './interfaces/token-payload.interface';
-import { ClientKafka, RpcException } from '@nestjs/microservices';
+import { ClientKafka } from '@nestjs/microservices';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
 import { ClinicUsersService } from './clinic-users/clinic-users.service';
@@ -78,14 +78,10 @@ export class AuthService implements OnModuleInit {
       throw new BadRequestException('Invitation is invalid or expired!');
     }
 
-    if (invitation.actorType !== invitation.role.roleType) {
-      throw new BadRequestException('Invitation is invalid or expired, please request a new one!');
-    }
-
     const clinicUser = {
       email,
       password,
-      actorType: invitation.actorType,
+      actorType: invitation.role.roleType,
       role: invitation.role.id,
       clinic: invitation.clinic.id,
     };
@@ -125,7 +121,13 @@ export class AuthService implements OnModuleInit {
 
 
   async acceptInvitation(userId: string, acceptInvitationDto: AcceptInvitationDto) {
-    const { token, email, accept } = acceptInvitationDto;
+    const { token, accept } = acceptInvitationDto;
+
+    // find doctor user  validation
+    // because only doctor can be invited to multiple clinics
+    const user = await this.clinicUserService.find({ id: userId, actorType: ActorEnum.DOCTOR });
+    const email = user.email;
+
     const invitation = await this.invitationService.getInvitationByToken({ token, email });
 
     // Check if the invitation has expired
@@ -137,19 +139,16 @@ export class AuthService implements OnModuleInit {
       return { message: 'Invitation rejected' };
     }
 
-    const clinicToAdd = invitation.clinic;
-    const user = await this.clinicUserService.find({ email, actorType: invitation.actorType });
     // Check if the user from token is the same as the user from the invitation
-    console.log(user.id, userId)
     if (
-      !user
-      || user.actorType != ActorEnum.DOCTOR // Only doctor can be invited to another clinic
-      || user.id != userId //Check if the user from jwt and the invted user is the same
+      !user ||
+      invitation.email != email //Check if the user from jwt and the invted user is the same
     ) {
       throw new BadRequestException("Invalid invitation");
     }
 
     // Check the user has already in the invted clinic
+    const clinicToAdd = invitation.clinic;
     const alreadyExists = user.clinics.some(c => c.id === clinicToAdd.id);
 
     if (!alreadyExists) {
@@ -196,12 +195,15 @@ export class AuthService implements OnModuleInit {
 
     const tokenPayload: TokenPayload = {
       userId: user.id,
+      email: user.email,
       actorType: user.actorType as ActorEnum,
       permissions: Array.from(new Set(user.roles.flatMap(role => role.permissions.map(p => p.name)))),
       roles: user.roles.map(r => r.name),
     };
+
     const currentClinics = user.clinics;
     tokenPayload.currentClinics = currentClinics.map((clinic) => clinic.id);
+
     const adminOf = user.ownerOf.map((clinic) => clinic.id);
     tokenPayload.isAdminOf = adminOf
     //if (user.clinics && user.clinics.length > 0) {

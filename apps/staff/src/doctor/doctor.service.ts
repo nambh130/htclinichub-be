@@ -28,7 +28,7 @@ export class DoctorService extends BaseService {
     const doctors = await this.doctorRepository.findAll();
 
     const enrichedDoctors = await Promise.all(
-      doctors.map(async (doctor) => {
+      doctors.data.map(async (doctor) => {
         const createdBy = await this.commonRepository.findActorWithIdAndType(
           doctor.createdByType,
           doctor.createdById,

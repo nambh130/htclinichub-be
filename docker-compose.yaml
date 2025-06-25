@@ -100,17 +100,17 @@ services:
     ports:
       - '3000:3000'
 
-  reservations:
+  clinics:
     build:
       context: .
-      dockerfile: ./apps/reservations/Dockerfile
+      dockerfile: ./apps/clinics/Dockerfile
       target: development
-    command: sh -c "sleep 10 && pnpm run start:dev reservations"
+    command: sh -c "sleep 10 && pnpm run start:dev clinics"
     develop:
       watch:
         - action: sync
-          path: ./apps/reservations/src
-          target: /app/apps/reservations/src
+          path: ./apps/clinics/src
+          target: /app/apps/clinics/src
           ignore:
             - node_modules/
         - action: sync
@@ -121,9 +121,11 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/reservations/.env
+      - ./apps/clinics/.env
     depends_on:
       kafka:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
       mongo:
         condition: service_healthy
