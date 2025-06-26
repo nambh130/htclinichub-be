@@ -9,9 +9,9 @@ export class Clinic extends BaseClinic {
     if (clinic) Object.assign(this, clinic);
   }
 
-  //@ManyToOne(() => Doctor, (user) => user.ownerOf, { nullable: true })
-  //@JoinColumn()
-  //owner: Doctor;
+  // @ManyToOne(() => Doctor, (user) => user.ownerOf, { nullable: true })
+  // @JoinColumn()
+  // owner: Doctor;
 
   @ManyToMany(() => Doctor, (doctor) => doctor.clinics)
   users: Doctor[]

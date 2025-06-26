@@ -88,4 +88,11 @@ export class StaffController {
   ) {
     return this.staffService.unlockEmployeeAccount(id, user);
   }
+
+
+  @Get('doctor-account-byId/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorAccountById(@Param('id') id: string) {
+    return this.staffService.getDoctorAccountById(id);
+  }
 }

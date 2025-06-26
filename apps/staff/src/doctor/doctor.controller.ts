@@ -55,4 +55,9 @@ export class DoctorController {
   ) {
     return this.doctorService.createDoctorProfile(payload.dto, payload.user);
   }
+  //khanh
+  @Get("doctor-account-byId/:id")
+  viewDoctorAccountById(@Body() id: string) {
+    return this.doctorService.getDoctorAccountById(id);
+  }
 }

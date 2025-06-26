@@ -74,7 +74,7 @@ export class DoctorService extends BaseService {
     if (dto.clinic) {
       const clinicMap = new DoctorClinicMap();
       clinicMap.clinic = dto.clinic; // assign the clinic ID
-      clinicMap.doctor = doctor;     // establish relation to current doctor
+      clinicMap.doctor = doctor; // establish relation to current doctor
 
       doctor.clinics = [clinicMap];
     }
@@ -168,5 +168,20 @@ export class DoctorService extends BaseService {
     applyAuditFields(staffInfo, user);
 
     return await this.staffInfoRepository.create(staffInfo);
+  }
+  //khanh
+  async getDoctorAccountById(
+    id: string,
+  ): Promise<{ id: string; email: string }> {
+    const doctor = await this.doctorRepository.findOne({ id });
+
+    if (!doctor) {
+      throw new Error('Doctor not found');
+    }
+
+    return {
+      id: doctor.id,
+      email: doctor.email,
+    };
   }
 }

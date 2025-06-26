@@ -14,6 +14,7 @@ export class ClinicsService {
     @Inject(CLINIC_SERVICE)
     private readonly clinicsClient: ClientKafka,
     private readonly logger: PinoLogger,
+    
   ) {
     this.logger.setContext(ClinicsService.name);
   }
@@ -40,9 +41,11 @@ export class ClinicsService {
       const newClinic = new Clinic();
       newClinic.name = addClinicDto.name;
       newClinic.location = addClinicDto.location;
+      newClinic.email = addClinicDto.email;
+      newClinic.phone = addClinicDto.phone;
       newClinic.ownerId = addClinicDto.ownerId;
-      newClinic.createdById = userId;
       newClinic.token = nanoid(32);
+      newClinic.createdById = userId;
 
       const clinic = await this.clinicsRepository.create(newClinic);
 
@@ -74,6 +77,9 @@ export class ClinicsService {
         name: clinic.name,
         location: clinic.location,
         ownerId: clinic.ownerId,
+        token: clinic.token,
+        email: clinic.email,
+        phone: clinic.phone,
         createdById: clinic.createdById,
       });
 
@@ -312,7 +318,7 @@ export class ClinicsService {
         msg: 'Clinic deleted successfully',
         type: 'audit-log',
         context: 'ClinicService',
-        operation: 'DELETE_CLINIC', 
+        operation: 'DELETE_CLINIC',
         status: 'SUCCESS',
         clinicId,
         userId,
