@@ -1,4 +1,15 @@
-import { BadRequestException, Body, Controller, Get, Inject, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ClientKafka } from '@nestjs/microservices';
 import { OtpService } from './otp/otp.service';
@@ -31,8 +42,8 @@ export class AuthController {
     private readonly otpService: OtpService,
     private readonly invitationService: InvitationsService,
     @Inject(AUTH_SERVICE)
-    private readonly messageBroker: ClientKafka
-  ) { }
+    private readonly messageBroker: ClientKafka,
+  ) {}
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -54,9 +65,9 @@ export class AuthController {
 
     // Set cookie securely
     res.cookie('Authentication', response.token, {
-      httpOnly: true,        // Prevent JS access
-      secure: true,          // Use HTTPS only
-      sameSite: 'lax',       // Or 'strict' depending on your needs
+      httpOnly: true, // Prevent JS access
+      secure: true, // Use HTTPS only
+      sameSite: 'lax', // Or 'strict' depending on your needs
     });
 
     // Respond with JSON
@@ -67,12 +78,15 @@ export class AuthController {
   }
   // ------------------------------ STAFF AND DOCTOR ------------------------------
   // Check if the email in the invitation already has an account
-  @Post("invitation/check")
+  @Post('invitation/check')
   async checkInvitation(@Body() invitationCheckDto: InvitationCheckDto) {
     const { email, token } = invitationCheckDto;
-    const invitation = await this.invitationService.getInvitationByToken({ email, token });
+    const invitation = await this.invitationService.getInvitationByToken({
+      email,
+      token,
+    });
     // Check if invitation still valid
-    if (invitation && invitation.status != "pending") {
+    if (invitation && invitation.status != 'pending') {
       throw new BadRequestException();
     }
     try {
@@ -83,83 +97,85 @@ export class AuthController {
     return true;
   }
 
-  @Post("invitation/signup") // Create an account by invitation
+  @Post('invitation/signup') // Create an account by invitation
   async invitationSignup(@Body() dto: InvitationSignupDto) {
     if (dto.password != dto.confirmPassword) {
-      throw new BadRequestException("Password does not match retype password");
+      throw new BadRequestException('Password does not match retype password');
     }
     return await this.authService.invitationSignup(dto);
   }
 
-  @Post("invitation/accept") // Create an account by invitation
+  @Post('invitation/accept') // Create an account by invitation
   @UseGuards(JwtAuthGuard)
   async acceptInvitation(
     @Body() dto: AcceptInvitationDto,
-    @CurrentUser() user: TokenPayload
+    @CurrentUser() user: TokenPayload,
   ) {
     return this.authService.acceptInvitation(user.userId, dto);
   }
 
-  @Post("clinic/login")
+  @Post('clinic/login')
   async clinicUserLogin(
     @Body() dto: ClinicUserLoginDto,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     if (
       dto.userType != ActorEnum.DOCTOR &&
       dto.userType != ActorEnum.EMPLOYEE
     ) {
-      throw new BadRequestException("")
+      throw new BadRequestException('');
     }
     const response = await this.authService.clinicUserLogin(dto);
     res.cookie('Authentication', response?.token);
     return response;
   }
 
-  @Post("admin/login")
+  @Post('admin/login')
   async adminLogin(
     @Body() dto: AdminLoginDto,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     const response = await this.authService.clinicUserLogin({
-      ...dto, userType: ActorEnum.ADMIN
+      ...dto,
+      userType: ActorEnum.ADMIN,
     });
     res.cookie('Authentication', response?.token);
     return response;
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post("test-clinic")
+  @Post('test-clinic')
   async createClinic(@Body() createClinicDto: CreateClinicDto) {
-    return await this.clinicService.createClinic(createClinicDto)
+    return await this.clinicService.createClinic(createClinicDto);
   }
 
   @UseGuards(JwtAuthGuard, AuthorizationGuard)
   @Authorizations({
-    permissions: ['create-user']
+    permissions: ['create-user'],
   })
-  @Get("test-clinic")
+  @Get('test-clinic')
   async getClinics(@Req() req: Request) {
-    console.log("header: ", req.user)
-    return await this.clinicService.getClinics()
+    console.log('header: ', req.user);
+    return await this.clinicService.getClinics();
   }
 
-  @Post("test-user")
+  @Post('test-user')
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
-      const newUser = await this.userService.createUser(createUserDto)
+      const newUser = await this.userService.createUser(createUserDto);
       if (newUser) {
         const event = new UserCreatedEvent(
           newUser.id,
           newUser.email,
-          newUser.actorType
-        )
-        this.messageBroker.emit("user-created", event);
+          newUser.actorType,
+        );
+        this.messageBroker.emit('user-created', event);
       }
       return newUser;
     } catch (e) {
-      if (e.code === '23505') { // Postgres unique violation
-        console.log(e)
+      if (e.code === '23505') {
+        // Postgres unique violation
+        console.log(e);
         throw new BadRequestException({ message: 'Email already exists' });
       }
       throw e;

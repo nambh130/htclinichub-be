@@ -1,9 +1,10 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { Specialize } from './specialize.entity';
 import { Degree } from './degree.entity';
 
 @Entity()
+@Unique(['staff_id'])
 export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
   @Column({ unique: true })
   staff_id: string;

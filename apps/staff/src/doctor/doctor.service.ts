@@ -24,6 +24,7 @@ import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { Specialize } from '../models/specialize.entity';
 import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
+import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -130,17 +131,19 @@ export class DoctorService extends BaseService {
     };
   }
 
-  async getStaffInfoByDoctorId(doctorId: string): Promise<StaffInfo> {
+  async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
+    const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
+      'clinics',
+      'services',
+      'invitations',
+    ]);
+
     const staffInfo = await this.staffInfoRepository.findOne(
       { staff_id: doctorId },
-      ['image', 'specializes', 'degrees'],
+      ['degrees', 'specializes'],
     );
 
-    if (!staffInfo) {
-      throw new NotFoundException('Staff info not found for this doctor');
-    }
-
-    return staffInfo;
+    return toDoctorProfile(doctor, staffInfo);
   }
 
   async createDoctorProfileStepOne(
@@ -149,23 +152,28 @@ export class DoctorService extends BaseService {
     currentUser: TokenPayload,
   ): Promise<StaffInfo> {
     const staffInfo = new StaffInfo();
-
     staffInfo.staff_id = staffId;
     staffInfo.full_name = dto.full_name;
     staffInfo.dob = dto.dob;
     staffInfo.phone = dto.phone;
     staffInfo.gender = dto.gender;
     staffInfo.position = dto.position;
-
-    if (dto.type === 'doctor') {
-      staffInfo.staff_type = 'doctor';
-    } else {
-      staffInfo.staff_type = 'employee';
-    }
+    staffInfo.staff_type = dto.type === 'doctor' ? 'doctor' : 'employee';
 
     setAudit(staffInfo, currentUser);
 
-    return await this.staffInfoRepository.create(staffInfo);
+    const createdStaffInfo = await this.staffInfoRepository.create(staffInfo);
+
+    if (dto.type === 'doctor') {
+      const doctor = await this.doctorRepository.findOne({ id: staffId });
+
+      updateAudit(doctor, currentUser);
+      doctor.staffInfo = createdStaffInfo;
+
+      await this.doctorRepository.findOneAndUpdate({ id: staffId }, doctor);
+    }
+
+    return createdStaffInfo;
   }
 
   async addDoctorDegree(
@@ -186,6 +194,14 @@ export class DoctorService extends BaseService {
     return await this.degreeRepository.create(degree);
   }
 
+  async getDegreeList(staffInfoId: string): Promise<Degree[]> {
+    const degrees = await this.degreeRepository.find({
+      staff_info: { id: staffInfoId },
+    });
+
+    return degrees;
+  }
+
   async addDoctorSpecialize(
     staffInfoId: string,
     dto: DoctorSpecializeDto,
@@ -202,6 +218,14 @@ export class DoctorService extends BaseService {
     setAudit(specialize, currentUser);
 
     return await this.specializeRepository.create(specialize);
+  }
+
+  async getSpecializeList(staffInfoId: string): Promise<Degree[]> {
+    const specializes = await this.specializeRepository.find({
+      staff_info: { id: staffInfoId },
+    });
+
+    return specializes;
   }
 
   // async createDoctorProfileStepTwo(

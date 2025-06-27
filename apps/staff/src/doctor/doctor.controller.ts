@@ -67,9 +67,9 @@ export class DoctorController {
     );
   }
 
-  @Post('profile')
-  getStaffInfoByDoctorId(@Body() payload: { doctorId: string }) {
-    return this.doctorService.getStaffInfoByDoctorId(payload.doctorId);
+  @Get('details/:id')
+  getDoctorDetails(@Param('id') doctorId: string) {
+    return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 
   @Post('create-profile/step-one')
@@ -101,6 +101,17 @@ export class DoctorController {
     return this.doctorService.addDoctorDegree(staffInfoId, dto, currentUser);
   }
 
+  @Post('get-degrees')
+  getDegreeList(
+    @Body()
+    payload: {
+      staffInfoId: string;
+    },
+  ) {
+    const { staffInfoId } = payload;
+    return this.doctorService.getDegreeList(staffInfoId);
+  }
+
   @Post('add-specialize')
   addDoctorSpecialize(
     @Body()
@@ -111,6 +122,21 @@ export class DoctorController {
     },
   ) {
     const { staffInfoId, dto, currentUser } = payload;
-    return this.doctorService.addDoctorDegree(staffInfoId, dto, currentUser);
+    return this.doctorService.addDoctorSpecialize(
+      staffInfoId,
+      dto,
+      currentUser,
+    );
+  }
+
+  @Post('get-specializes')
+  getSpecializeList(
+    @Body()
+    payload: {
+      staffInfoId: string;
+    },
+  ) {
+    const { staffInfoId } = payload;
+    return this.doctorService.getSpecializeList(staffInfoId);
   }
 }

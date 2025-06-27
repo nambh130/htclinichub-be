@@ -39,6 +39,12 @@ export class StaffController {
     return await this.staffService.getDoctorById(doctorId);
   }
 
+  @Get('doctor-details/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorDetailsById(@Param('id') doctorId: string) {
+    return await this.staffService.getDoctorDetailsById(doctorId);
+  }
+
   @Post('doctor/create-account')
   @UseGuards(JwtAuthGuard)
   async createDoctorAccount(
@@ -96,6 +102,12 @@ export class StaffController {
     return this.staffService.addDoctorDegree(staffInfoId, dto, currentUser);
   }
 
+  @Get('doctor/:id/degrees')
+  @UseGuards(JwtAuthGuard)
+  getDegreesByStaffInfoId(@Param('id') staffInfoId: string) {
+    return this.staffService.getDegreesByStaffInfoId(staffInfoId);
+  }
+
   @Post('doctor/:id/add-specialize')
   @UseGuards(JwtAuthGuard)
   addDoctorSpecialize(
@@ -104,6 +116,12 @@ export class StaffController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     return this.staffService.addDoctorSpecialize(staffInfoId, dto, currentUser);
+  }
+
+  @Get('doctor/:id/specializes')
+  @UseGuards(JwtAuthGuard)
+  getSpecializesByStaffInfoId(@Param('id') staffInfoId: string) {
+    return this.staffService.getSpecializesByStaffInfoId(staffInfoId);
   }
 
   //Employee-endpoints

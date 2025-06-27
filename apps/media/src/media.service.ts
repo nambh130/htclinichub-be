@@ -25,17 +25,17 @@ export class MediaService {
     private readonly mediaRepository: MediaRepository,
   ) {}
 
-  async getFileById(id: string): Promise<MediaDocument> {
+  async getFileById(
+    id: string | null | undefined,
+  ): Promise<MediaDocument | null> {
+    if (!id) return null;
+
     const media = await this.mediaRepository.findOne({
       _id: id,
       isDeleted: { $ne: true },
     });
 
-    if (!media) {
-      throw new NotFoundException(`Media with id ${id} not found`);
-    }
-
-    return media;
+    return media ?? null;
   }
 
   async uploadFile(
