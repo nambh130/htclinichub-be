@@ -173,8 +173,9 @@ export class DoctorService extends BaseService {
   async getDoctorAccountById(
     id: string,
   ): Promise<{ id: string; email: string }> {
+    console.log('Fetching doctor account by ID:', id);
     const doctor = await this.doctorRepository.findOne({ id });
-
+    console.log('Doctor found:', doctor);
     if (!doctor) {
       throw new Error('Doctor not found');
     }
@@ -183,5 +184,26 @@ export class DoctorService extends BaseService {
       id: doctor.id,
       email: doctor.email,
     };
+  }
+
+  async getDoctorByClinic(clinicId: string): Promise<any[]> {
+    const doctors = await this.doctorRepository.repo
+      .createQueryBuilder('doctor')
+      .innerJoin('doctor.clinics', 'doctorClinicMap')
+      .leftJoinAndSelect('doctor.staff_info', 'staff_info')
+      .where('doctorClinicMap.clinic = :clinicId', { clinicId })
+      .getMany();
+
+    if (!doctors || doctors.length === 0) {
+      throw new Error(`No doctors found for clinic ID ${clinicId}`);
+    }
+
+    return doctors.map((doctor) => ({
+      account: {
+        id: doctor.id,
+        email: doctor.email,
+      },
+      info: doctor.staff_info || null,
+    }));
   }
 }

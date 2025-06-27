@@ -151,4 +151,11 @@ export class StaffService {
     );
     return response.data;
   }
+
+  async getDoctorByClinic(clinicId: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.httpService.get(`/staff/doctor-by-clinic/${clinicId}`),
+    );
+    return response.data;
+  }
 }

@@ -42,4 +42,6 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
 
   @OneToMany(() => Clinic, (clinic) => clinic.owner)
   ownerOf: Clinic[];
+
+
 }

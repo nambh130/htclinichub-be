@@ -19,6 +19,7 @@ export class ClinicEventController {
   @EventPattern('clinic-added')
   async handleClinicCreated(@Payload() payload: any) {
     const newClinic = {
+      id: payload.id,
       name: payload.name,
       location: payload.location,
       phone: payload.phone,

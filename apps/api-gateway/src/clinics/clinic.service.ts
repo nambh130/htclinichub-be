@@ -50,8 +50,13 @@ export class ClinicService implements OnModuleInit {
     );
   }
 
-  async getClinics(userId: string): Promise<ClinicDto[]> {
-    return firstValueFrom(this.clinicClient.send('get-clinics', { userId }));
+  async getClinics(
+    userId: string,
+    options?: { limit?: number; page?: number },
+  ): Promise<any> {
+    return firstValueFrom(
+      this.clinicClient.send('get-clinics', { userId, options }),
+    );
   }
 
   async getClinicById(id: string, userId: string): Promise<ClinicDto> {

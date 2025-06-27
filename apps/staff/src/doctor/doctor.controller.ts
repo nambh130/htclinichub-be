@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { ActorType, CreateDoctorAccountDto } from '@app/common';
 import { CreateDoctorProfileDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
@@ -10,6 +10,11 @@ export class DoctorController {
   @Get('doctor-account-list')
   viewDoctorAccountList() {
     return this.doctorService.viewDoctorAccountList();
+  }
+
+  @Get('doctor-by-clinic/:clinicId')
+  getDoctorByClinic(@Param('clinicId') clinicId: string) {
+    return this.doctorService.getDoctorByClinic(clinicId);
   }
 
   @Post('create-doctor-account')
@@ -56,8 +61,8 @@ export class DoctorController {
     return this.doctorService.createDoctorProfile(payload.dto, payload.user);
   }
   //khanh
-  @Get("doctor-account-byId/:id")
-  viewDoctorAccountById(@Body() id: string) {
+  @Get('doctor-account-byId/:id')
+  viewDoctorAccountById(@Param('id') id: string) {
     return this.doctorService.getDoctorAccountById(id);
   }
 }

@@ -7,6 +7,7 @@ import {
   UseGuards,
   Delete,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ClinicService } from './clinic.service';
 import {
@@ -37,8 +38,15 @@ export class ClinicController {
 
   @Get('')
   @UseGuards(JwtAuthGuard)
-  async getClinics(@CurrentUser() user: TokenPayload) {
-    return this.clinicService.getClinics(user.userId);
+  async getClinics(
+    @CurrentUser() user: TokenPayload,
+    @Query('limit') limit?: number,
+    @Query('page') page?: number,
+  ) {
+    return this.clinicService.getClinics(user.userId, {
+      limit: Number(limit),
+      page: Number(page),
+    });
   }
 
   @Get(':id')
