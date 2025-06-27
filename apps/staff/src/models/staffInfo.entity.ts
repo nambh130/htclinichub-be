@@ -1,11 +1,17 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { Image } from './image.entity';
+import { PostgresAbstractEntity } from '@app/common';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { Specialize } from './specialize.entity';
 import { Degree } from './degree.entity';
-import { PostgresAbstractEntity } from '@app/common';
+import { Doctor } from './doctor.entity';
 
 @Entity()
 export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
+  @Column({ unique: true })
+  staff_id: string;
+
+  @Column()
+  staff_type: 'doctor' | 'employee';
+
   @Column()
   full_name: string;
 
@@ -21,17 +27,21 @@ export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
   @Column()
   position: string;
 
-  @ManyToOne(() => Image, { nullable: true })
-  @JoinColumn({ name: 'image_id' })
-  image?: Image;
+  @Column({ nullable: true })
+  profile_img_id?: string;
 
-  @OneToOne(() => Specialize, (specialize) => specialize.employee_info, {
-    nullable: true,
+  @OneToOne(() => Doctor, (doctor) => doctor.staff_info)
+  doctor: Doctor;
+
+  @OneToMany(() => Specialize, (specialize) => specialize.staff_info, {
+    cascade: true,
+    eager: true,
   })
-  @JoinColumn({ name: 'specialize_id' })
-  specializes?: Specialize;
+  specializes: Specialize[];
 
-  @OneToOne(() => Degree, (degree) => degree.employee_info, { nullable: true })
-  @JoinColumn({ name: 'degree_id' })
-  degrees?: Degree;
+  @OneToMany(() => Degree, (degree) => degree.staff_info, {
+    cascade: true,
+    eager: true,
+  })
+  degrees: Degree[];
 }

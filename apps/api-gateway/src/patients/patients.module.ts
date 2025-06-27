@@ -12,9 +12,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
+import { HttpModule } from '@nestjs/axios';
+import { httpClientConfig } from '../api/http.client';
 
 @Module({
   imports: [
+    ConfigModule,
+        HttpModule.registerAsync({
+          imports: [ConfigModule],
+          useFactory: (configService: ConfigService) =>
+            httpClientConfig(
+              configService.get<string>('PATIENT_SERVICE_HOST'),
+              configService.get<string>('PATIENT_SERVICE_PORT'),
+            ),
+          inject: [ConfigService],
+        }),
     ClientsModule.registerAsync([
       {
         name: PATIENT_SERVICE,
@@ -23,7 +35,7 @@ import { DownLoadMedicalReportService } from './medical-report/download_medical_
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'patients',
+              clientId: 'patient',
               brokers: [configService.get('KAFKA_BROKER')!],
             },
             consumer: {
@@ -32,8 +44,25 @@ import { DownLoadMedicalReportService } from './medical-report/download_medical_
           },
         }),
         inject: [ConfigService],
-      }
-    ]),
+      },
+      {
+        name: AUTH_SERVICE,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'auth',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
+          },
+        }),
+      },
+    ]),    
     AuthModule
   ],
   controllers: [PatientsController],

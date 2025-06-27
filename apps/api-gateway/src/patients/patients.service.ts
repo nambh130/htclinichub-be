@@ -3,46 +3,29 @@ import {
   CreatePatientDto,
   UpdatePatientDto,
   PATIENT_SERVICE,
+  TokenPayload,
 } from '@app/common';
+import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class PatientService implements OnModuleInit {
-  constructor(
-    @Inject(PATIENT_SERVICE)
-    private readonly patientClient: ClientKafka,
-    @Inject(AUTH_SERVICE)
-    private readonly authClient: ClientKafka,
-  ) { }
-
-  async onModuleInit() {
-    this.patientClient.subscribeToResponseOf('create-patient');
-    this.patientClient.subscribeToResponseOf('update-patient');
-    this.patientClient.subscribeToResponseOf('delete-patient');
-    this.patientClient.subscribeToResponseOf('get-patient-by-id');
-    this.patientClient.subscribeToResponseOf('get-patient-by-fullName');
-    this.patientClient.subscribeToResponseOf('get-patient-by-phone');
-    this.patientClient.subscribeToResponseOf('get-all-patients');
-
-    this.authClient.subscribeToResponseOf('authenticate');
-
-    await this.patientClient.connect();
-    await this.authClient.connect();
-  }
+export class PatientService {
+  constructor(private readonly httpService: HttpService) { }
 
   // Patient-related methods
   async createPatient(
     createPatientDto: CreatePatientDto,
-    userId: string,
+    currentUser: TokenPayload
   ) {
     try {
-      const result = await firstValueFrom(
-        this.patientClient.send('create-patient', { createPatientDto, userId })
+      const payload = { createPatientDto, currentUser };
+
+      const response = await firstValueFrom(
+        this.httpService.post('/patient-service/create-patient', payload),
       );
-      console.log('Patient created successfully:', result);
-      return result;
+      return response.data;
     } catch (error) {
       console.error('Error creating patient:', error);
       throw error;
@@ -52,46 +35,46 @@ export class PatientService implements OnModuleInit {
   async updatePatient(
     patient_account_id: string,
     updatePatientDto: UpdatePatientDto,
-    userId: string,
+    currentUser: TokenPayload
   ) {
     try {
+      const payload = {
+        updatePatientDto,
+        currentUser,
+      };
+
       const result = await firstValueFrom(
-        this.patientClient.send('update-patient', { patient_account_id, updatePatientDto, userId })
+        this.httpService.put(`/patient-service/update-patient/${patient_account_id}`, payload),
       );
-      // return {
-      //   "Patient update successfully Patient Services": result,
-      // };
-      return result;
+
+      return result.data;
     } catch (error) {
-      console.error('Error update patient:', error);
+      console.error('Error update patient:', error?.response?.data || error);
       throw error;
     }
   }
 
-  async deletePatient(
-    id: string,
-    userId: string,
-  ) {
+  async deletePatient(id: string, currentUser: TokenPayload) {
     try {
-      const result = await firstValueFrom(
-        this.patientClient.send('delete-patient', { id, userId })
+      const response = await firstValueFrom(
+        this.httpService.delete(`/patient-service/delete-patient/${id}`)
       );
-      return result;
+
+      return response.data;
     } catch (error) {
-      console.error('Error deleting patient:', error);
-      throw error;
+      console.error('Error deleting patient:', error?.response?.data || error.message);
     }
   }
 
   async getPatientById(
     id: string,
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
       const result = await firstValueFrom(
-        this.patientClient.send('get-patient-by-id', { id, userId })
+        this.httpService.get(`/patient-service/get-patient-by-id/${id}`)
       );
-      return result;
+      return result.data;
     } catch (error) {
       console.error('Error retrieving patient:', error);
       throw error;
@@ -100,13 +83,13 @@ export class PatientService implements OnModuleInit {
 
   async getPatientByFullName(
     fullName: string,
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
       const result = await firstValueFrom(
-        this.patientClient.send('get-patient-by-fullName', { fullName, userId })
+        this.httpService.get(`/patient-service/get-patient-by-fullName/${fullName}`)
       );
-      return result;
+      return result.data;
     } catch (error) {
       console.error('Error retrieving patient:', error);
       throw error;
@@ -115,13 +98,43 @@ export class PatientService implements OnModuleInit {
 
   async getPatientByPhoneNumber(
     phoneNumber: string,
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
       const result = await firstValueFrom(
-        this.patientClient.send('get-patient-by-phone', { phoneNumber, userId })
+        this.httpService.get(`/patient-service/get-patient-by-phone/${phoneNumber}`)
       );
-      return result;
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+   async getPatientByCid(
+    cid: string,
+    currentUser: TokenPayload,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-by-cid/${cid}`)
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByHid(
+    hid: string,
+    currentUser: TokenPayload,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-by-hid/${hid}`)
+      );
+      return result.data;
     } catch (error) {
       console.error('Error retrieving patient:', error);
       throw error;
@@ -129,13 +142,13 @@ export class PatientService implements OnModuleInit {
   }
 
   async getAllPatients(
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
       const result = await firstValueFrom(
-        this.patientClient.send('get-all-patients', { userId })
+        this.httpService.get('/patient-service/get-all-patients')
       );
-      return result;
+      return result.data;
     } catch (error) {
       console.error('Error retrieving patient:', error);
       throw error;

@@ -7,7 +7,7 @@ import {
   MaxLength,
   ValidateNested,
   IsDateString,
-  IsNotEmpty,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -38,6 +38,18 @@ export class UpdatePatientDto {
   @IsString()
   @MaxLength(255)
   relation?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d+$/, { message: 'CCCD must contain only numbers' })
+  @Length(12, 12, { message: 'CCCD must be exactly 12 digits' })
+  citizen_id?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d+$/, { message: 'BHYT must contain only numbers' })
+  @Length(15, 15, { message: 'BHYT must be exactly 15 digits' })
+  health_insurance_id?: string
 
   @IsOptional()
   @IsString()

@@ -7,6 +7,6 @@ export function httpClientConfig(
 ): HttpModuleOptions {
   return {
     baseURL: `http://${host}:${port}`,
-    timeout: 5000,
+    timeout: 10000,
   };
 }

@@ -22,6 +22,12 @@ export class Patient extends MongoAbstractDocument {
     @Prop()
     relation: string;
 
+    @Prop({ unique: true, sparse: true })
+    citizen_id: string;
+
+    @Prop({ unique: true, sparse: true })
+    health_insurance_id: string
+
     @Prop()
     ethnicity: string;
 

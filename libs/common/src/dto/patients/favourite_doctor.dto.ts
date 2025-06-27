@@ -1,6 +1,6 @@
-import { IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class FavouriteDoctorDto {
-  @IsNumber()
-  doctor_id: number;
+  @IsNotEmpty()
+  doctor_id: string;
 }

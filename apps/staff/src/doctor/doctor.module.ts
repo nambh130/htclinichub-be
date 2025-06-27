@@ -6,9 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Doctor } from '../models/doctor.entity';
 import { StaffInfo } from '../models/staffInfo.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PATIENTS_TO_STAFF_CLIENT, PATIENTS_TO_STAFF_CONSUMER, PATIENTS_TO_STAFF_SERVICE } from '@app/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Doctor_WorkShift } from '../models/doctor_workshift.entity';
+import { PATIENTS_TO_STAFF_CLIENT, PATIENTS_TO_STAFF_CONSUMER, PATIENTS_TO_STAFF_SERVICE } from '@app/common';
 
 @Module({
   imports: [

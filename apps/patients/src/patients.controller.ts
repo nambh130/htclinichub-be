@@ -1,35 +1,39 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto, FavouriteDoctorDto, UpdatePatientDto } from '@app/common/dto';
 import { PatientCreatedEvent } from '@app/common/events/patients';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
+import { CurrentUser, TokenPayload } from '@app/common';
 // import { DownLoadMedicalReportService } from './medical-report/download_medical_report';
 
-@Controller('patients')
+@Controller('patient-service')
 export class PatientsController {
   constructor(
     private readonly patientsService: PatientsService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
-
   ) { }
 
-  @MessagePattern('create-patient')
+  @Post('create-patient')
   async createPatient(
-    @Payload()
-    data: {
+    @Body()
+    payload: {
       createPatientDto: CreatePatientDto;
-      userId: string;
+      currentUser: TokenPayload;
     },
   ) {
     try {
-      const { createPatientDto, userId } = data;
-      const createPatient = await this.patientsService.createPatient(createPatientDto, userId);
-      return createPatient;
+      const { createPatientDto, currentUser } = payload;
+
+      const createdPatient = await this.patientsService.createPatient(
+        createPatientDto,
+        currentUser.userId,
+      );
+
+      return createdPatient;
     } catch (error) {
-      console.error('Error in createPatient:', error);
-      throw error;
+      console.error('Error in createPatient:', error?.response?.data || error);
     }
   }
 
@@ -38,39 +42,21 @@ export class PatientsController {
     patientCreatedEvent.toString();
   }
 
-  // @MessagePattern('findAllPatients')
-  // findAll() {
-  //   return this.patientsService.findAll();
-  // }
-
-  // @MessagePattern('findOnePatient')
-  // findOne(@Payload() id: number) {
-  //   return this.patientsService.findOne(id);
-  // }
-
-  @MessagePattern('update-patient')
+  @Put('update-patient/:patient_account_id')
   async updatePatient(
-    @Payload()
-    data: {
-      patient_account_id: string;
+    @Param('patient_account_id') patient_account_id: string,
+    @Body() data: {
       updatePatientDto: UpdatePatientDto;
-      userId: string;
+      currentUser: TokenPayload;
     },
   ) {
-    try {
-      const { patient_account_id, updatePatientDto, userId } = data;
-      const createPatient = await this.patientsService.updatePatient(
-        patient_account_id,
-        updatePatientDto,
-        userId);
-      //  return {
-      //   "Patient update successfully Patient Controller": createPatient,
-      // };
-      return createPatient;
-    } catch (error) {
-      console.error('Error in updatePatient:', error);
-      throw error;
-    }
+    const { updatePatientDto, currentUser } = data;
+
+    return await this.patientsService.updatePatient(
+      patient_account_id,
+      updatePatientDto,
+      currentUser.userId
+    );
   }
 
   @EventPattern('patient-updated')
@@ -78,35 +64,29 @@ export class PatientsController {
     patientCreatedEvent.toString();
   }
 
-  @MessagePattern('delete-patient')
+  @Delete('delete-patient/:id')
   async removePatient(
-    @Payload()
-    data: {
-      id: string;
-      userId: string;
-    },
+    @Param('id') id: string,
   ) {
     try {
-      const { id, userId } = data;
-      const deletedPatient = await this.patientsService.deletePatient(id, userId);
-      return deletedPatient;
+      const deletedPatient = await this.patientsService.deletePatient(id);
+
+      return {
+        success: true,
+        message: 'Patient deleted successfully',
+        data: deletedPatient,
+      };
     } catch (error) {
       console.error('Error in removePatient:', error);
-      throw error;
     }
   }
 
-  @MessagePattern('get-patient-by-id')
+  @Get('get-patient-by-id/:id')
   async getPatientById(
-    @Payload()
-    data: {
-      id: string;
-      userId: string;
-    },
+    @Param('id') id: string,
   ) {
     try {
-      const { id, userId } = data;
-      const patient = await this.patientsService.getPatientById(id, userId);
+      const patient = await this.patientsService.getPatientById(id);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -114,17 +94,12 @@ export class PatientsController {
     }
   }
 
-  @MessagePattern('get-patient-by-fullName')
+  @Get('get-patient-by-fullName/:fullName')
   async getPatientByFullName(
-    @Payload()
-    data: {
-      fullName: string;
-      userId: string;
-    },
+    @Param('fullName') fullName: string,
   ) {
     try {
-      const { fullName, userId } = data;
-      const patient = await this.patientsService.getPatientByFullName(fullName, userId);
+      const patient = await this.patientsService.getPatientByFullName(fullName);
       return patient;
     } catch (error) {
       console.error('Error in getPatientByFullName:', error);
@@ -132,17 +107,13 @@ export class PatientsController {
     }
   }
 
-  @MessagePattern('get-patient-by-phone')
+  @Get('get-patient-by-phone/:phoneNumber')
   async getPatientByPhoneNumber(
-    @Payload()
-    data: {
-      phoneNumber: string;
-      userId: string;
-    },
+    @Param('phoneNumber') phoneNumber: string,
+
   ) {
     try {
-      const { phoneNumber, userId } = data;
-      const patient = await this.patientsService.getPatientByPhoneNumber(phoneNumber, userId);
+      const patient = await this.patientsService.getPatientByPhoneNumber(phoneNumber);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -150,16 +121,13 @@ export class PatientsController {
     }
   }
 
-  @MessagePattern('get-all-patients')
-  async getAllPatients(
-    @Payload()
-    data: {
-      userId: string;
-    },
+  @Get('get-patient-by-cid/:cid')
+  async getPatientByCid(
+    @Param('cid') cid: string,
+
   ) {
     try {
-      const { userId } = data;
-      const patient = await this.patientsService.getAllPatients(userId);
+      const patient = await this.patientsService.getPatientByCid(cid);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -167,16 +135,41 @@ export class PatientsController {
     }
   }
 
-  @MessagePattern('add-favourite-doctors')
+  @Get('get-patient-by-hid/:hid')
+  async getPatientByHid(
+    @Param('hid') hid: string,
+
+  ) {
+    try {
+      const patient = await this.patientsService.getPatientByHid(hid);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-all-patients')
+  async getAllPatients() {
+    try {
+      const patient = await this.patientsService.getAllPatients();
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @Post('add-favourite-doctors')
   async addFavouriteDoctor(
-    @Payload()
-    data: {
+    @Body()
+    payload: {
       userId: string;
       favouriteDoctorDto: FavouriteDoctorDto;
     },
   ) {
     try {
-      const { userId, favouriteDoctorDto } = data;
+      const { userId, favouriteDoctorDto } = payload;
       const result = await this.favouriteDoctorService.addFavouriteDoctor(userId, favouriteDoctorDto);
       return result;
     } catch (error) {

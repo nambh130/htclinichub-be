@@ -1,30 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Patient } from './patients.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { PostgresAbstractEntity } from '@app/common';
 
 @Entity()
-export class FavouriteDoctor {
-    @PrimaryGeneratedColumn()
-    id: number;
+export class FavouriteDoctor extends PostgresAbstractEntity<FavouriteDoctor> {
+    // @PrimaryGeneratedColumn()
+    // id: number;
 
     @Column()
     patient_id: string;
 
     @Column()
-    doctor_id: number;
+    doctor_id: string;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    createdBy?: string;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    updatedBy?: string;
-
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
-
-    @Column({
-        type: 'timestamp',
-        default: () => 'CURRENT_TIMESTAMP',
-        onUpdate: 'CURRENT_TIMESTAMP',
-    })
-    updatedAt: Date;
+    // @OneToOne(() => Doctor, (doctor) => doctor.id)
+    // doctor: Doctor;
 }

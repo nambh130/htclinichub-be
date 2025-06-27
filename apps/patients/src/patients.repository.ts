@@ -27,7 +27,7 @@ export class PatientRepository extends MongoAbstractRepository<PatientDocument> 
   protected readonly logger = new Logger(PatientRepository.name);
 
   constructor(
-    @InjectModel(Patient.name)
+    @InjectModel(Patient.name, 'patientService')
     patientModel: Model<PatientDocument>,
   ) {
     super(patientModel);
@@ -39,6 +39,22 @@ export class PatientRepository extends MongoAbstractRepository<PatientDocument> 
       return null;
     }
     return existPhone;
+  }
+
+  async findCitizenId(citizen_id: string) {
+    const existCitizenId = await this.model.findOne({ citizen_id });
+    if (!existCitizenId) {
+      return null;
+    }
+    return existCitizenId;
+  }
+
+  async findHealthInsuranceId(health_insurance_id: string) {
+    const existCitizenId = await this.model.findOne({ health_insurance_id });
+    if (!existCitizenId) {
+      return null;
+    }
+    return existCitizenId;
   }
 
   async createPatient(document: Partial<Patient>): Promise<Patient> {

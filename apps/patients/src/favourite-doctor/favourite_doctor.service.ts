@@ -6,7 +6,7 @@ import { FavouriteDoctor } from '../models/favourite_doctor.entity';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class FavouriteDoctorService implements OnModuleInit {
+export class FavouriteDoctorService {
     constructor(
         private readonly favouriteDoctorRepository: FavouriteDoctorRepository,
         @Inject(PATIENTS_TO_STAFF_SERVICE)
@@ -15,32 +15,19 @@ export class FavouriteDoctorService implements OnModuleInit {
         // private readonly authClient: ClientKafka,
     ) { }
 
-     async onModuleInit() {
-        try {
-            // Important: Subscribe before any send operations
-            this.doctorClient.subscribeToResponseOf('get-doctors-by-ids');
-            this.doctorClient.subscribeToResponseOf('get-doctors-by-ids.reply');
-            await this.doctorClient.connect();
-            console.log('Successfully connected to Kafka and subscribed to topics');
-        } catch (error) {
-            console.error('Failed to initialize Kafka connection:', error);
-            throw error;
-        }
-    }
-
     async addFavouriteDoctor(
         userId: string,
         favouriteDoctorDto: FavouriteDoctorDto
     ) {
         try {
-            // const existedDoctor = await this.favouriteDoctorRepository.checkExistedDoctor({
-            //     patient_id: userId,
-            //     doctor_id: favouriteDoctorDto.doctor_id,
-            // });
+            const existedDoctor = await this.favouriteDoctorRepository.checkExistedDoctor({
+                patient_id: userId,
+                doctor_id: favouriteDoctorDto.doctor_id,
+            });
 
-            // if (existedDoctor) {
-            //     throw new BadRequestException('Bác sĩ đã tồn tại trong danh sách yêu thích!!!');
-            // }
+            if (existedDoctor) {
+                throw new BadRequestException('Bác sĩ đã tồn tại trong danh sách yêu thích!!!');
+            }
 
             const newDoctor = new FavouriteDoctor();
             newDoctor.doctor_id = favouriteDoctorDto.doctor_id;

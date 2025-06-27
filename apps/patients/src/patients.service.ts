@@ -21,6 +21,16 @@ export class PatientsService {
       throw new BadRequestException('Số điện thoại đã tồn tại!');
     }
 
+    const existedCitizenId = await this.patientsRepository.findCitizenId(createPatientDto.citizen_id);
+    if (existedCitizenId) {
+      throw new BadRequestException('CCCD đã tồn tại!');
+    }
+
+    const existedHealthInsuranceId = await this.patientsRepository.findHealthInsuranceId(createPatientDto.health_insurance_id);
+    if (existedHealthInsuranceId) {
+      throw new BadRequestException('BHYT đã tồn tại!');
+    }
+
     const patientData = {
       fullname: createPatientDto.fullname,
       patient_account_id: createPatientDto.patient_account_id,
@@ -32,6 +42,8 @@ export class PatientsService {
       nation: createPatientDto.nation,
       work_address: createPatientDto.work_address,
       relation: createPatientDto.relation,
+      citizen_id: createPatientDto.citizen_id,
+      health_insurance_id: createPatientDto.health_insurance_id,
       phone: createPatientDto.phone,
       dOB: createPatientDto.dOB,
       createdBy: userId,
@@ -87,6 +99,24 @@ export class PatientsService {
         }
       }
 
+      if (updatePatientDto.citizen_id) {
+        const existedCitizenId = await this.patientsRepository.findCitizenId(updatePatientDto.citizen_id);
+
+        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+        if (existedCitizenId && existedCitizenId.patient_account_id !== patient.patient_account_id) {
+          throw new BadRequestException('CCCD đã tồn tại!');
+        }
+      }
+
+      if (updatePatientDto.health_insurance_id) {
+        const existedHealthInsuranceId = await this.patientsRepository.findHealthInsuranceId(updatePatientDto.health_insurance_id);
+
+        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+        if (existedHealthInsuranceId && existedHealthInsuranceId.patient_account_id !== patient.patient_account_id) {
+          throw new BadRequestException('BHYT đã tồn tại!');
+        }
+      }
+
       const updatedPatient = await this.patientsRepository.findOneAndUpdate(
         patient,
         {
@@ -107,19 +137,19 @@ export class PatientsService {
     }
   }
 
-  async deletePatient(id: string, userId: string) {
+  async deletePatient(id: string) {
     if (!id) {
       throw new NotFoundException('Invalid id');
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({ id: parseInt(id) });
+      const patient = await this.patientsRepository.findOne({ _id: id });
 
       if (!patient) {
         throw new NotFoundException(`Patient with id ${id} not found`);
       }
 
-      const deletedPatient = await this.patientsRepository.findOneAndDelete({ id: parseInt(id) });
+      const deletedPatient = await this.patientsRepository.findOneAndDelete({ _id: id });
 
       return {
         success: true,
@@ -132,7 +162,7 @@ export class PatientsService {
     }
   }
 
-  async getPatientById(id: string, userId: string) {
+  async getPatientById(id: string) {
     if (!id) {
       throw new NotFoundException('Invalid id');
     }
@@ -150,7 +180,8 @@ export class PatientsService {
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
           relation: patient.relation,
-          ethnicity: patient.ethnicity,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
           marital_status: patient.marital_status,
           address1: patient.address1,
           address2: patient.address2 ? patient.address2 : 'Trống',
@@ -171,7 +202,7 @@ export class PatientsService {
     }
   }
 
-  async getPatientByFullName(fullName: string, userId: string) {
+  async getPatientByFullName(fullName: string) {
     if (!fullName) {
       throw new NotFoundException('Invalid fullName');
     }
@@ -189,6 +220,8 @@ export class PatientsService {
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
           relation: patient.relation,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
           ethnicity: patient.ethnicity,
           marital_status: patient.marital_status,
           address1: patient.address1,
@@ -210,7 +243,7 @@ export class PatientsService {
     }
   }
 
-  async getPatientByPhoneNumber(phoneNumber: string, userId: string) {
+  async getPatientByPhoneNumber(phoneNumber: string) {
     if (!phoneNumber) {
       throw new NotFoundException('Invalid phoneNumber');
     }
@@ -228,6 +261,8 @@ export class PatientsService {
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
           relation: patient.relation,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
           ethnicity: patient.ethnicity,
           marital_status: patient.marital_status,
           address1: patient.address1,
@@ -249,7 +284,89 @@ export class PatientsService {
     }
   }
 
-  async getAllPatients(userId: string) {
+   async getPatientByCid(cid: string) {
+    if (!cid) {
+      throw new NotFoundException('Invalid phoneNumber');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ citizen_id: cid });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with phone ${cid} not found`);
+      }
+
+      return {
+        data: {
+          id: patient._id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ? patient.address2 : 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+          medical_history: {
+            allergies: patient.medical_history.allergies,
+            personal_history: patient.medical_history.personal_history,
+            family_history: patient.medical_history.family_history,
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+   async getPatientByHid(hid: string) {
+    if (!hid) {
+      throw new NotFoundException('Invalid phoneNumber');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ health_insurance_id: hid });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with phone ${hid} not found`);
+      }
+
+      return {
+        data: {
+          id: patient._id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ? patient.address2 : 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+          medical_history: {
+            allergies: patient.medical_history.allergies,
+            personal_history: patient.medical_history.personal_history,
+            family_history: patient.medical_history.family_history,
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getAllPatients() {
     try {
       const patients = await this.patientsRepository.find({});
 
@@ -263,6 +380,8 @@ export class PatientsService {
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
           relation: patient.relation,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
           ethnicity: patient.ethnicity,
           marital_status: patient.marital_status,
           address1: patient.address1,

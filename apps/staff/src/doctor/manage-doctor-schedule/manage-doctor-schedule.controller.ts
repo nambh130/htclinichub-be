@@ -1,22 +1,18 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ActorType, CreateDoctorAccountDto } from '@app/common';
+import { ActorType, CreateDoctorAccountDto, TokenPayload } from '@app/common';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule.service';
 
 @Controller('manage-doctor-schedule')
 export class ManageDoctorScheduleController {
   constructor(private readonly manageDoctorScheduleService: ManageDoctorScheduleService) { }
 
-   @Get('doctor-view-working-shift')
+  @Get('doctor-view-working-shift/:doctorId')
   async getViewWorkingShiftController(
-    @Payload()
-    data: {
-      doctorId: string;
-      user: { id: string; type: ActorType };
-    },
+    @Param('doctorId') doctorId: string,
   ) {
     try {
-      const doctor = await this.manageDoctorScheduleService.getViewWorkingShiftService(data.doctorId, data.user);
+      const doctor = await this.manageDoctorScheduleService.getViewWorkingShiftService(doctorId);
       return doctor;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -24,24 +20,17 @@ export class ManageDoctorScheduleController {
     }
   }
 
-   @Get('detail-working-shift')
+  @Get('detail-working-shift/:shiftId')
   async getDetailShiftController(
-    @Param()
-    data: {
-      shiftId: string;
-      userId: string;
-    },
+    @Param('shiftId') shiftId: string,
   ) {
     try {
-      // const { shiftId, userId } = data;
-      // console.log("[DEBUG]: " + data.shiftId, data.userId)
-      // const shift = await this.manageDoctorScheduleService.getDetailShiftService(shiftId, userId);
-      return data.userId + " sjdfjsdjf hihi";
+      console.log("[DEBUG]: " + shiftId)
+      const shift = await this.manageDoctorScheduleService.getDetailShiftService(shiftId);
+      return shift;
     } catch (error) {
       console.error('Error in getPatientById:', error);
       throw error;
     }
   }
-
-
 }

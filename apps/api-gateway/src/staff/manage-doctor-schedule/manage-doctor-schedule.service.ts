@@ -1,7 +1,4 @@
-import {
-    TokenPayload,
-    UserDocument,
-} from '@app/common';
+import { TokenPayload, } from '@app/common';
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
@@ -12,20 +9,12 @@ export class ManageDoctorScheduleService {
 
     async getViewWorkingShiftService(
         doctorId: string,
-        user: UserDocument,
+        user: TokenPayload,
     ) {
         try {
-
-            const params = {
-                doctorId,
-                user: {
-                    id: user._id,
-                    type: user.type,
-                },
-            };
-            
             const response = await firstValueFrom(
-                this.httpService.get('/manage-doctor-schedule/doctor-view-working-shift', { params }));
+                this.httpService.get(`/manage-doctor-schedule/doctor-view-working-shift/${doctorId}`)
+            );
             return response.data;
         } catch (error) {
             console.error('Error retrieving working shift:', error.response?.data || error.message);
@@ -39,12 +28,7 @@ export class ManageDoctorScheduleService {
     ) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get('/manage-doctor-schedule/detail-working-shift', {
-                    params: {
-                        shiftId,
-                        userId: user.userId,
-                    },
-                }),
+                this.httpService.get(`/manage-doctor-schedule/detail-working-shift/${shiftId}`)
             );
             return response.data;
         } catch (error) {

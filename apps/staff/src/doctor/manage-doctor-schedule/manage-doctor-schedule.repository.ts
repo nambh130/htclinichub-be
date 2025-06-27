@@ -8,6 +8,7 @@ import { Doctor_WorkShift } from '../../models/doctor_workshift.entity';
 export class ManageDoctorScheduleRepository extends PostgresAbstractRepository<Doctor_WorkShift> {
   protected readonly logger = new Logger(ManageDoctorScheduleRepository.name);
 
+
   constructor(
     @InjectRepository(Doctor_WorkShift)
     itemsRepository: Repository<Doctor_WorkShift>,

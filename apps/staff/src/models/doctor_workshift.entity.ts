@@ -10,7 +10,8 @@ import { PostgresAbstractEntity, PostgresAbstractRepository } from '@app/common'
 // import { Clinic } from './clinic.entity';
 
 @Entity({ name: 'doctor_workshift' })
-export class Doctor_WorkShift extends PostgresAbstractEntity<Doctor_WorkShift>{
+export class Doctor_WorkShift extends PostgresAbstractEntity<Doctor_WorkShift> {
+
     @ManyToOne(() => Doctor, { nullable: false })
     @JoinColumn({ name: 'doctor_id' })
     doctor: Doctor;

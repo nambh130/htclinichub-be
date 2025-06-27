@@ -3,29 +3,26 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import { ActorType } from '../databases';
+import { ActorType } from '@app/common';
 
 interface TokenPayload {
-  userId: string,
-  actorType: ActorType,
-  roles?: string[],
-  permissions?: string[],
-  isAdmin?: string,
-  currentClinics?: string[],
-  adminOf?: string[]
+  userId: string;
+  actorType: ActorType;
+  roles?: string[];
+  permissions?: string[];
+  isAdmin?: string;
+  currentClinics?: string[];
+  adminOf?: string[];
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    configService: ConfigService,
-  ) {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           return (
-            request?.cookies?.Authentication ||
-            request?.headers?.authentication
+            request?.cookies?.Authentication || request?.headers?.authentication
           );
         },
       ]),

@@ -16,9 +16,8 @@ export class ManageDoctorScheduleService extends BaseService {
         private readonly doctorRepository: DoctorRepository,
     ) { super(); }
 
-    async getViewWorkingShiftService(
+      async getViewWorkingShiftService(
         doctorId: string,
-        user: { id: string; type: ActorType },
     ) {
         if (!doctorId) {
             throw new NotFoundException('Invalid doctorId');
@@ -58,39 +57,47 @@ export class ManageDoctorScheduleService extends BaseService {
         }
     }
 
-    async getDetailShiftService(shiftId: string, userId: string) {
+    async getDetailShiftService(shiftId: string) {
         try {
-            // const shift = await this.manageDoctorScheduleRepository.findOne(
-            //     { id: shiftId },
-            //     { doctor: { staff_info: true } },
-            // );
+            const shift = await this.manageDoctorScheduleRepository.findOne(
+                { id: shiftId },
+                ['doctor', 'doctor.staff_info', 'doctor.staff_info.specializes', 'doctor.staff_info.degrees']
+            );
 
-            // const doctor = shift.doctor;
-            // const info = doctor.staff_info;
+            if (!shift) throw new Error('Shift not found');
+            if (!shift.doctor) throw new Error('Doctor not found for shift');
 
-            // return {
-            //     shiftId: shift.id,
-            //     startTime: dayjs(shift.startTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm'),
-            //     duration: shift.duration,
-            //     isActivate: shift.isActivate,
-            //     doctor: {
-            //         id: doctor.id,
-            //         email: doctor.email,
-            //         fullName: info?.full_name,
-            //         dob: info?.dob,
-            //         gender: info?.gender,
-            //         phone: info?.phone,
-            //         specialize: info?.specializes,
-            //         degree: info?.degrees,
-            //         position: info?.position,
-            //         profilePicture: info?.image,
-            //     },
-            // };
+            const doctor = shift.doctor;
+            const info = doctor.staff_info;
 
-            return userId;
+            return {
+                shiftId: shift.id,
+                startTime: dayjs(shift.startTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm'),
+                duration: shift.duration,
+                isActivate: shift.isActivate,
+                doctor: {
+                    id: doctor.id,
+                    email: doctor.email,
+                    fullName: info?.full_name || null,
+                    dob: info?.dob || null,
+                    gender: info?.gender || null,
+                    phone: info?.phone || null,
+                    specialize: info?.specializes?.map((spec) => ({
+                        name: spec.name,
+                        description: spec.description,
+                    })) || [],
+
+                    degree: info?.degrees?.map((deg) => ({
+                        name: deg.name,
+                        description: deg.description,
+                    })) || [],
+                    position: info?.position || null,
+                    profilePicture: info?.profile_img_id || null,
+                },
+            };
         } catch (error) {
             console.error('Error retrieving shift detail:', error);
-            throw error;
+            throw new Error('Không thể lấy chi tiết ca trực');
         }
     }
 }

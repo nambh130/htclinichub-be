@@ -2,7 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { FavouriteDoctorService } from './favourite_doctor.service';
 
-@Controller()
+@Controller('favourite-doctor')
 export class FavouriteDoctorController {
   constructor(private readonly favouriteDoctorService: FavouriteDoctorService) {}
 

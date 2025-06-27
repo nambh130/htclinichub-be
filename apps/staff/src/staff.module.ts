@@ -9,7 +9,6 @@ import { Doctor } from './models/doctor.entity';
 import { DoctorServiceLink } from './models/doctorServiceLinks.entity';
 import { Employee } from './models/employee.entity';
 import { EmployeeRoleLink } from './models/employeeRoleLinks.entity';
-import { Image } from './models/image.entity';
 import { Invitation } from './models/invitation.entity';
 import { Role } from './models/role.entity';
 import { Service } from './models/service.entity';
@@ -27,56 +26,72 @@ import { CommonRepository } from './repositories/common.repository';
 import { DoctorRepository } from './repositories/doctor.repository';
 import { EmployeeRepository } from './repositories/employee.repository';
 import { StaffInfoRepository } from './repositories/staffInfo.repository';
+import { DegreeRepository } from './repositories/degree.repository';
+import { SpecializeRepository } from './repositories/specialize.repository';
 import { DoctorEventController } from './doctor/doctor-event.controller';
 import { EmployeeEventController } from './employee/employee-event.controller';
 import { DoctorClinicMap } from './models/doctor-clinic-map.entity';
+import { ManageDoctorScheduleModule } from './doctor/manage-doctor-schedule/manage-doctor-schedule.module';
+import { Doctor_WorkShift } from './models/doctor_workshift.entity';
+import { ManageDoctorScheduleRepository } from './doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
+import { ManageDoctorScheduleController } from './doctor/manage-doctor-schedule/manage-doctor-schedule.controller';
+import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/manage-doctor-schedule.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/staff/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
-        HTTP_PORT: Joi.number().default(3003),
+        STAFF_SERVICE_PORT: Joi.number().required(),
         KAFKA_BROKER: Joi.required(),
+
+        STAFF_SERVICE_DB: Joi.string().required(),
+
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
         POSTGRES_USER: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
-        POSTGRES_SYNC: Joi.boolean().default(false),
+        POSTGRES_SYNC: Joi.boolean().required(),
       }),
     }),
     LoggerModule,
-    PostgresDatabaseModule,
+    PostgresDatabaseModule.register('STAFF_SERVICE_DB'),
     PostgresDatabaseModule.forFeature([
       Degree,
       Doctor,
       DoctorServiceLink,
       Employee,
       EmployeeRoleLink,
-      Image,
       Invitation,
       Role,
       Service,
       Specialize,
       StaffInfo,
-      DoctorClinicMap
+      DoctorClinicMap,
+      Doctor_WorkShift,
     ]),
   ],
-  controllers: [StaffController, DoctorController,
+  controllers: [
+    StaffController,
+    DoctorController,
     EmployeeController,
     DoctorEventController,
-    EmployeeEventController
+    EmployeeEventController,
+    ManageDoctorScheduleController
   ],
   providers: [
     StaffService,
     DoctorService,
+    ManageDoctorScheduleService,
+    DegreeRepository,
+    SpecializeRepository,
     EmployeeService,
     CommonRepository,
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
+    ManageDoctorScheduleRepository
   ],
   exports: [StaffService],
 })

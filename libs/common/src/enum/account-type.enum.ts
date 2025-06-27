@@ -5,4 +5,4 @@ export enum AccountStatus {
   DELETED = 'deleted',
 }
 
-export type AccountStatusType = 'active' | 'pending' | 'banned' | 'deleted'
+export type AccountStatusType = 'active' | 'pending' | 'banned' | 'deleted';

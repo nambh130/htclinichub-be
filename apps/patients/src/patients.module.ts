@@ -3,42 +3,56 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsService } from './patients.service';
 import { PatientsController } from './patients.controller';
-import { Patient, PatientSchema } from './models';
-import { MongoDatabaseModule, LoggerModule, PATIENT_SERVICE } from '@app/common';
+import { FavouriteDoctor, Patient, PatientSchema } from './models';
+import { MongoDatabaseModule, LoggerModule, PATIENT_SERVICE, PostgresDatabaseModule, PATIENTS_TO_STAFF_SERVICE, PATIENTS_TO_STAFF_CLIENT, PATIENTS_TO_STAFF_CONSUMER } from '@app/common';
 import * as Joi from 'joi';
 import { FavouriteDoctorModule } from './favourite-doctor/favourite_doctor.module';
 import { PatientRepository } from './patients.repository';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { JwtModule } from '@nestjs/jwt';
+import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
+import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
+import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/patients/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
-         KAFKA_BROKER: Joi.required(),
-        MONGODB_URI: Joi.string().required(),
-        POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
-        POSTGRES_USER: Joi.string().required(),
-        POSTGRES_PASSWORD: Joi.string().required(),
-        POSTGRES_SYNC: Joi.boolean().default(false),
+        KAFKA_BROKER: Joi.required(),
+        PATIENT_SERVICE_URI: Joi.string().required(),
       }),
     }),
 
-    LoggerModule,
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get('JWT_EXPIRES_IN')}s`,
+        },
+      }),
+      inject: [ConfigService],
+    }),
 
-    // Kết nối Mongo
-    MongoDatabaseModule,
+    LoggerModule,
+    MongoDatabaseModule.forRoot({
+      envKey: 'PATIENT_SERVICE_URI',
+      connectionName: 'patientService',
+    }),
     MongoDatabaseModule.forFeature([
       {
         name: Patient.name,
         schema: PatientSchema,
       },
+    ], 'patientService'),
+
+    PostgresDatabaseModule.register('PATIENT_SERVICE_DB'),
+    PostgresDatabaseModule.forFeature([
+      FavouriteDoctor,
     ]),
 
-     ClientsModule.registerAsync([
+    ClientsModule.registerAsync([
       {
         name: PATIENT_SERVICE, // tương ứng 'patients'
         imports: [ConfigModule],
@@ -58,14 +72,39 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
     ]),
 
+    ClientsModule.registerAsync([
+      {
+        name: PATIENTS_TO_STAFF_SERVICE,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: PATIENTS_TO_STAFF_CLIENT,
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: PATIENTS_TO_STAFF_CONSUMER,
+              allowAutoTopicCreation: true
+            },
+            subscribe: {
+              fromBeginning: true
+            }
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
+
     // Import Postgre module con
     FavouriteDoctorModule,
   ],
-  controllers: [PatientsController],
-  providers: [PatientsService, PatientRepository],
-   exports: [
+  controllers: [PatientsController, FavouriteDoctorController],
+  providers: [PatientsService, PatientRepository, FavouriteDoctorService, FavouriteDoctorRepository, JwtModule],
+  exports: [
     PatientsService,
-    PatientRepository, 
+    PatientRepository,
+    FavouriteDoctorService, FavouriteDoctorRepository,
   ],
 })
-export class PatientsModule {}
+export class PatientsModule { }
