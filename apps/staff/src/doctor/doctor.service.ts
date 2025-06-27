@@ -73,8 +73,8 @@ export class DoctorService extends BaseService {
     doctor.password = await bcrypt.hash(dto.password, 10);
     if (dto.clinic) {
       const clinicMap = new DoctorClinicMap();
-      clinicMap.clinic = dto.clinic; // assign the clinic ID
-      clinicMap.doctor = doctor; // establish relation to current doctor
+      clinicMap.clinic = { id: dto.clinic } as any; // gán tạm entity với id
+      clinicMap.doctor = doctor;
 
       doctor.clinics = [clinicMap];
     }

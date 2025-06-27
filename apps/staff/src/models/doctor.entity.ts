@@ -1,9 +1,18 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { StaffInfo } from './staffInfo.entity';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
 import { PostgresAbstractEntity } from '@app/common';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
+import { Clinic } from './clinic.entity';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -26,6 +35,11 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
   services: DoctorServiceLink[];
 
-  @OneToMany(() => DoctorClinicMap, (clinic) => clinic.doctor, { cascade: true })
-  clinics: DoctorClinicMap[]
+  @OneToMany(() => DoctorClinicMap, (clinicMap) => clinicMap.doctor, {
+    cascade: true,
+  })
+  clinics: DoctorClinicMap[];
+
+  @OneToMany(() => Clinic, (clinic) => clinic.owner)
+  ownerOf: Clinic[];
 }

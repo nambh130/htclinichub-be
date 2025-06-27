@@ -1,6 +1,14 @@
-import { BaseClinic } from "@app/common/modules/clinic/models/base-clinic.entity";
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne } from "typeorm";
-import { Doctor } from "./doctor.entity";
+import { BaseClinic } from '@app/common/modules/clinic/models/base-clinic.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { Doctor } from './doctor.entity';
+import { DoctorClinicMap } from './doctor-clinic-map.entity';
 
 @Entity({ name: 'clinic' })
 export class Clinic extends BaseClinic {
@@ -9,10 +17,13 @@ export class Clinic extends BaseClinic {
     if (clinic) Object.assign(this, clinic);
   }
 
-  // @ManyToOne(() => Doctor, (user) => user.ownerOf, { nullable: true })
-  // @JoinColumn()
-  // owner: Doctor;
+  @ManyToOne(() => Doctor, { nullable: true })
+  @JoinColumn({ name: 'ownerId' })
+  owner: Doctor;
 
-  @ManyToMany(() => Doctor, (doctor) => doctor.clinics)
-  users: Doctor[]
+  @Column({ type: 'uuid', nullable: true })
+  ownerId: string;
+
+  @OneToMany(() => DoctorClinicMap, (map) => map.clinic, { cascade: true })
+  doctorClinicMaps: DoctorClinicMap[];
 }

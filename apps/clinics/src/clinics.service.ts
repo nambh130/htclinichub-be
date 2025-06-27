@@ -55,11 +55,6 @@ export class ClinicsService {
         context: 'ClinicService',
         operation: 'CREATE_CLINIC',
         status: 'SUCCESS',
-        clinicId: clinic.id,
-        name: clinic.name,
-        location: clinic.location,
-        ownerId: clinic.ownerId,
-        createdById: userId,
         payload: addClinicDto,
         businessData: {
           clinicCreated: clinic,

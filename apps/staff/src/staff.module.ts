@@ -30,6 +30,10 @@ import { StaffInfoRepository } from './repositories/staffInfo.repository';
 import { DoctorEventController } from './doctor/doctor-event.controller';
 import { EmployeeEventController } from './employee/employee-event.controller';
 import { DoctorClinicMap } from './models/doctor-clinic-map.entity';
+import { Clinic } from './models/clinic.entity';
+import { ClinicEventController } from './clinic/clinic-event.controller';
+import { ClinicRepository } from './clinic/clinic.repository';
+import { ClinicService } from './clinic/clinic.service';
 
 @Module({
   imports: [
@@ -61,22 +65,27 @@ import { DoctorClinicMap } from './models/doctor-clinic-map.entity';
       Service,
       Specialize,
       StaffInfo,
-      DoctorClinicMap
+      DoctorClinicMap,
+      Clinic
     ]),
   ],
   controllers: [StaffController, DoctorController,
     EmployeeController,
     DoctorEventController,
-    EmployeeEventController
+    EmployeeEventController,
+    ClinicEventController
   ],
   providers: [
     StaffService,
     DoctorService,
     EmployeeService,
+    ClinicService,
     CommonRepository,
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
+    ClinicRepository
+    
   ],
   exports: [StaffService],
 })
