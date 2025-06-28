@@ -7,10 +7,11 @@ import {
   TokenPayload,
 } from '@app/common';
 import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('staff/doctor')
 export class DoctorController {
-  constructor(private readonly doctorService: DoctorService) {}
+  constructor(private readonly doctorService: DoctorService) { }
 
   @Get('account-list')
   getDoctorAccountList(

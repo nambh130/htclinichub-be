@@ -19,7 +19,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/auth/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         AUTH_SERVICE_DB: Joi.string().required(),

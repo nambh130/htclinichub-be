@@ -5,6 +5,8 @@ import * as Joi from 'joi';
 import { LoggerModule } from '@app/common';
 import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
+import { PatientsModule } from './patients/patients.module';
+import { AnalyzeHealthcareDataModule } from './analyze-healthcare-data/analyze-healthcare-data.module';
 import { MediaModule } from './media/media.module';
 import { ClinicModule } from './clinics/clinic.module';
 
@@ -25,13 +27,17 @@ import { ClinicModule } from './clinics/clinic.module';
 
         MEDIA_SERVICE_HOST: Joi.string().required(),
         MEDIA_SERVICE_PORT: Joi.number().required(),
+
+        PATIENT_SERVICE_HOST: Joi.string().required(),
+        PATIENT_SERVICE_PORT: Joi.number().required(),
       }),
     }),
 
     //Single imports
     StaffModule,
+    PatientsModule,
     AuthModule,
-    MediaModule,
+    AnalyzeHealthcareDataModule,
     HttpModule,
     LoggerModule,
     MediaModule,

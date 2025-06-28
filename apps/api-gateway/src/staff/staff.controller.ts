@@ -8,6 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
+import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
 import {
   CreateDoctorAccountDto,
   CreateEmployeeAccountDto,
@@ -17,11 +18,15 @@ import {
   JwtAuthGuard,
   TokenPayload,
 } from '@app/common';
+
 import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(
+    private readonly staffService: StaffService,
+    private readonly manageDoctorScheduleService: ManageDoctorScheduleService,
+  ) { }
 
   //Doctor-enpoints
   @Get('doctor/account-list')
@@ -169,5 +174,41 @@ export class StaffController {
   @UseGuards(JwtAuthGuard)
   async getDoctorAccountById(@Param('id') id: string) {
     return this.staffService.getDoctorAccountById(id);
+  }
+
+  // View Working Hours
+  // Set Up Working Hours
+  // Change Working Hours
+
+  @Get('/doctor/view-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async getViewWorkingShift(
+    @Param('doctorId') doctorId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService
+        .getViewWorkingShiftService(doctorId, user);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/doctor/detail-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async getDetailShiftByShiftId(
+    @Param('shiftId') shiftId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService
+        .getDetailShift(shiftId, user);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
   }
 }

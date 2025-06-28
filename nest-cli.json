@@ -35,6 +35,15 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "patients": {
+      "type": "application",
+      "root": "apps/patients",
+      "entryFile": "main",
+      "sourceRoot": "apps/patients/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/patients/tsconfig.app.json"
+      }
+    },
     "media": {
       "type": "application",
       "root": "apps/media",
@@ -60,6 +69,15 @@
       "sourceRoot": "apps/staff/src",
       "compilerOptions": {
         "tsConfigPath": "apps/staff/tsconfig.app.json"
+      }
+    },
+    "analyze-healthcare-data": {
+      "type": "application",
+      "root": "apps/analyze-healthcare-data",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
       }
     },
     "clinics": {

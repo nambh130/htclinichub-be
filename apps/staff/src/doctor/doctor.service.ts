@@ -176,6 +176,20 @@ export class DoctorService extends BaseService {
     return createdStaffInfo;
   }
 
+async getDoctorsByIds(data: { ids: number[] }) {
+    console.log('This is a mock response from Doctor Service, received IDs:', data.ids);
+
+    const formatData = data.ids.map(id => ({
+        name: `Doctor ${id}`,
+        email: `doctor${id}@example.com`,
+    }));
+
+    console.log('Formatted doctor mock data:', formatData);
+
+    return formatData;
+}
+
+
   async addDoctorDegree(
     staffInfoId: string,
     dto: DoctorDegreeDto,
