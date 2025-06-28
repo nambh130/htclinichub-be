@@ -17,11 +17,11 @@ export class DownLoadMedicalReportService implements OnModuleInit {
   ) { }
 
   async onModuleInit() {
-    this.patientClient.subscribeToResponseOf('download-medical-report');
-    this.authClient.subscribeToResponseOf('authenticate');
+    // this.patientClient.subscribeToResponseOf('download-medical-report');
+    // this.authClient.subscribeToResponseOf('authenticate');
 
-    await this.patientClient.connect();
-    await this.authClient.connect();
+    // await this.patientClient.connect();
+    // await this.authClient.connect();
   }
 
   // Patient-related methods

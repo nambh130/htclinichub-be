@@ -1,7 +1,7 @@
 import { PostgresAbstractEntity } from '@app/common';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
-import { Column, Entity, JoinColumn, JoinColumn, OneToMany, OneToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
 import { StaffInfo } from './staffInfo.entity';
 import { Doctor_WorkShift } from './doctor_workshift.entity';

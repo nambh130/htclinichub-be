@@ -11,7 +11,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('staff/doctor')
 export class DoctorController {
-  constructor(private readonly doctorService: DoctorService) { }
+  constructor(private readonly doctorService: DoctorService) {}
 
   @Get('account-list')
   getDoctorAccountList(
@@ -21,7 +21,7 @@ export class DoctorController {
     return this.doctorService.getDoctorAccountList(+page, +limit);
   }
 
-  //khanh 
+  //khanh
   @Get('doctor-by-clinic/:clinicId')
   getDoctorByClinic(@Param('clinicId') clinicId: string) {
     return this.doctorService.getDoctorByClinic(clinicId);
@@ -150,5 +150,11 @@ export class DoctorController {
   ) {
     const { staffInfoId } = payload;
     return this.doctorService.getSpecializeList(staffInfoId);
+  }
+  @MessagePattern('get-doctors-by-ids')
+  async getDoctorsByIds(@Payload() data: { ids: number[] }) {
+    console.log('Received IDs Doctor Service:', data.ids);
+    // Gọi đến service thật nếu đã có, tạm thời trả mock:
+    return this.doctorService.getDoctorsByIds({ ids: data.ids });
   }
 }

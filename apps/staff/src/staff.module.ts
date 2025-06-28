@@ -73,7 +73,7 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
       Specialize,
       StaffInfo,
       DoctorClinicMap,
-      Clinic
+      Clinic,
       Doctor_WorkShift,
     ]),
   ],
@@ -83,8 +83,8 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
     EmployeeController,
     DoctorEventController,
     EmployeeEventController,
-    ClinicEventController
-    ManageDoctorScheduleController
+    ClinicEventController,
+    ManageDoctorScheduleController,
   ],
   providers: [
     StaffService,
@@ -98,9 +98,8 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
-    ClinicRepository
-    
-    ManageDoctorScheduleRepository
+    ClinicRepository,
+    ManageDoctorScheduleRepository,
   ],
   exports: [StaffService],
 })

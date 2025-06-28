@@ -1,7 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto, FavouriteDoctorDto, UpdatePatientDto } from '@app/common/dto';
+import {
+  CreatePatientDto,
+  FavouriteDoctorDto,
+  UpdatePatientDto,
+} from '@app/common/dto';
 import { PatientCreatedEvent } from '@app/common/events/patients';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { CurrentUser, TokenPayload } from '@app/common';
@@ -13,7 +26,7 @@ export class PatientsController {
     private readonly patientsService: PatientsService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
-  ) { }
+  ) {}
 
   @Post('create-patient')
   async createPatient(
@@ -45,7 +58,8 @@ export class PatientsController {
   @Put('update-patient/:patient_account_id')
   async updatePatient(
     @Param('patient_account_id') patient_account_id: string,
-    @Body() data: {
+    @Body()
+    data: {
       updatePatientDto: UpdatePatientDto;
       currentUser: TokenPayload;
     },
@@ -55,7 +69,7 @@ export class PatientsController {
     return await this.patientsService.updatePatient(
       patient_account_id,
       updatePatientDto,
-      currentUser.userId
+      currentUser.userId,
     );
   }
 
@@ -65,9 +79,7 @@ export class PatientsController {
   }
 
   @Delete('delete-patient/:id')
-  async removePatient(
-    @Param('id') id: string,
-  ) {
+  async removePatient(@Param('id') id: string) {
     try {
       const deletedPatient = await this.patientsService.deletePatient(id);
 
@@ -82,9 +94,7 @@ export class PatientsController {
   }
 
   @Get('get-patient-by-id/:id')
-  async getPatientById(
-    @Param('id') id: string,
-  ) {
+  async getPatientById(@Param('id') id: string) {
     try {
       const patient = await this.patientsService.getPatientById(id);
       return patient;
@@ -95,9 +105,7 @@ export class PatientsController {
   }
 
   @Get('get-patient-by-fullName/:fullName')
-  async getPatientByFullName(
-    @Param('fullName') fullName: string,
-  ) {
+  async getPatientByFullName(@Param('fullName') fullName: string) {
     try {
       const patient = await this.patientsService.getPatientByFullName(fullName);
       return patient;
@@ -108,12 +116,10 @@ export class PatientsController {
   }
 
   @Get('get-patient-by-phone/:phoneNumber')
-  async getPatientByPhoneNumber(
-    @Param('phoneNumber') phoneNumber: string,
-
-  ) {
+  async getPatientByPhoneNumber(@Param('phoneNumber') phoneNumber: string) {
     try {
-      const patient = await this.patientsService.getPatientByPhoneNumber(phoneNumber);
+      const patient =
+        await this.patientsService.getPatientByPhoneNumber(phoneNumber);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -122,10 +128,7 @@ export class PatientsController {
   }
 
   @Get('get-patient-by-cid/:cid')
-  async getPatientByCid(
-    @Param('cid') cid: string,
-
-  ) {
+  async getPatientByCid(@Param('cid') cid: string) {
     try {
       const patient = await this.patientsService.getPatientByCid(cid);
       return patient;
@@ -136,10 +139,7 @@ export class PatientsController {
   }
 
   @Get('get-patient-by-hid/:hid')
-  async getPatientByHid(
-    @Param('hid') hid: string,
-
-  ) {
+  async getPatientByHid(@Param('hid') hid: string) {
     try {
       const patient = await this.patientsService.getPatientByHid(hid);
       return patient;
@@ -170,7 +170,10 @@ export class PatientsController {
   ) {
     try {
       const { userId, favouriteDoctorDto } = payload;
-      const result = await this.favouriteDoctorService.addFavouriteDoctor(userId, favouriteDoctorDto);
+      const result = await this.favouriteDoctorService.addFavouriteDoctor(
+        userId,
+        favouriteDoctorDto,
+      );
       return result;
     } catch (error) {
       console.error('Error in addFavouriteDoctor:', error);
@@ -195,4 +198,26 @@ export class PatientsController {
   //     throw error;
   //   }
   // }
+
+  //khanhlq
+  @Post('/assign-to-clinic/:clinicId')
+  async assignToClinic(
+    @Param('clinicId') clinicId: string,
+    @Body()
+    payload: {
+      userId: string;
+    },
+  ) {
+    try {
+      const { userId } = payload;
+      const result = await this.patientsService.assignToClinic(
+        userId,
+        clinicId,
+      );
+      return result;
+    } catch (error) {
+      console.error('Error in assignToClinic:', error);
+      throw error;
+    }
+  }
 }

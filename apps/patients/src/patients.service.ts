@@ -6,27 +6,39 @@ import { PATIENT_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
 import { BadRequestException } from '@nestjs/common';
+import { PatientAccountRepository } from './repositories/patient-account.repositoty';
+import { PatientClinicLink } from './models/patient_clinic_link.entity';
+import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
 
 @Injectable()
 export class PatientsService {
   constructor(
     private readonly patientsRepository: PatientRepository,
+    private readonly patientAccountRepo: PatientAccountRepository,
+    private readonly patientClinicLinkRepo: PatientClinicLinkRepository,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
-  ) { }
+  ) {}
 
   async createPatient(createPatientDto: CreatePatientDto, userId: string) {
-    const existedPhone = await this.patientsRepository.findByPhone(createPatientDto.phone);
+    const existedPhone = await this.patientsRepository.findByPhone(
+      createPatientDto.phone,
+    );
     if (existedPhone) {
       throw new BadRequestException('Số điện thoại đã tồn tại!');
     }
 
-    const existedCitizenId = await this.patientsRepository.findCitizenId(createPatientDto.citizen_id);
+    const existedCitizenId = await this.patientsRepository.findCitizenId(
+      createPatientDto.citizen_id,
+    );
     if (existedCitizenId) {
       throw new BadRequestException('CCCD đã tồn tại!');
     }
 
-    const existedHealthInsuranceId = await this.patientsRepository.findHealthInsuranceId(createPatientDto.health_insurance_id);
+    const existedHealthInsuranceId =
+      await this.patientsRepository.findHealthInsuranceId(
+        createPatientDto.health_insurance_id,
+      );
     if (existedHealthInsuranceId) {
       throw new BadRequestException('BHYT đã tồn tại!');
     }
@@ -87,32 +99,51 @@ export class PatientsService {
       });
 
       if (!patient) {
-        throw new NotFoundException(`Patient with patient_account_id ${patient_account_id} not found`);
+        throw new NotFoundException(
+          `Patient with patient_account_id ${patient_account_id} not found`,
+        );
       }
 
       if (updatePatientDto.phone) {
-        const existedPhone = await this.patientsRepository.findByPhone(updatePatientDto.phone);
+        const existedPhone = await this.patientsRepository.findByPhone(
+          updatePatientDto.phone,
+        );
 
         // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
-        if (existedPhone && existedPhone.patient_account_id !== patient.patient_account_id) {
+        if (
+          existedPhone &&
+          existedPhone.patient_account_id !== patient.patient_account_id
+        ) {
           throw new BadRequestException('Số điện thoại đã tồn tại!');
         }
       }
 
       if (updatePatientDto.citizen_id) {
-        const existedCitizenId = await this.patientsRepository.findCitizenId(updatePatientDto.citizen_id);
+        const existedCitizenId = await this.patientsRepository.findCitizenId(
+          updatePatientDto.citizen_id,
+        );
 
         // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
-        if (existedCitizenId && existedCitizenId.patient_account_id !== patient.patient_account_id) {
+        if (
+          existedCitizenId &&
+          existedCitizenId.patient_account_id !== patient.patient_account_id
+        ) {
           throw new BadRequestException('CCCD đã tồn tại!');
         }
       }
 
       if (updatePatientDto.health_insurance_id) {
-        const existedHealthInsuranceId = await this.patientsRepository.findHealthInsuranceId(updatePatientDto.health_insurance_id);
+        const existedHealthInsuranceId =
+          await this.patientsRepository.findHealthInsuranceId(
+            updatePatientDto.health_insurance_id,
+          );
 
         // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
-        if (existedHealthInsuranceId && existedHealthInsuranceId.patient_account_id !== patient.patient_account_id) {
+        if (
+          existedHealthInsuranceId &&
+          existedHealthInsuranceId.patient_account_id !==
+            patient.patient_account_id
+        ) {
           throw new BadRequestException('BHYT đã tồn tại!');
         }
       }
@@ -127,7 +158,9 @@ export class PatientsService {
       );
 
       if (!updatedPatient) {
-        throw new NotFoundException(`Patient with patient_account_id ${patient_account_id} not updated`);
+        throw new NotFoundException(
+          `Patient with patient_account_id ${patient_account_id} not updated`,
+        );
       }
 
       return updatedPatient;
@@ -149,7 +182,9 @@ export class PatientsService {
         throw new NotFoundException(`Patient with id ${id} not found`);
       }
 
-      const deletedPatient = await this.patientsRepository.findOneAndDelete({ _id: id });
+      const deletedPatient = await this.patientsRepository.findOneAndDelete({
+        _id: id,
+      });
 
       return {
         success: true,
@@ -193,8 +228,8 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -208,14 +243,16 @@ export class PatientsService {
     }
 
     try {
-      const patients = await this.patientsRepository.find({ fullname: fullName });
+      const patients = await this.patientsRepository.find({
+        fullname: fullName,
+      });
 
       if (!patients || patients.length === 0) {
         throw new NotFoundException(`Patient with name ${fullName} not found`);
       }
 
       return {
-        data: patients.map(patient => ({
+        data: patients.map((patient) => ({
           id: patient._id,
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
@@ -234,8 +271,8 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }))
+          },
+        })),
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -249,10 +286,14 @@ export class PatientsService {
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({ phone: phoneNumber });
+      const patient = await this.patientsRepository.findOne({
+        phone: phoneNumber,
+      });
 
       if (!patient) {
-        throw new NotFoundException(`Patient with phone ${phoneNumber} not found`);
+        throw new NotFoundException(
+          `Patient with phone ${phoneNumber} not found`,
+        );
       }
 
       return {
@@ -275,8 +316,8 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -284,13 +325,15 @@ export class PatientsService {
     }
   }
 
-   async getPatientByCid(cid: string) {
+  async getPatientByCid(cid: string) {
     if (!cid) {
       throw new NotFoundException('Invalid phoneNumber');
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({ citizen_id: cid });
+      const patient = await this.patientsRepository.findOne({
+        citizen_id: cid,
+      });
 
       if (!patient) {
         throw new NotFoundException(`Patient with phone ${cid} not found`);
@@ -316,8 +359,8 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -325,13 +368,15 @@ export class PatientsService {
     }
   }
 
-   async getPatientByHid(hid: string) {
+  async getPatientByHid(hid: string) {
     if (!hid) {
       throw new NotFoundException('Invalid phoneNumber');
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({ health_insurance_id: hid });
+      const patient = await this.patientsRepository.findOne({
+        health_insurance_id: hid,
+      });
 
       if (!patient) {
         throw new NotFoundException(`Patient with phone ${hid} not found`);
@@ -357,8 +402,8 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -375,7 +420,7 @@ export class PatientsService {
       }
 
       return {
-        data: patients.map(patient => ({
+        data: patients.map((patient) => ({
           id: patient._id,
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
@@ -394,11 +439,42 @@ export class PatientsService {
             allergies: patient.medical_history.allergies,
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
-          }
-        }))
+          },
+        })),
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async assignToClinic(patient_account_id: string, clinicId: string) {
+    try {
+      console.log('Assigning patient to clinic:', {
+        patient_account_id,
+        clinicId,
+      });
+      // Kiểm tra patient account có tồn tại không
+      const patientAccount = await this.patientAccountRepo.repo.findOne({
+        where: { id: patient_account_id },
+      });
+
+      if (!patientAccount) {
+        throw new Error(`PatientAccount ${patient_account_id} not found`);
+      }
+
+      // Tạo bản ghi PatientClinicLink mới
+      const link = this.patientClinicLinkRepo.repo.create({
+        clinic_id: clinicId,
+        patientAccount: patientAccount,
+      });
+
+      // Lưu vào DB
+      await this.patientClinicLinkRepo.repo.save(link);
+
+      return link;
+    } catch (error) {
+      console.error('Error assigning patient to clinic:', error);
       throw error;
     }
   }

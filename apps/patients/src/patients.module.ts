@@ -3,8 +3,21 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsService } from './patients.service';
 import { PatientsController } from './patients.controller';
-import { FavouriteDoctor, Patient, PatientSchema } from './models';
-import { MongoDatabaseModule, LoggerModule, PATIENT_SERVICE, PostgresDatabaseModule, PATIENTS_TO_STAFF_SERVICE, PATIENTS_TO_STAFF_CLIENT, PATIENTS_TO_STAFF_CONSUMER } from '@app/common';
+import {
+  FavouriteDoctor,
+  Patient,
+  PatientAccount,
+  PatientSchema,
+} from './models';
+import {
+  MongoDatabaseModule,
+  LoggerModule,
+  PATIENT_SERVICE,
+  PostgresDatabaseModule,
+  PATIENTS_TO_STAFF_SERVICE,
+  PATIENTS_TO_STAFF_CLIENT,
+  PATIENTS_TO_STAFF_CONSUMER,
+} from '@app/common';
 import * as Joi from 'joi';
 import { FavouriteDoctorModule } from './favourite-doctor/favourite_doctor.module';
 import { PatientRepository } from './patients.repository';
@@ -13,6 +26,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
+import { PatientClinicLink } from './models/patient_clinic_link.entity';
+import { PatientAccountRepository } from './repositories/patient-account.repositoty';
+import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
 
 @Module({
   imports: [
@@ -40,16 +56,21 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
       envKey: 'PATIENT_SERVICE_URI',
       connectionName: 'patientService',
     }),
-    MongoDatabaseModule.forFeature([
-      {
-        name: Patient.name,
-        schema: PatientSchema,
-      },
-    ], 'patientService'),
+    MongoDatabaseModule.forFeature(
+      [
+        {
+          name: Patient.name,
+          schema: PatientSchema,
+        },
+      ],
+      'patientService',
+    ),
 
     PostgresDatabaseModule.register('PATIENT_SERVICE_DB'),
     PostgresDatabaseModule.forFeature([
       FavouriteDoctor,
+      PatientAccount,
+      PatientClinicLink,
     ]),
 
     ClientsModule.registerAsync([
@@ -85,11 +106,11 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
             },
             consumer: {
               groupId: PATIENTS_TO_STAFF_CONSUMER,
-              allowAutoTopicCreation: true
+              allowAutoTopicCreation: true,
             },
             subscribe: {
-              fromBeginning: true
-            }
+              fromBeginning: true,
+            },
           },
         }),
         inject: [ConfigService],
@@ -100,11 +121,22 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
     FavouriteDoctorModule,
   ],
   controllers: [PatientsController, FavouriteDoctorController],
-  providers: [PatientsService, PatientRepository, FavouriteDoctorService, FavouriteDoctorRepository, JwtModule],
+  providers: [
+    PatientsService,
+    PatientRepository,
+    FavouriteDoctorService,
+    FavouriteDoctorRepository,
+    JwtModule,
+    PatientAccountRepository,
+    PatientClinicLinkRepository,
+  ],
   exports: [
     PatientsService,
     PatientRepository,
-    FavouriteDoctorService, FavouriteDoctorRepository,
+    FavouriteDoctorService,
+    FavouriteDoctorRepository,
+    PatientAccountRepository,
+    PatientClinicLinkRepository,
   ],
 })
-export class PatientsModule { }
+export class PatientsModule {}

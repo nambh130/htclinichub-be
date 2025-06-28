@@ -12,21 +12,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
-import { HttpModule } from '@nestjs/axios';
-import { httpClientConfig } from '../api/http.client';
+import { httpClientConfig, HttpModules } from '../api/http.client';
 
 @Module({
   imports: [
     ConfigModule,
-        HttpModule.registerAsync({
-          imports: [ConfigModule],
-          useFactory: (configService: ConfigService) =>
-            httpClientConfig(
-              configService.get<string>('PATIENT_SERVICE_HOST'),
-              configService.get<string>('PATIENT_SERVICE_PORT'),
-            ),
-          inject: [ConfigService],
-        }),
+    HttpModules.registerAsync([
+      httpClientConfig(
+        PATIENT_SERVICE,
+        'PATIENT_SERVICE_HOST',
+        'PATIENT_SERVICE_PORT',
+      ),
+    ]),
     ClientsModule.registerAsync([
       {
         name: PATIENT_SERVICE,
@@ -62,11 +59,19 @@ import { httpClientConfig } from '../api/http.client';
           },
         }),
       },
-    ]),    
-    AuthModule
+    ]),
+    AuthModule,
   ],
   controllers: [PatientsController],
-  providers: [PatientService, FavouriteDoctorService, DownLoadMedicalReportService],
-  exports: [PatientService, FavouriteDoctorService, DownLoadMedicalReportService],
+  providers: [
+    PatientService,
+    FavouriteDoctorService,
+    DownLoadMedicalReportService,
+  ],
+  exports: [
+    PatientService,
+    FavouriteDoctorService,
+    DownLoadMedicalReportService,
+  ],
 })
 export class PatientsModule {}
