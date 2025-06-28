@@ -77,8 +77,8 @@ export class DoctorService extends BaseService {
     doctor.password = await bcrypt.hash(dto.password, 10);
     if (dto.clinic) {
       const clinicMap = new DoctorClinicMap();
-      clinicMap.clinic = { id: dto.clinic } as any; // gán tạm entity với id
-      clinicMap.doctor = doctor;
+      clinicMap.clinic = dto.clinic; // assign the clinic ID
+      clinicMap.doctor = doctor; // establish relation to current doctor
 
       doctor.clinics = [clinicMap];
     }
@@ -217,9 +217,58 @@ export class DoctorService extends BaseService {
 
     setAudit(specialize, currentUser);
 
-    return await this.staffInfoRepository.create(staffInfo);
+    return await this.specializeRepository.create(specialize);
   }
+
+  async getSpecializeList(staffInfoId: string): Promise<Degree[]> {
+    const specializes = await this.specializeRepository.find({
+      staff_info: { id: staffInfoId },
+    });
+
+    return specializes;
+  }
+
+  // async createDoctorProfileStepTwo(
+  //   payload: any,
+  //   user: { id: string; type: ActorType },
+  // ): Promise<StaffInfo> {
+  //   const staffInfo = await this.staffInfoRepository.findOne({});
+  //   return null;
+  // }
+
   //khanh
+  async getDoctorByClinic(clinicId: string): Promise<any[]> {
+    // Query doctor theo clinicId
+    const doctorClinicMaps = await this.doctorRepository.repo.manager
+      .getRepository(DoctorClinicMap)
+      .createQueryBuilder('doctorClinicMap')
+      .innerJoinAndSelect('doctorClinicMap.doctor', 'doctor')
+      .where('doctorClinicMap.clinic = :clinicId', { clinicId })
+      .getMany();
+
+    const doctors = doctorClinicMaps.map((map) => map.doctor);
+
+    // Lặp từng doctor để lấy info
+    const results = await Promise.all(
+      doctors.map(async (doctor) => {
+        const staffInfo = await this.staffInfoRepository.findOne(
+          { staff_id: doctor.id },
+          ['degrees', 'specializes'],
+        );
+
+        return {
+          account: {
+            id: doctor.id,
+            email: doctor.email,
+          },
+          info: staffInfo || null,
+        };
+      }),
+    );
+
+    return results;
+  }
+
   async getDoctorAccountById(
     id: string,
   ): Promise<{ id: string; email: string }> {
@@ -234,26 +283,5 @@ export class DoctorService extends BaseService {
       id: doctor.id,
       email: doctor.email,
     };
-  }
-
-  async getDoctorByClinic(clinicId: string): Promise<any[]> {
-    const doctors = await this.doctorRepository.repo
-      .createQueryBuilder('doctor')
-      .innerJoin('doctor.clinics', 'doctorClinicMap')
-      .leftJoinAndSelect('doctor.staff_info', 'staff_info')
-      .where('doctorClinicMap.clinic = :clinicId', { clinicId })
-      .getMany();
-
-    if (!doctors || doctors.length === 0) {
-      throw new Error(`No doctors found for clinic ID ${clinicId}`);
-    }
-
-    return doctors.map((doctor) => ({
-      account: {
-        id: doctor.id,
-        email: doctor.email,
-      },
-      info: doctor.staff_info || null,
-    }));
   }
 }

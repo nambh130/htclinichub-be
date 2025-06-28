@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import {
   CreateDoctorAccountDto,
@@ -20,12 +20,23 @@ export class DoctorController {
     return this.doctorService.getDoctorAccountList(+page, +limit);
   }
 
+  //khanh 
   @Get('doctor-by-clinic/:clinicId')
   getDoctorByClinic(@Param('clinicId') clinicId: string) {
     return this.doctorService.getDoctorByClinic(clinicId);
   }
 
-  @Post('create-doctor-account')
+  @Get('doctor-account-byId/:id')
+  viewDoctorAccountById(@Param('id') id: string) {
+    return this.doctorService.getDoctorAccountById(id);
+  }
+
+  @Get(':id')
+  getDoctorById(@Param('id') doctorId: string) {
+    return this.doctorService.getDoctorById(doctorId);
+  }
+
+  @Post('create-account')
   createDoctorAccount(
     @Body()
     payload: {
@@ -136,11 +147,7 @@ export class DoctorController {
       staffInfoId: string;
     },
   ) {
-    return this.doctorService.createDoctorProfile(payload.dto, payload.user);
-  }
-  //khanh
-  @Get('doctor-account-byId/:id')
-  viewDoctorAccountById(@Param('id') id: string) {
-    return this.doctorService.getDoctorAccountById(id);
+    const { staffInfoId } = payload;
+    return this.doctorService.getSpecializeList(staffInfoId);
   }
 }

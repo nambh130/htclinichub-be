@@ -1,18 +1,9 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
-import { StaffInfo } from './staffInfo.entity';
+import { PostgresAbstractEntity } from '@app/common';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
-import { Clinic } from './clinic.entity';
+import { StaffInfo } from './staffInfo.entity';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -25,19 +16,18 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @Column({ default: false })
   is_locked: boolean;
 
+  @OneToOne(() => StaffInfo)
+  @JoinColumn({ name: 'staff_info_id', referencedColumnName: 'id' })
+  staffInfo: StaffInfo;
+
   @OneToMany(() => Invitation, (invitation) => invitation.doctor)
   invitations: Invitation[];
 
   @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
   services: DoctorServiceLink[];
 
-  @OneToMany(() => DoctorClinicMap, (clinicMap) => clinicMap.doctor, {
+  @OneToMany(() => DoctorClinicMap, (clinic) => clinic.doctor, {
     cascade: true,
   })
   clinics: DoctorClinicMap[];
-
-  @OneToMany(() => Clinic, (clinic) => clinic.owner)
-  ownerOf: Clinic[];
-
-
 }

@@ -1,18 +1,14 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
-import { Image } from './image.entity';
+import { PostgresAbstractEntity } from '@app/common';
+import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { Specialize } from './specialize.entity';
 import { Degree } from './degree.entity';
 
 @Entity()
 @Unique(['staff_id'])
 export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
+  @Column({ unique: true })
+  staff_id: string;
+
   @Column()
   staff_type: 'doctor' | 'employee';
 
@@ -36,13 +32,11 @@ export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
 
   @OneToMany(() => Specialize, (specialize) => specialize.staff_info, {
     cascade: true,
-    eager: true,
   })
   specializes: Specialize[];
 
-  @OneToMany(() => Degree, (degrees) => degrees.staff_info, {
+  @OneToMany(() => Degree, (degree) => degree.staff_info, {
     cascade: true,
-    eager: true,
   })
-  degrees?: Degree;
+  degrees: Degree[];
 }
