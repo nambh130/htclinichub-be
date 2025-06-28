@@ -14,34 +14,6 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  //@Post('login')
-  //@ApiOperation({ summary: 'Login user and return token' })
-  //@ApiBody({ type: UserDto })
-  //@ApiResponse({
-  //  status: 200,
-  //  description: 'User logged in successfully',
-  //  schema: {
-  //    example: {
-  //      user: {
-  //        email: 'user@example.com',
-  //        role: 'user',
-  //      },
-  //      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  //    },
-  //  },
-  //})
-  //async login(
-  //  @Body() dto: LoginDto,
-  //  @Res({ passthrough: true }) response: Response,
-  //) {
-  //  const { user, token } = (await this.authService.login(dto)) as {
-  //    user: UserDocument;
-  //    token: string;
-  //  };
-  //  response.cookie('Authentication', token, { httpOnly: true });
-  //  return { user, token };
-  //}
-
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
   @ApiOperation({ summary: 'Patient login with phone number' })

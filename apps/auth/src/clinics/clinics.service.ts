@@ -13,8 +13,6 @@ export class ClinicsService {
 
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
     const newClinic: Partial<Clinic> = {};
-    newClinic.name = createClinicDto.name;
-    newClinic.location = createClinicDto.location;
 
     if (createClinicDto.owner) {
       try {

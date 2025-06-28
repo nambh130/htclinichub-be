@@ -35,7 +35,7 @@ export class AuthService implements OnModuleInit {
     private readonly clinicRepository: ClinicRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -67,10 +67,6 @@ export class AuthService implements OnModuleInit {
     const token = await this.jwtService.signAsync(tokenPayload);
 
     return { user: patient, token };
-  }
-
-  async verifyToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync(token);
   }
 
   // ------------------------------ EMPLOYEE ---------------------------------
@@ -147,6 +143,8 @@ export class AuthService implements OnModuleInit {
     });
     const email = user.email;
 
+    // getInvitationByToken() automatically check and update invitation status
+    // if it is expired
     const invitation = await this.invitationService.getInvitationByToken({
       token,
       email,
@@ -222,6 +220,7 @@ export class AuthService implements OnModuleInit {
     });
     if (!user) throw new BadRequestException('User not found');
 
+    // Compare password with hashed password
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new BadRequestException('Invalid credentials');
 
@@ -242,15 +241,6 @@ export class AuthService implements OnModuleInit {
 
     const adminOf = user.ownerOf.map((clinic) => clinic.id);
     tokenPayload.isAdminOf = adminOf;
-    //if (user.clinics && user.clinics.length > 0) {
-    //  const currentClinic = user.clinics[0];
-    //  if (currentClinic) {
-    //    tokenPayload.currentClinic = currentClinic.id;
-    //    if (currentClinic.owner?.id === user.id) {
-    //      tokenPayload.isAdmin = true;
-    //    }
-    //  }
-    //}
 
     const token = await this.createJWT(tokenPayload);
 
@@ -266,6 +256,11 @@ export class AuthService implements OnModuleInit {
     };
   }
 
+  // ------------------------------ UTILITIES ---------------------------------
+  async verifyToken(token: string): Promise<TokenPayload> {
+    return this.jwtService.verifyAsync(token);
+  }
+
   async createJWT(payload: TokenPayload) {
     const expires = new Date();
     const jwtExpiration = Number(
@@ -274,5 +269,16 @@ export class AuthService implements OnModuleInit {
     expires.setSeconds(expires.getSeconds() + jwtExpiration);
     const token = await this.jwtService.signAsync(payload);
     return token;
+  }
+
+  async createRefreshToken(userId: string): Promise<string> {
+    const refreshToken = this.jwtService.sign(
+      { sub: userId },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      }
+    );
+    return refreshToken
   }
 }

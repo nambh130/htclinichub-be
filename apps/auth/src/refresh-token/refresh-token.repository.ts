@@ -2,18 +2,20 @@ import { PostgresAbstractRepository } from '@app/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { User } from './models/clinic-user.entity';
-import { ClinicRepository } from '../clinics/clinics.repository';
+import { RefreshToken } from './models/refresh-token.model';
 
 @Injectable()
-export class ClinicUserRepository extends PostgresAbstractRepository<User> {
-  protected readonly logger = new Logger(ClinicRepository.name);
+export class RefreshTokenRepository extends PostgresAbstractRepository<RefreshToken> {
+  protected readonly logger = new Logger(RefreshTokenRepository.name);
 
   constructor(
-    @InjectRepository(User)
-    itemsRepository: Repository<User>,
+    @InjectRepository(RefreshToken)
+    itemsRepository: Repository<RefreshToken>,
     entityManager: EntityManager
   ) {
     super(itemsRepository, entityManager);
   }
 }
+
+
+

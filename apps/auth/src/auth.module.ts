@@ -14,6 +14,7 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
     InvitationsModule,
     RolesModule,
     PermissionsModule,
+    RefreshTokenModule
   ],
   controllers: [AuthController],
   exports: [AuthService],
