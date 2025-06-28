@@ -7,11 +7,14 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 
 @Module({
   imports: [
     HttpModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: 'jwt'}),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,
@@ -37,6 +40,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  providers: [AuthService,JwtStrategy],
   exports: [AuthService, ClientsModule],
 })
 export class AuthModule {}

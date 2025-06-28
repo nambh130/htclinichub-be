@@ -77,8 +77,8 @@ export class DoctorService extends BaseService {
     doctor.password = await bcrypt.hash(dto.password, 10);
     if (dto.clinic) {
       const clinicMap = new DoctorClinicMap();
-      clinicMap.clinic = dto.clinic; // assign the clinic ID
-      clinicMap.doctor = doctor; // establish relation to current doctor
+      clinicMap.clinic = { id: dto.clinic } as any; // gán tạm entity với id
+      clinicMap.doctor = doctor;
 
       doctor.clinics = [clinicMap];
     }
@@ -217,22 +217,43 @@ export class DoctorService extends BaseService {
 
     setAudit(specialize, currentUser);
 
-    return await this.specializeRepository.create(specialize);
+    return await this.staffInfoRepository.create(staffInfo);
+  }
+  //khanh
+  async getDoctorAccountById(
+    id: string,
+  ): Promise<{ id: string; email: string }> {
+    console.log('Fetching doctor account by ID:', id);
+    const doctor = await this.doctorRepository.findOne({ id });
+    console.log('Doctor found:', doctor);
+    if (!doctor) {
+      throw new Error('Doctor not found');
+    }
+
+    return {
+      id: doctor.id,
+      email: doctor.email,
+    };
   }
 
-  async getSpecializeList(staffInfoId: string): Promise<Degree[]> {
-    const specializes = await this.specializeRepository.find({
-      staff_info: { id: staffInfoId },
-    });
+  async getDoctorByClinic(clinicId: string): Promise<any[]> {
+    const doctors = await this.doctorRepository.repo
+      .createQueryBuilder('doctor')
+      .innerJoin('doctor.clinics', 'doctorClinicMap')
+      .leftJoinAndSelect('doctor.staff_info', 'staff_info')
+      .where('doctorClinicMap.clinic = :clinicId', { clinicId })
+      .getMany();
 
-    return specializes;
+    if (!doctors || doctors.length === 0) {
+      throw new Error(`No doctors found for clinic ID ${clinicId}`);
+    }
+
+    return doctors.map((doctor) => ({
+      account: {
+        id: doctor.id,
+        email: doctor.email,
+      },
+      info: doctor.staff_info || null,
+    }));
   }
-
-  // async createDoctorProfileStepTwo(
-  //   payload: any,
-  //   user: { id: string; type: ActorType },
-  // ): Promise<StaffInfo> {
-  //   const staffInfo = await this.staffInfoRepository.findOne({});
-  //   return null;
-  // }
 }

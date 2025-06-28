@@ -233,4 +233,20 @@ export class StaffService {
     );
     return response.data;
   }
+
+
+  //khanh: get doctor account by id
+  async getDoctorAccountById(id: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.httpService.get(`/staff/doctor-account-byId/${id}`),
+    );
+    return response.data;
+  }
+
+  async getDoctorByClinic(clinicId: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.httpService.get(`/staff/doctor-by-clinic/${clinicId}`),
+    );
+    return response.data;
+  }
 }

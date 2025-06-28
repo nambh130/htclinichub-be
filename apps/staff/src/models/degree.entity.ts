@@ -10,12 +10,13 @@ export class Degree extends PostgresAbstractEntity<Degree> {
   @Column()
   description: string;
 
-  @ManyToOne(() => StaffInfo, (staffInfo) => staffInfo.degrees, {
+  @ManyToOne(() => StaffInfo, (staffInfo) => staffInfo.specializes, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'staff_info_id' })
   staff_info: StaffInfo;
-
-  @Column({ name: 'image_id' })
-  image_id: string;
+  
+  @ManyToOne(() => Image)
+  @JoinColumn({ name: 'image_id' })
+  image: Image;
 }
