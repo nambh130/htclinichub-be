@@ -235,4 +235,53 @@ export class DoctorService extends BaseService {
   //   const staffInfo = await this.staffInfoRepository.findOne({});
   //   return null;
   // }
+
+  //khanh
+  async getDoctorByClinic(clinicId: string): Promise<any[]> {
+    // Query doctor theo clinicId
+    const doctorClinicMaps = await this.doctorRepository.repo.manager
+      .getRepository(DoctorClinicMap)
+      .createQueryBuilder('doctorClinicMap')
+      .innerJoinAndSelect('doctorClinicMap.doctor', 'doctor')
+      .where('doctorClinicMap.clinic = :clinicId', { clinicId })
+      .getMany();
+
+    const doctors = doctorClinicMaps.map((map) => map.doctor);
+
+    // Lặp từng doctor để lấy info
+    const results = await Promise.all(
+      doctors.map(async (doctor) => {
+        const staffInfo = await this.staffInfoRepository.findOne(
+          { staff_id: doctor.id },
+          ['degrees', 'specializes'],
+        );
+
+        return {
+          account: {
+            id: doctor.id,
+            email: doctor.email,
+          },
+          info: staffInfo || null,
+        };
+      }),
+    );
+
+    return results;
+  }
+
+  async getDoctorAccountById(
+    id: string,
+  ): Promise<{ id: string; email: string }> {
+    console.log('Fetching doctor account by ID:', id);
+    const doctor = await this.doctorRepository.findOne({ id });
+    console.log('Doctor found:', doctor);
+    if (!doctor) {
+      throw new Error('Doctor not found');
+    }
+
+    return {
+      id: doctor.id,
+      email: doctor.email,
+    };
+  }
 }

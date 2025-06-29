@@ -20,6 +20,17 @@ export class DoctorController {
     return this.doctorService.getDoctorAccountList(+page, +limit);
   }
 
+  //khanh 
+  @Get('doctor-by-clinic/:clinicId')
+  getDoctorByClinic(@Param('clinicId') clinicId: string) {
+    return this.doctorService.getDoctorByClinic(clinicId);
+  }
+
+  @Get('doctor-account-byId/:id')
+  viewDoctorAccountById(@Param('id') id: string) {
+    return this.doctorService.getDoctorAccountById(id);
+  }
+
   @Get(':id')
   getDoctorById(@Param('id') doctorId: string) {
     return this.doctorService.getDoctorById(doctorId);

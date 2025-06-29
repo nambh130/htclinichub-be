@@ -26,4 +26,8 @@ export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
     });
     return doctor !== null;
   }
+
+  get repo(): Repository<Doctor> {
+    return this.itemsRepository;
+  }
 }
