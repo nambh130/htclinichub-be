@@ -2,7 +2,7 @@ import { PostgresAbstractEntity } from '@app/common';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Clinic extends PostgresAbstractEntity<Clinic>{
+export class Clinic extends PostgresAbstractEntity<Clinic> {
   //@PrimaryGeneratedColumn()
   //id: number;
 
@@ -11,6 +11,12 @@ export class Clinic extends PostgresAbstractEntity<Clinic>{
 
   @Column({ length: 500 })
   location: string;
+
+  @Column({ length: 15 })
+  phone: string;
+
+  @Column({ length: 255 })
+  email: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   ownerId?: string;

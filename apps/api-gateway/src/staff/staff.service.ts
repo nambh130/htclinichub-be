@@ -18,28 +18,36 @@ import { MediaService } from '../media/media.service';
 export class StaffService {
   constructor(
     private readonly mediaService: MediaService,
-    @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
+    @Inject(STAFF_SERVICE) private readonly httpService: HttpService,
   ) {}
 
   async getDoctorAccountList(page = 1, limit = 10): Promise<unknown> {
     const response = await firstValueFrom(
-      this.staffService.get('/staff/doctor/account-list', {
+      this.httpService.get('/staff/doctor/account-list', {
         params: { page, limit },
       }),
     );
     return response.data;
   }
 
+  async getDoctorByClinic(clinicId: string): Promise<unknown> {
+    console.log('Calling staff service getDoctorByClinic with clinicId:', clinicId);
+    const response = await firstValueFrom(
+      this.httpService.get(`/staff/doctor/doctor-by-clinic/${clinicId}`),
+    );
+    return response.data;
+  }
+
   async getDoctorById(doctorId: string): Promise<unknown> {
     const response = await firstValueFrom(
-      this.staffService.get(`/staff/doctor/${doctorId}`),
+      this.httpService.get(`/staff/doctor/${doctorId}`),
     );
     return response.data;
   }
 
   async getDoctorDetailsById(doctorId: string): Promise<StaffDetails> {
     const response = await firstValueFrom(
-      this.staffService.get(`/staff/doctor/details/${doctorId}`),
+      this.httpService.get(`/staff/doctor/details/${doctorId}`),
     );
 
     const result = response.data as StaffDetails;
@@ -77,7 +85,7 @@ export class StaffService {
     const payload = { dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/create-account', payload),
+      this.httpService.post('/staff/doctor/create-account', payload),
     );
     return response.data;
   }
@@ -89,7 +97,7 @@ export class StaffService {
     const payload = { id, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/lock', payload),
+      this.httpService.post('/staff/doctor/lock', payload),
     );
     return response.data;
   }
@@ -101,7 +109,7 @@ export class StaffService {
     const payload = { id, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/unlock', payload),
+      this.httpService.post('/staff/doctor/unlock', payload),
     );
     return response.data;
   }
@@ -110,7 +118,7 @@ export class StaffService {
     const payload = { doctorId };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/profile', payload),
+      this.httpService.post('/staff/doctor/profile', payload),
     );
 
     return response.data;
@@ -124,7 +132,7 @@ export class StaffService {
     const payload = { staffId, dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/create-profile/step-one', payload),
+      this.httpService.post('/staff/doctor/create-profile/step-one', payload),
     );
 
     return response.data;
@@ -138,7 +146,7 @@ export class StaffService {
     const payload = { staffInfoId, dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post(`/staff/doctor/add-degree`, payload),
+      this.httpService.post(`/staff/doctor/add-degree`, payload),
     );
 
     return response.data;
@@ -148,7 +156,7 @@ export class StaffService {
     const payload = { staffInfoId };
 
     const response = await firstValueFrom(
-      this.staffService.post<unknown[]>('/staff/doctor/get-degrees', payload),
+      this.httpService.post<unknown[]>('/staff/doctor/get-degrees', payload),
     );
 
     return response.data;
@@ -162,7 +170,7 @@ export class StaffService {
     const payload = { staffInfoId, dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post(`/staff/doctor/add-specialize`, payload),
+      this.httpService.post(`/staff/doctor/add-specialize`, payload),
     );
 
     return response.data;
@@ -172,7 +180,7 @@ export class StaffService {
     const payload = { staffInfoId };
 
     const response = await firstValueFrom(
-      this.staffService.post<unknown[]>(
+      this.httpService.post<unknown[]>(
         '/staff/doctor/get-specializes',
         payload,
       ),
@@ -184,7 +192,7 @@ export class StaffService {
   //Employee services
   async viewEmployeeAccountList(): Promise<unknown> {
     const response = await firstValueFrom(
-      this.staffService.get('/staff/employee-account-list'),
+      this.httpService.get('/staff/employee-account-list'),
     );
     return response.data;
   }
@@ -199,7 +207,7 @@ export class StaffService {
     };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/create-employee-account', payload),
+      this.httpService.post('/staff/create-employee-account', payload),
     );
     return response.data;
   }
@@ -214,7 +222,7 @@ export class StaffService {
     };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/lock-employee-account', payload),
+      this.httpService.post('/staff/lock-employee-account', payload),
     );
     return response.data;
   }
@@ -229,8 +237,19 @@ export class StaffService {
     };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/unlock-employee-account', payload),
+      this.httpService.post('/staff/unlock-employee-account', payload),
     );
     return response.data;
   }
+
+
+  //khanh: get doctor account by id
+  async getDoctorAccountById(id: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.httpService.get(`/staff/doctor/doctor-account-byId/${id}`),
+    );
+    return response.data;
+  }
+
+  
 }
