@@ -14,7 +14,7 @@ export class ClinicUsersService {
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly roleRepository: RoleRepository,
-  ) {}
+  ) { }
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
@@ -70,6 +70,15 @@ export class ClinicUsersService {
     email: string,
     updateData: Partial<User>,
   ): Promise<User> {
+    if (updateData.password)
+      updateData.password = await this.hashPassword(updateData.password)
+
     return await this.userRepository.create(new User(updateData));
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 12;
+    const hash = await bcrypt.hash(password, saltRounds);
+    return hash
   }
 }

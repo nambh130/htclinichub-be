@@ -88,4 +88,16 @@ export class AuthController {
     const response = await this.authService.logout(req, res);
     return response;
   }
+
+  @Post('recover-password')
+  async recoverPassowrd(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.recoverPassword(req, res)
+    return response
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.resetPassword(req, res)
+    return response
+  }
 }

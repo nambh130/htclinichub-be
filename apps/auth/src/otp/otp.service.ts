@@ -24,8 +24,10 @@ export class OtpService {
 
     // Send SMS or Email
     if (input.type === OtpTargetType.PHONE) {
+      console.log(`Sending OTP ${code} to phone ${input.target} for ${input.purpose}`);
       // TODO: Send SMS here
     } else {
+      console.log(`Sending OTP ${code} to email ${input.target} for ${input.purpose}`);
       // TODO: Send Email here
     }
 

@@ -34,6 +34,8 @@ import { ActorEnum } from '@app/common/enum/actor-type';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { ConfigService } from '@nestjs/config';
 import { OtpPurpose, OtpTargetType } from './constants/enums';
+import { PasswordRecoveryDto } from './dto/user-recover-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -179,7 +181,6 @@ export class AuthController {
     const rawToken = req.cookies['refreshToken'];
     const userAgent = req.headers['user-agent'] || 'unknown';
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').toString();
-    console.log(rawToken)
 
     if (!rawToken) throw new UnauthorizedException('Missing refresh token');
 
@@ -227,7 +228,6 @@ export class AuthController {
       path: '/auth/refresh',
     });
 
-    console.log("HELLLOOOO")
     return { message: 'Logged out successfully' };
   }
 
@@ -235,6 +235,61 @@ export class AuthController {
   @Post('test-clinic')
   async createClinic(@Body() createClinicDto: CreateClinicDto) {
     return await this.clinicService.createClinic(createClinicDto);
+  }
+
+  @Post('recover-password')
+  async recoverPassword(@Body() dto: PasswordRecoveryDto) {
+    const actorPurposeMap: Record<string, OtpPurpose> = {
+      [ActorEnum.DOCTOR]: OtpPurpose.DOCTOR_RESET_PASSWORD,
+      [ActorEnum.ADMIN]: OtpPurpose.ADMIN_RESET_PASSWORD,
+      [ActorEnum.EMPLOYEE]: OtpPurpose.STAFF_RESET_PASSWORD,
+    };
+
+    const purpose = actorPurposeMap[dto.actorType];
+    if (!purpose) {
+      throw new BadRequestException(`Invalid actor type: ${dto.actorType}`);
+    }
+
+    const checkUser = await this.userService.findUserByEmail(dto.email);
+    if (!checkUser) {
+      throw new BadRequestException("Email not found!");
+    }
+
+    return this.otpService.sendOtp({
+      target: dto.email,
+      type: OtpTargetType.EMAIL,
+      purpose,
+    });
+  }
+
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    const actorPurposeMap: Record<string, OtpPurpose> = {
+      [ActorEnum.DOCTOR]: OtpPurpose.DOCTOR_RESET_PASSWORD,
+      [ActorEnum.ADMIN]: OtpPurpose.ADMIN_RESET_PASSWORD,
+      [ActorEnum.EMPLOYEE]: OtpPurpose.STAFF_RESET_PASSWORD,
+    };
+
+    const purpose = actorPurposeMap[dto.actorType];
+    const verifyOtp = this.otpService.verifyOtp(
+      dto.email,
+      OtpTargetType.EMAIL,
+      purpose,
+      dto.otp
+    )
+
+    if (!verifyOtp) {
+      throw new BadRequestException("Invalid OTP");
+    }
+
+    const user = await this.userService.find({ email: dto.email, actorType: dto.actorType });
+    user.password = dto.password
+    const updatedUser = this.userService.updateUser(dto.email, user);
+    if (!updatedUser) {
+      throw new Error();
+    }
+    return ({ message: "Change password succesfully" })
   }
 
   @UseGuards(JwtAuthGuard, AuthorizationGuard)

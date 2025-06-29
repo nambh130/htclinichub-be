@@ -197,7 +197,45 @@ export class AuthService implements OnModuleInit {
 
     return res.json({ message: 'Logged out successfully' }); // ✅ this forces flush
   }
+  // ------------------- RECOVER PASSWORD -------------------
 
+  async recoverPassword(req: Request, res: Response): Promise<any> {
+    const response = await firstValueFrom(
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/recover-password`, req.body)
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          }),
+        ),
+    );
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<any> {
+    const response = await firstValueFrom(
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/reset-password`, req.body)
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          }),
+        ),
+    );
+    const setCookie = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+    }
+
+    return res.status(response.status).send(response.data);
+  }
   // ------------------- INVITATIONS ------------------- 
   async createInvitation(
     invitationDto: CreateInvitationDto,
