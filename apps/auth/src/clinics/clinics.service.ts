@@ -26,10 +26,6 @@ export class ClinicsService {
       }
     }
 
-    //const newClinic = new Clinic({
-    //  location, name,
-    //  owner
-    //});
     return await this.clinicRepository.create(new Clinic(newClinic));
   }
 

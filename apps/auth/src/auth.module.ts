@@ -24,7 +24,10 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         AUTH_SERVICE_DB: Joi.string().required(),
-        AUTH_SERVICE_URI: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_EXPIRES: Joi.number().required(),
+        JWT_EXPIRES_IN: Joi.number().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
     JwtModule.registerAsync({
@@ -69,4 +72,4 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
   exports: [AuthService],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }
