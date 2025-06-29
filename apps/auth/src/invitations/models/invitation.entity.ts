@@ -1,12 +1,10 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Clinic } from '../../clinics/models/clinic.entity';
 import {
-  ActorEnum,
-  ClinicUser,
+  User,
 } from '../../clinic-users/models/clinic-user.entity';
-import { ActorType, PostgresAbstractEntity } from '@app/common';
+import { PostgresAbstractEntity } from '@app/common';
 import { Role } from '../../roles/models/role.entity';
-
 export type InvitationType = 'pending' | 'accepted' | 'expired' | 'revoked';
 export enum InvitationEnum {
   PENDING = 'pending',
@@ -50,9 +48,9 @@ export class EmployeeInvitation extends PostgresAbstractEntity<EmployeeInvitatio
   })
   isOwnerInvitation: boolean;
 
-  @ManyToOne(() => ClinicUser, { nullable: true })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'invited_by' })
-  invitedBy: ClinicUser;
+  invitedBy: User;
 
   @Column({
     type: 'enum',

@@ -1,37 +1,50 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { RequestOtpDto } from './dto/request-otp.dto';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { OtpPurpose, OtpTargetType } from '../constants/enums';
+import { RequestOtpInput } from '../constants/interfaces';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OtpService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) { }
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly configService: ConfigService
+  ) { }
 
-  async sendOtp(dto: RequestOtpDto) {
+  async sendOtp(input: RequestOtpInput) {
     const code = this.generateOtp();
-    const ttlSeconds = 1000 * 60 * 10; // 10 minutes
+    const ttlSeconds = this.configService.get("OTP_TTL_SECONDS") || 600000; // 10 minutes
+    const key = `otp:${input.purpose}:${input.type}:${input.target}`;
 
-    // Store OTP in cache: key is phone number, value is code
-    await this.cacheManager.set(dto.phone, code, ttlSeconds);
-    const check = await this.cacheManager.get(dto.phone);
-    if(!check){
-      throw new Error("Cache error;");
+    await this.cacheManager.set<string>(key, code, ttlSeconds); // ttl is in miliseconds
+
+    const check = await this.cacheManager.get<string>(key);
+    if (!check) throw new Error("Failed to cache OTP");
+
+    // Send SMS or Email
+    if (input.type === OtpTargetType.PHONE) {
+      console.log(`Sending OTP ${code} to phone ${input.target} for ${input.purpose}`);
+      // TODO: Send SMS here
+    } else {
+      console.log(`Sending OTP ${code} to email ${input.target} for ${input.purpose}`);
+      // TODO: Send Email here
     }
-
-    // Here, integrate SMS sending logic, e.g., Twilio
-    console.log(`Sending OTP ${code} to ${dto.phone}`);
 
     return { success: true };
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<boolean> {
-    const { phone, otp } = verifyOtpDto;
-    const cachedCode = await this.cacheManager.get<string>(phone);
+  async verifyOtp(
+    target: string,
+    type: OtpTargetType,
+    purpose: OtpPurpose,
+    submittedOtp: string
+  ): Promise<boolean> {
+    const key = `otp:${purpose}:${type}:${target}`;
+    const cachedOtp = await this.cacheManager.get<string>(key);
 
-    if (cachedCode && cachedCode === otp) {
-      // Optionally delete OTP after verification
-      await this.cacheManager.del(phone);
+    if (cachedOtp && cachedOtp === submittedOtp) {
+      await this.cacheManager.del(key); // OTP is one-time
       return true;
     }
 
