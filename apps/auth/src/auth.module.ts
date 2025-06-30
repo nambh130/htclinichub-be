@@ -20,7 +20,7 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/auth/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         AUTH_SERVICE_DB: Joi.string().required(),
@@ -66,10 +66,10 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
     InvitationsModule,
     RolesModule,
     PermissionsModule,
-    RefreshTokenModule
+    RefreshTokenModule,
   ],
   controllers: [AuthController],
   exports: [AuthService],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

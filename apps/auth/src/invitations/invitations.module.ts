@@ -14,10 +14,10 @@ import { ClinicUsersModule } from '../clinic-users/clinic-users.module';
 
     RolesModule,
     ClinicUsersModule,
-    RolesModule
+    RolesModule,
   ],
   controllers: [InvitationsController],
-  providers: [InvitationsService, InvitationRepository ],
-  exports: [InvitationsService]
+  providers: [InvitationsService, InvitationRepository],
+  exports: [InvitationsService],
 })
-export class InvitationsModule { }
+export class InvitationsModule {}

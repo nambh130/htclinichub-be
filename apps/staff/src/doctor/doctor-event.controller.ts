@@ -1,7 +1,5 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
-import { ActorType, CreateDoctorAccountDto } from '@app/common';
-import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 import { EventPattern } from '@nestjs/microservices';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ActorEnum } from '@app/common/enum/actor-type';
@@ -36,5 +34,6 @@ export class DoctorEventController {
         },
       );
     }
+    return null;
   }
 }
