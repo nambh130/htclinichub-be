@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, LoggerModule } from '@app/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { PatientsModule } from './patients/patients.module';
@@ -15,6 +15,7 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
+import { ClinicEventController } from './clinics/clinic-event.controller';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
         REFRESH_TOKEN_EXPIRES: Joi.number().required(),
         JWT_EXPIRES_IN: Joi.number().required(),
         JWT_SECRET: Joi.string().required(),
+        FRONT_END_URL: Joi.string().required()
       }),
     }),
     JwtModule.registerAsync({
@@ -68,8 +70,8 @@ import { RefreshTokenModule } from './refresh-token/refresh-token.module';
     PermissionsModule,
     RefreshTokenModule
   ],
-  controllers: [AuthController],
-  exports: [AuthService],
+  controllers: [AuthController, ClinicEventController],
+  exports: [AuthService, JwtModule],
   providers: [AuthService, JwtStrategy],
 })
 export class AuthModule { }

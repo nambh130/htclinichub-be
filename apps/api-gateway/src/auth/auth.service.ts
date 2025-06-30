@@ -201,7 +201,7 @@ export class AuthService implements OnModuleInit {
 
   async recoverPassword(req: Request, res: Response): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/recover-password`, req.body)
+      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/forget-password`, req.body)
         .pipe(
           catchError((error) => {
             const e = error.response;
