@@ -195,4 +195,17 @@ export class PatientsController {
   //     throw error;
   //   }
   // }
+
+  @Get('get-patientProfile-by-account_id/:account_id')
+  async getPatientProfileByAccountId(
+    @Param('account_id') account_id: string,
+  ) {
+    try {
+      const patient = await this.patientsService.getPatientProfileByAccountId(account_id);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
 }

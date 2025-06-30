@@ -209,8 +209,10 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    ports:
+      - '3006:3006'
     env_file:
-      - ./apps/analyze-healthcare-data/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy

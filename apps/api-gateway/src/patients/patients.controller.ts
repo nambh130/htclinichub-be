@@ -168,19 +168,35 @@ async deletePatient(
     }
   }
 
-  // @Get('/get-favourite-doctors-list')
-  // @UseGuards(JwtAuthGuard)
-  // async getFavouriteDoctors(
-  //   @CurrentUser() user: TokenPayload,
-  // ) {
-  //   try {
-  //     const result = await this.favouriteDoctorService.getFavouriteDoctors(user._id.toString());
-  //     return result;
-  //   } catch (error) {
-  //     console.error('Error retrieving favourite doctors:', error);
-  //     throw error;
-  //   }
-  // }
+  @Get('/get-favourite-doctors-list/:patientId')
+  @UseGuards(JwtAuthGuard)
+  async getFavouriteDoctors(
+     @Param('patientId') patientId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const result = await this.favouriteDoctorService.getFavouriteDoctors(user, patientId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving favourite doctors:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-patientProfile-by-account_id/:account_id')
+  @UseGuards(JwtAuthGuard)
+  async getPatientProfileByAccountId(
+    @Param('account_id') account_id: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientProfileByAccountId(account_id, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 
   // @Post('/download-medical-report/:patient_account_id')
   // @UseGuards(JwtAuthGuard)

@@ -8,6 +8,7 @@ import {
   ValidateNested,
   IsDateString,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -36,8 +37,8 @@ export class UpdatePatientDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  relation?: string;
+  @IsEnum(['Chính chủ', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'])
+  relation?: 'Chính chủ' | 'Vợ' | 'Con' | 'Bố' | 'Mẹ' | 'Ông' | 'Bà' | 'Chị' | 'Anh' | 'Em' | 'Cháu' | 'Khác';
 
   @IsString()
   @IsOptional()
@@ -99,6 +100,10 @@ export class UpdatePatientDto {
   @Type(() => MedicalHistoryDto)
   @IsOptional()
   medical_history?: MedicalHistoryDto;
+
+  @IsOptional()
+  @IsEnum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 
   // @IsString()
   // @IsNotEmpty()

@@ -11,6 +11,14 @@ const bloodPressureValue = {
     _id: false,
 }
 
+const glucoseLevelValue = {
+    type: {
+        min: { type: Number },
+        max: { type: Number },
+    },
+    _id: false,
+}
+
 @Schema({ versionKey: false, timestamps: true })
 export class Vitals extends MongoAbstractDocument {
     @Prop({ type: Types.ObjectId, ref: 'Patient', required: true })
@@ -28,11 +36,33 @@ export class Vitals extends MongoAbstractDocument {
     @Prop({ type: Number })
     temperature?: number;
 
+    @Prop({ type: Number })
+    weight?: number;
+
+    @Prop({ type: Number })
+    height?: number;
+
+    @Prop({ type: Number })
+    bmi?: number;
+
+    @Prop(glucoseLevelValue)
+    glucoseLevel?: {
+        min: number;
+        max: number;
+    };
+
     @Prop(bloodPressureValue)
     bloodPressure?: {
         systolic: number;
         diastolic: number;
     };
+
+    // @Prop({
+    //     type: String,
+    //     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+    //     default: 'O+'
+    // })
+    // bloodGroup: string;
 
     @Prop({ type: String, enum: ['wearable', 'manual', 'nurse'], default: 'manual' })
     source: string;

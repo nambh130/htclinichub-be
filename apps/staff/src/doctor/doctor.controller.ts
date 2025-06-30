@@ -115,10 +115,9 @@ export class DoctorController {
     return this.doctorService.addDoctorDegree(staffInfoId, dto, currentUser);
   }
 
-  @MessagePattern('get-doctors-by-ids')
-  async getDoctorsByIds(@Payload() data: { ids: number[] }) {
-    console.log('Received IDs Doctor Service:', data.ids);
-    // Gọi đến service thật nếu đã có, tạm thời trả mock:
-    return this.doctorService.getDoctorsByIds({ ids: data.ids });
-  }
+  @Get('get-doctors-by-ids')
+async getDoctorsByIds(@Query('ids') ids: string | string[]) {
+  const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
+  return this.doctorService.getDoctorsByIds({ ids: parsedIds });
+}
 }

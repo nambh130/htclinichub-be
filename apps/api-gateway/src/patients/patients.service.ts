@@ -154,4 +154,19 @@ export class PatientService {
       throw error;
     }
   }
+
+  async getPatientProfileByAccountId(
+    account_id: string,
+    currentUser: TokenPayload,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patientProfile-by-account_id/${account_id}`)
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }

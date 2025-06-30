@@ -1,4 +1,4 @@
-import { CurrentUser, JwtAuthGuard, UserDocument } from '@app/common';
+import { CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
 import { InputVitalDto, UpdateVitalDto } from '@app/common/dto/analyze-healthcare-data';
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { AnalyzeHealthcareDataService } from './analyze-healthcare-data.service';
@@ -13,15 +13,11 @@ export class AnalyzeHealthcareDataController {
   @UseGuards(JwtAuthGuard)
   async inputVitalSigns(
     @Body() inputVitalDto: InputVitalDto,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const analyzeHealthcareData = await this.analyzeHealthcareDataService.inputVital(inputVitalDto, user._id.toString());
-      return {
-        success: true,
-        inputVitalDto,
-        message: 'input Vital successfully'
-      }
+      const analyzeHealthcareData = await this.analyzeHealthcareDataService.inputVital(inputVitalDto, user);
+      return analyzeHealthcareData;
     } catch (error) {
       console.error('Error input Vital:', error);
       throw error;
@@ -32,10 +28,10 @@ export class AnalyzeHealthcareDataController {
   @UseGuards(JwtAuthGuard)
   async vitalSignsDataByPatientId(
     @Param('patientId') patientId: String,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const analyzeHealthcareData = await this.analyzeHealthcareDataService.getVitalSignsDataByPatientId(patientId, user._id.toString());
+      const analyzeHealthcareData = await this.analyzeHealthcareDataService.getVitalSignsDataByPatientId(patientId, user);
       return analyzeHealthcareData;
     } catch (error) {
       console.error('Error input Vital:', error);
@@ -43,22 +39,38 @@ export class AnalyzeHealthcareDataController {
     }
   }
 
-  @Put('/update-vital-signs/:patientId')
+  @Get('/vital-signs/:id')
+  @UseGuards(JwtAuthGuard)
+  async vitalSignsDataById(
+    @Param('id') id: String,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const analyzeHealthcareData = await this.analyzeHealthcareDataService.vitalSignsDataById(id, user);
+      return analyzeHealthcareData;
+    } catch (error) {
+      console.error('Error input Vital:', error);
+      throw error;
+    }
+  }
+
+
+  @Put('/update-vital-signs/:id')
   @UseGuards(JwtAuthGuard)
   async updateVital(
-    @Param('patientId') patientId: string,
+    @Param('id') id: string,
     @Body() updateVitalDto: UpdateVitalDto,
-    @CurrentUser() user: UserDocument,
+    @CurrentUser() user: TokenPayload,
   ) {
     try {
       const updatedPatient = await this.analyzeHealthcareDataService.updateVital(
-        patientId,
+        id,
         updateVitalDto,
-        user._id.toString());
+        user);
       return {
         success: true,
-        patientId: patientId,
-        userId: user._id.toString(),
+        patientId: id,
+        userId: user,
         data: updateVitalDto,
         message: 'Patient updated successfully'
       };

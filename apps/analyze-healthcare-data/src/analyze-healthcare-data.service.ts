@@ -25,6 +25,13 @@ export class AnalyzeHealthcareDataService {
         heartRate: inputVitalDto.heartRate,
         respiratoryRate: inputVitalDto.respiratoryRate,
         temperature: inputVitalDto.temperature,
+        weight: inputVitalDto.weight,
+        height: inputVitalDto.height,
+        bmi: inputVitalDto.bmi,
+        glucoseLevel: {
+          min: inputVitalDto.glucoseLevel.min,
+          max: inputVitalDto.glucoseLevel.max,
+        },
         bloodPressure: {
           systolic: inputVitalDto.bloodPressure.systolic,
           diastolic: inputVitalDto.bloodPressure.diastolic,
@@ -42,31 +49,88 @@ export class AnalyzeHealthcareDataService {
     }
   }
 
-  async getVitalSignsDataByPatientId(patientId: string, userId: string) {
+  async getVitalSignsDataByPatientId(patientId: string) {
     if (!patientId) {
       throw new NotFoundException('Invalid patientId');
     }
 
     try {
-      const vitalsData = await this.analyzeHealthcareDataRepository.findOne({ patientId: new Types.ObjectId(patientId) });
+      const vitalsData = await this.analyzeHealthcareDataRepository.findAndSort(
+        { patientId: new Types.ObjectId(patientId) },
+        { sort: { createdAt: -1 } }
+      );
+      if (!vitalsData || vitalsData.length === 0) {
+        throw new NotFoundException(`No vitals found for patient with id ${patientId}`);
+      }
+
+      return {
+        data: vitalsData.map(v => ({
+          _id: v._id,
+          patientId: v.patientId,
+          spo2: v.spo2,
+          heartRate: v.heartRate,
+          respiratoryRate: v.respiratoryRate,
+          temperature: v.temperature,
+          weight: v.weight,
+          height: v.height,
+          bmi: v.bmi,
+          glucoseLevel: {
+            min: v.glucoseLevel?.min,
+            max: v.glucoseLevel?.max,
+          },
+          bloodPressure: {
+            systolic: v.bloodPressure?.systolic,
+            diastolic: v.bloodPressure?.diastolic,
+          },
+          createdAt: v.createdAt,
+          updatedAt: v.updatedAt,
+          source: v.source,
+        }))
+      };
+
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async vitalSignsDataById(id: string) {
+    if (!id) {
+      throw new NotFoundException('Invalid patientId');
+    }
+
+    try {
+      const vitalsData = await this.analyzeHealthcareDataRepository.findOne({
+        _id: new Types.ObjectId(id),
+      });
 
       if (!vitalsData) {
-        throw new NotFoundException(`Patient with id ${patientId} not found`);
+        throw new NotFoundException(`Patient with id ${id} not found`);
       }
 
       return {
         data: {
+          _id: vitalsData._id,
           patientId: vitalsData.patientId,
           spo2: vitalsData.spo2,
           heartRate: vitalsData.heartRate,
           respiratoryRate: vitalsData.respiratoryRate,
           temperature: vitalsData.temperature,
+          weight: vitalsData.weight,
+          height: vitalsData.height,
+          bmi: vitalsData.bmi,
+          glucoseLevel: {
+            min: vitalsData.glucoseLevel?.min,
+            max: vitalsData.glucoseLevel?.max,
+          },
           bloodPressure: {
             systolic: vitalsData.bloodPressure?.systolic,
             diastolic: vitalsData.bloodPressure?.diastolic,
           },
+          createdAt: vitalsData.createdAt,
+          updatedAt: vitalsData.updatedAt,
           source: vitalsData.source,
-        }
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -75,11 +139,11 @@ export class AnalyzeHealthcareDataService {
   }
 
   async updateVitalService(
-    patientId: string,
+    id: string,
     updateVitalDto: UpdateVitalDto,
     userId: string,
   ) {
-    if (!patientId) {
+    if (!id) {
       throw new NotFoundException('Invalid patientId');
     }
 
@@ -93,7 +157,7 @@ export class AnalyzeHealthcareDataService {
       // }
 
       const updateVitalData = await this.analyzeHealthcareDataRepository.findOneAndUpdate(
-        { patientId: new Types.ObjectId(patientId) },
+        { _id: new Types.ObjectId(id) },
         {
           ...updateVitalDto,
           updatedBy: userId,
@@ -102,7 +166,7 @@ export class AnalyzeHealthcareDataService {
       );
 
       if (!updateVitalData) {
-        throw new NotFoundException(`Patient with patientId ${patientId} not updated`);
+        throw new NotFoundException(`Patient with patientId ${id} not updated`);
       }
 
       return updateVitalData;
