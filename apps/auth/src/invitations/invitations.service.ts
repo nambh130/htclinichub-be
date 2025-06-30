@@ -63,7 +63,6 @@ export class InvitationsService extends BaseService {
     // Create new Invitation object
     const newInvitation = new EmployeeInvitation({
       email,
-      //actorType: userType,
       isOwnerInvitation,
       expires_at: expiresAt,
       role: { id: role.id } as Role,

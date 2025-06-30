@@ -12,10 +12,9 @@ import { PermissionsController } from './permissions.controller';
     PostgresDatabaseModule,
     PostgresDatabaseModule.forFeature([Permission]),
     LoggerModule,
-
   ],
   providers: [PermissionsService, PermissionRepository],
   controllers: [PermissionsController],
-  exports: [PermissionsService, PermissionRepository]
+  exports: [PermissionsService, PermissionRepository],
 })
 export class PermissionsModule {}

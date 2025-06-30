@@ -14,16 +14,20 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/auth/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         AUTH_SERVICE_DB: Joi.string().required(),
-        AUTH_SERVICE_URI: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_EXPIRES: Joi.number().required(),
+        JWT_EXPIRES_IN: Joi.number().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
     JwtModule.registerAsync({
@@ -62,6 +66,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
     InvitationsModule,
     RolesModule,
     PermissionsModule,
+    RefreshTokenModule,
   ],
   controllers: [AuthController],
   exports: [AuthService],

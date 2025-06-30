@@ -1,46 +1,16 @@
-import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
-import { LoginOtpVerifyDto } from './dto/login-otp-verify.dto';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { JwtAuthGuard } from '@app/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
-
-  //@Post('login')
-  //@ApiOperation({ summary: 'Login user and return token' })
-  //@ApiBody({ type: UserDto })
-  //@ApiResponse({
-  //  status: 200,
-  //  description: 'User logged in successfully',
-  //  schema: {
-  //    example: {
-  //      user: {
-  //        email: 'user@example.com',
-  //        role: 'user',
-  //      },
-  //      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  //    },
-  //  },
-  //})
-  //async login(
-  //  @Body() dto: LoginDto,
-  //  @Res({ passthrough: true }) response: Response,
-  //) {
-  //  const { user, token } = (await this.authService.login(dto)) as {
-  //    user: UserDocument;
-  //    token: string;
-  //  };
-  //  response.cookie('Authentication', token, { httpOnly: true });
-  //  return { user, token };
-  //}
+  constructor(private readonly authService: AuthService) { }
 
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
@@ -88,6 +58,7 @@ export class AuthController {
     const response = await this.authService.adminLogin(req, res);
     return response;
   }
+
   // ------------------------------INVITATION ------------------------------
   @Post('invitation')
   async createInvitation(
@@ -104,5 +75,29 @@ export class AuthController {
   @Post('invitation/check')
   async invitationCheck(@Req() req: Request) {
     return await this.authService.invitationCheck(req);
+  }
+  // ------------------------------ LOGUT, REFRESH ------------------------------
+  @Post('refresh')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.refreshToken(req, res);
+    return response;
+  }
+
+  @Post('logout')
+  async logout(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.logout(req, res);
+    return response;
+  }
+
+  @Post('recover-password')
+  async recoverPassowrd(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.recoverPassword(req, res)
+    return response
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Req() req: Request, @Res() res: Response) {
+    const response = await this.authService.resetPassword(req, res)
+    return response
   }
 }

@@ -57,6 +57,12 @@ export class StaffController {
     return await this.staffService.getDoctorById(doctorId);
   }
 
+  @Get('doctor-by-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorByClinic(@Param('clinicId') clinicId: string) {
+    return this.staffService.getDoctorByClinic(clinicId);
+  }
+
   @Get('doctor-details/:id')
   @UseGuards(JwtAuthGuard)
   async getDoctorDetailsById(@Param('id') doctorId: string) {
@@ -245,5 +251,11 @@ export class StaffController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     return this.staffService.unlockEmployeeAccount(id, currentUser);
+  }
+
+  @Get('doctor-account-byId/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorAccountById(@Param('id') id: string) {
+    return this.staffService.getDoctorAccountById(id);
   }
 }

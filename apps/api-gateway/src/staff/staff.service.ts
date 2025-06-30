@@ -76,6 +76,17 @@ export class StaffService {
     }
   }
 
+  async getDoctorByClinic(clinicId: string): Promise<unknown> {
+    console.log(
+      'Calling staff service getDoctorByClinic with clinicId:',
+      clinicId,
+    );
+    const response = await firstValueFrom(
+      this.staffService.get(`/staff/doctor/doctor-by-clinic/${clinicId}`),
+    );
+    return response.data;
+  }
+
   async getDoctorById(doctorId: string): Promise<unknown> {
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/${doctorId}`),
@@ -380,6 +391,14 @@ export class StaffService {
 
     const response = await firstValueFrom(
       this.staffService.post('/staff/unlock-employee-account', payload),
+    );
+    return response.data;
+  }
+
+  //khanh: get doctor account by id
+  async getDoctorAccountById(id: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.staffService.get(`/staff/doctor/doctor-account-byId/${id}`),
     );
     return response.data;
   }

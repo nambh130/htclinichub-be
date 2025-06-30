@@ -21,8 +21,15 @@ export class ClinicsController {
   }
 
   @MessagePattern('get-clinics')
-  async getClinics(@Payload() userId: string) {
-    return this.clinicsService.getClinics(userId);
+  async getClinics(
+    @Payload()
+    payload: {
+      userId: string;
+      options?: { limit?: number; page?: number };
+    },
+  ) {
+    const { userId, options } = payload;
+    return this.clinicsService.getClinics(userId, options);
   }
 
   @MessagePattern('get-clinic-by-id')

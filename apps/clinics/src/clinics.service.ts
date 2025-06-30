@@ -40,9 +40,11 @@ export class ClinicsService {
       const newClinic = new Clinic();
       newClinic.name = addClinicDto.name;
       newClinic.location = addClinicDto.location;
+      newClinic.email = addClinicDto.email;
+      newClinic.phone = addClinicDto.phone;
       newClinic.ownerId = addClinicDto.ownerId;
-      newClinic.createdById = userId;
       newClinic.token = nanoid(32);
+      newClinic.createdById = userId;
 
       const clinic = await this.clinicsRepository.create(newClinic);
 
@@ -52,11 +54,6 @@ export class ClinicsService {
         context: 'ClinicService',
         operation: 'CREATE_CLINIC',
         status: 'SUCCESS',
-        clinicId: clinic.id,
-        name: clinic.name,
-        location: clinic.location,
-        ownerId: clinic.ownerId,
-        createdById: userId,
         payload: addClinicDto,
         businessData: {
           clinicCreated: clinic,
@@ -74,6 +71,9 @@ export class ClinicsService {
         name: clinic.name,
         location: clinic.location,
         ownerId: clinic.ownerId,
+        token: clinic.token,
+        email: clinic.email,
+        phone: clinic.phone,
         createdById: clinic.createdById,
       });
 
@@ -103,54 +103,21 @@ export class ClinicsService {
   async getClinics(
     userId: string,
     options?: { limit?: number; page?: number },
-  ): Promise<Clinic[]> {
+  ): Promise<{ data: Clinic[]; total: number; page: number; limit: number }> {
     const { limit = 20, page = 1 } = options || {};
-    const start = Date.now();
 
-    try {
-      const clinics = await this.clinicsRepository.findAll({ limit, page });
+    const [clinics, total] = await this.clinicsRepository.findAndCount(
+      {}, // where
+      (page - 1) * limit, // skip
+      limit, // take
+    );
 
-      const duration = Date.now() - start;
-
-      this.logger.info({
-        msg: 'Retrieved clinics successfully',
-        type: 'audit-log',
-        context: 'ClinicService',
-        operation: 'GET_CLINICS',
-        status: 'SUCCESS',
-        userId,
-        durationMs: duration,
-        businessData: {
-          retriever: {
-            userId,
-            action: 'GET_CLINICS',
-            timestamp: new Date().toISOString(),
-          },
-        },
-      });
-
-      return clinics.data;
-    } catch (error) {
-      const duration = Date.now() - start;
-
-      this.logger.error({
-        msg: 'Failed to retrieve clinics',
-        type: 'audit-log',
-        context: 'ClinicService',
-        operation: 'GET_CLINICS',
-        status: 'ERROR',
-        userId,
-        durationMs: duration,
-        error: {
-          message: error.message,
-          stack: error.stack,
-        },
-      });
-
-      throw new Error(
-        'Không thể lấy danh sách phòng khám, vui lòng thử lại sau',
-      );
-    }
+    return {
+      data: clinics,
+      total,
+      page,
+      limit,
+    };
   }
 
   async getClinicById(id: string, userId: string): Promise<Clinic> {
@@ -312,7 +279,7 @@ export class ClinicsService {
         msg: 'Clinic deleted successfully',
         type: 'audit-log',
         context: 'ClinicService',
-        operation: 'DELETE_CLINIC', 
+        operation: 'DELETE_CLINIC',
         status: 'SUCCESS',
         clinicId,
         userId,

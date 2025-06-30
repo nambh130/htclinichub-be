@@ -21,10 +21,10 @@ export enum ActorEnum {
   ADMIN = 'admin',
 }
 
-@Entity({ name: 'clinic_users' })
+@Entity({ name: 'users' })
 @Unique(['email', 'actorType'])
-export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
-  constructor(user?: Partial<ClinicUser>) {
+export class User extends PostgresAbstractEntity<User> {
+  constructor(user?: Partial<User>) {
     super();
     if (user) Object.assign(this, user);
   }
