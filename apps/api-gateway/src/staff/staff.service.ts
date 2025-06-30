@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import {
   CreateDoctorAccountDto,
   CreateEmployeeAccountDto,
@@ -8,11 +8,17 @@ import {
   StaffDetails,
   TokenPayload,
   Media,
+  UpdateDegreeDto,
+  UpdateSpecializeDto,
 } from '@app/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
+import {
+  DoctorProfileDto,
+  UpdateProfileDto,
+} from '@app/common/dto/staffs/doctor-profile.dto';
 import { MediaService } from '../media/media.service';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class StaffService {
@@ -21,6 +27,23 @@ export class StaffService {
     @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
   ) {}
 
+  // ============================================================================
+  // HELPER METHODS
+  // ============================================================================
+
+  private isAxiosError(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'isAxiosError' in error &&
+      (error as AxiosError).isAxiosError === true
+    );
+  }
+
+  // ============================================================================
+  // DOCTOR ACCOUNT MANAGEMENT
+  // ============================================================================
+
   async getDoctorAccountList(page = 1, limit = 10): Promise<unknown> {
     const response = await firstValueFrom(
       this.staffService.get('/staff/doctor/account-list', {
@@ -28,6 +51,29 @@ export class StaffService {
       }),
     );
     return response.data;
+  }
+
+  async getDoctorListWithProfile(page = 1, limit = 10): Promise<unknown> {
+    try {
+      const response = await firstValueFrom(
+        this.staffService.get(`/staff/doctor/account-list-with-profile`, {
+          params: { page, limit },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      if (this.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response?.data) {
+          throw new HttpException(
+            (axiosError.response.data as Record<string, unknown>).message ||
+              'Service error',
+            axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+      }
+      throw error;
+    }
   }
 
   async getDoctorById(doctorId: string): Promise<unknown> {
@@ -46,9 +92,11 @@ export class StaffService {
     const staffInfo = result?.account?.staffInfo;
 
     if (staffInfo) {
-      staffInfo.profile_img = (await this.mediaService.getFileById(
-        staffInfo.profile_img_id,
-      )) as Media | null;
+      staffInfo.profile_img = staffInfo.profile_img_id
+        ? ((await this.mediaService.getFileById(
+            staffInfo.profile_img_id,
+          )) as Media | null)
+        : null;
 
       for (const degree of staffInfo.degrees ?? []) {
         degree.image = degree.image_id
@@ -106,6 +154,10 @@ export class StaffService {
     return response.data;
   }
 
+  // ============================================================================
+  // DOCTOR PROFILE MANAGEMENT
+  // ============================================================================
+
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
     const payload = { doctorId };
 
@@ -116,36 +168,57 @@ export class StaffService {
     return response.data;
   }
 
-  async createDoctorProfileStepOne(
+  async createDoctorProfile(
     staffId: string,
-    dto: DoctorStepOneDto,
+    dto: DoctorProfileDto,
     currentUser: TokenPayload,
   ): Promise<unknown> {
     const payload = { staffId, dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post('/staff/doctor/create-profile/step-one', payload),
+      this.staffService.post('/staff/doctor/create-profile', payload),
     );
 
     return response.data;
   }
 
-  async addDoctorDegree(
-    staffInfoId: string,
-    dto: DoctorDegreeDto,
+  async updateDoctorProfile(
+    doctorId: string,
+    dto: UpdateProfileDto,
     currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { staffInfoId, dto, currentUser };
+    try {
+      const payload = { doctorId, dto, currentUser };
 
-    const response = await firstValueFrom(
-      this.staffService.post(`/staff/doctor/add-degree`, payload),
-    );
+      const response = await firstValueFrom(
+        this.staffService.post('/staff/doctor/update-profile', payload),
+      );
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      if (this.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response?.data) {
+          throw new HttpException(
+            (axiosError.response.data as Record<string, unknown>).message ||
+              'Failed to update doctor profile',
+            axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+      }
+      throw new HttpException(
+        'Failed to update doctor profile',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  async getDegreesByStaffInfoId(staffInfoId: string): Promise<unknown[]> {
-    const payload = { staffInfoId };
+  // ============================================================================
+  // DOCTOR DEGREES MANAGEMENT
+  // ============================================================================
+
+  async getDegreesByDoctorId(doctorId: string): Promise<unknown[]> {
+    const payload = { doctorId };
 
     const response = await firstValueFrom(
       this.staffService.post<unknown[]>('/staff/doctor/get-degrees', payload),
@@ -154,22 +227,54 @@ export class StaffService {
     return response.data;
   }
 
-  async addDoctorSpecialize(
-    staffInfoId: string,
-    dto: DoctorSpecializeDto,
+  async addDoctorDegree(
+    doctorId: string,
+    dto: DoctorDegreeDto,
     currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { staffInfoId, dto, currentUser };
+    const payload = { doctorId, dto, currentUser };
 
     const response = await firstValueFrom(
-      this.staffService.post(`/staff/doctor/add-specialize`, payload),
+      this.staffService.post(`/staff/doctor/add-degree`, payload),
     );
 
     return response.data;
   }
 
-  async getSpecializesByStaffInfoId(staffInfoId: string): Promise<unknown[]> {
-    const payload = { staffInfoId };
+  async updateDoctorDegree(
+    doctorId: string,
+    degreeId: string,
+    dto: UpdateDegreeDto,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { doctorId, degreeId, dto, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.post(`/staff/doctor/update-degree`, payload),
+    );
+
+    return response.data;
+  }
+
+  async deleteDoctorDegree(
+    doctorId: string,
+    degreeId: string,
+  ): Promise<unknown> {
+    const payload = { doctorId, degreeId };
+
+    const response = await firstValueFrom(
+      this.staffService.post(`/staff/doctor/delete-degree`, payload),
+    );
+
+    return response.data;
+  }
+
+  // ============================================================================
+  // DOCTOR SPECIALIZATIONS MANAGEMENT
+  // ============================================================================
+
+  async getSpecializesByDoctorId(doctorId: string): Promise<unknown[]> {
+    const payload = { doctorId };
 
     const response = await firstValueFrom(
       this.staffService.post<unknown[]>(
@@ -181,7 +286,52 @@ export class StaffService {
     return response.data;
   }
 
-  //Employee services
+  async addDoctorSpecialize(
+    doctorId: string,
+    dto: DoctorSpecializeDto,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { doctorId, dto, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.post(`/staff/doctor/add-specialize`, payload),
+    );
+
+    return response.data;
+  }
+
+  async updateDoctorSpecialize(
+    doctorId: string,
+    specializeId: string,
+    dto: UpdateSpecializeDto,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { doctorId, specializeId, dto, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.post(`/staff/doctor/update-specialize`, payload),
+    );
+
+    return response.data;
+  }
+
+  async deleteDoctorSpecialize(
+    doctorId: string,
+    specializeId: string,
+  ): Promise<unknown> {
+    const payload = { doctorId, specializeId };
+
+    const response = await firstValueFrom(
+      this.staffService.post(`/staff/doctor/delete-specialize`, payload),
+    );
+
+    return response.data;
+  }
+
+  // ============================================================================
+  // EMPLOYEE MANAGEMENT
+  // ============================================================================
+
   async viewEmployeeAccountList(): Promise<unknown> {
     const response = await firstValueFrom(
       this.staffService.get('/staff/employee-account-list'),

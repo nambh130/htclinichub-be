@@ -2,28 +2,37 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { IsNull } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+
 import {
   BaseService,
   CreateDoctorAccountDto,
   DoctorDegreeDto,
   DoctorSpecializeDto,
-  DoctorStepOneDto,
+  DoctorProfileDto,
   setAudit,
   TokenPayload,
   updateAudit,
+  UpdateDegreeDto,
+  UpdateSpecializeDto,
+  UpdateProfileDto,
 } from '@app/common';
+
 import { Doctor } from '../models/doctor.entity';
 import { StaffInfo } from '../models/staffInfo.entity';
-import { DoctorRepository } from '../repositories/doctor.repository';
-import { StaffInfoRepository } from '../repositories/staffInfo.repository';
-import { IsNull } from 'typeorm';
 import { Degree } from '../models/degree.entity';
-import { DegreeRepository } from '../repositories/degree.repository';
-import { SpecializeRepository } from '../repositories/specialize.repository';
 import { Specialize } from '../models/specialize.entity';
 import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
+
+import { DoctorRepository } from '../repositories/doctor.repository';
+import { StaffInfoRepository } from '../repositories/staffInfo.repository';
+import { DegreeRepository } from '../repositories/degree.repository';
+import { SpecializeRepository } from '../repositories/specialize.repository';
 import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
 
 @Injectable()
@@ -41,198 +50,749 @@ export class DoctorService extends BaseService {
     page = 1,
     limit = 10,
   ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
-    return this.doctorRepository.paginate({
-      where: {
-        deletedAt: IsNull(),
-        deletedById: IsNull(),
-        deletedByType: IsNull(),
-      },
-      page,
-      limit,
-    });
+    try {
+      if (page < 1 || limit < 1) {
+        throw new BadRequestException(
+          'Page and limit must be positive numbers',
+        );
+      }
+
+      if (limit > 100) {
+        throw new BadRequestException('Limit cannot exceed 100');
+      }
+
+      const result = await this.doctorRepository.paginate({
+        where: {
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
+        page,
+        limit,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to retrieve doctor accounts',
+      );
+    }
   }
 
   async getDoctorById(doctorId: string): Promise<Doctor> {
-    const doctor = await this.doctorRepository.findOne({ id: doctorId });
+    try {
+      if (!doctorId || doctorId.trim() === '') {
+        throw new BadRequestException('Doctor ID is required');
+      }
 
-    if (!doctor) {
-      throw new NotFoundException('Doctor not found');
+      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
+
+      return doctor;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to retrieve doctor');
     }
+  }
 
-    return doctor;
+  async getDoctorListWithProfile(
+    page = 1,
+    limit = 10,
+  ): Promise<{
+    data: Doctor[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    try {
+      return await this.doctorRepository.paginate({
+        where: {
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
+        relations: ['staffInfo'],
+        page,
+        limit,
+      });
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to retrieve doctor list with profiles',
+      );
+    }
   }
 
   async createDoctorAccount(
     dto: CreateDoctorAccountDto,
     currentUser: TokenPayload,
   ): Promise<Doctor> {
-    const email = dto.email.trim().toLowerCase();
+    try {
+      const email = dto.email.trim().toLowerCase();
 
-    if (await this.doctorRepository.checkDoctorEmailExists(email)) {
-      throw new BadRequestException('A doctor with this email already exists.');
+      const emailExists =
+        await this.doctorRepository.checkDoctorEmailExists(email);
+      if (emailExists) {
+        throw new ConflictException(
+          `A doctor with email ${email} already exists`,
+        );
+      }
+
+      const doctor = new Doctor();
+      doctor.email = email;
+      doctor.password = await bcrypt.hash(dto.password, 10);
+
+      if (dto.clinic) {
+        const clinicMap = new DoctorClinicMap();
+        clinicMap.clinic = dto.clinic;
+        clinicMap.doctor = doctor;
+        doctor.clinics = [clinicMap];
+      }
+
+      setAudit(doctor, currentUser);
+
+      const createdDoctor = await this.doctorRepository.create(doctor);
+
+      return createdDoctor;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to create doctor account');
     }
-
-    const doctor = new Doctor();
-    doctor.email = email;
-    doctor.password = await bcrypt.hash(dto.password, 10);
-    if (dto.clinic) {
-      const clinicMap = new DoctorClinicMap();
-      clinicMap.clinic = dto.clinic; // assign the clinic ID
-      clinicMap.doctor = doctor; // establish relation to current doctor
-
-      doctor.clinics = [clinicMap];
-    }
-
-    setAudit(doctor, currentUser);
-
-    return await this.doctorRepository.create(doctor);
   }
 
   async lockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
-    const updateData = updateAudit({ is_locked: true }, currentUser);
+    try {
+      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
 
-    const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
-      { id: doctorId },
-      updateData,
-    );
+      if (doctor.is_locked) {
+        throw new ConflictException(
+          `Doctor account ${doctorId} is already locked`,
+        );
+      }
 
-    return {
-      message: `Doctor account ${doctorId} has been locked`,
-      lockedBy: currentUser,
-      doctor: updatedDoctor,
-    };
+      const updateData = updateAudit({ is_locked: true }, currentUser);
+      const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
+        { id: doctorId },
+        updateData,
+      );
+
+      return {
+        message: `Doctor account ${doctorId} has been locked`,
+        lockedBy: currentUser,
+        doctor: updatedDoctor,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to lock doctor account');
+    }
   }
 
   async unlockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
-    const doctor = await this.doctorRepository.findOne({ id: doctorId });
+    try {
+      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
 
-    if (!doctor) {
-      throw new Error(`Doctor with ID ${doctorId} not found`);
-    }
+      if (!doctor.is_locked) {
+        return {
+          message: `Doctor account ${doctorId} is already unlocked`,
+          doctor,
+        };
+      }
 
-    if (!doctor.is_locked) {
+      const updateData = updateAudit({ is_locked: false }, currentUser);
+      const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
+        { id: doctorId },
+        updateData,
+      );
+
       return {
-        message: `Doctor account ${doctorId} is already unlocked`,
-        doctor,
+        message: `Doctor account ${doctorId} has been unlocked`,
+        unlockedBy: currentUser,
+        doctor: updatedDoctor,
       };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to unlock doctor account');
     }
-
-    const updateData = updateAudit({ is_locked: false }, currentUser);
-
-    const updatedDoctor = await this.doctorRepository.findOneAndUpdate(
-      { id: doctorId },
-      updateData,
-    );
-
-    return {
-      message: `Doctor account ${doctorId} has been unlocked`,
-      unlockedBy: currentUser,
-      doctor: updatedDoctor,
-    };
   }
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
-    const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
-      'clinics',
-      'services',
-      'invitations',
-    ]);
+    try {
+      const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
+        'clinics',
+        'services',
+        'invitations',
+      ]);
 
-    const staffInfo = await this.staffInfoRepository.findOne(
-      { staff_id: doctorId },
-      ['degrees', 'specializes'],
-    );
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
 
-    return toDoctorProfile(doctor, staffInfo);
+      const staffInfo = await this.staffInfoRepository.findOne(
+        { staff_id: doctorId },
+        ['degrees', 'specializes'],
+      );
+
+      const profile = toDoctorProfile(doctor, staffInfo);
+
+      return profile;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to retrieve staff information',
+      );
+    }
   }
 
-  async createDoctorProfileStepOne(
+  async createDoctorProfile(
     staffId: string,
-    dto: DoctorStepOneDto,
+    dto: DoctorProfileDto,
     currentUser: TokenPayload,
   ): Promise<StaffInfo> {
-    const staffInfo = new StaffInfo();
-    staffInfo.staff_id = staffId;
-    staffInfo.full_name = dto.full_name;
-    staffInfo.dob = dto.dob;
-    staffInfo.phone = dto.phone;
-    staffInfo.gender = dto.gender;
-    staffInfo.position = dto.position;
-    staffInfo.staff_type = dto.type === 'doctor' ? 'doctor' : 'employee';
-
-    setAudit(staffInfo, currentUser);
-
-    const createdStaffInfo = await this.staffInfoRepository.create(staffInfo);
-
-    if (dto.type === 'doctor') {
+    try {
       const doctor = await this.doctorRepository.findOne({ id: staffId });
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${staffId} not found`);
+      }
 
-      updateAudit(doctor, currentUser);
-      doctor.staffInfo = createdStaffInfo;
+      const existingStaffInfo = await this.staffInfoRepository.findOne({
+        staff_id: staffId,
+      });
+      if (existingStaffInfo) {
+        throw new ConflictException(
+          `Profile already exists for doctor ${staffId}`,
+        );
+      }
 
-      await this.doctorRepository.findOneAndUpdate({ id: staffId }, doctor);
+      if (dto.dob) {
+        const dobDate = new Date(dto.dob);
+        const now = new Date();
+        const age = now.getFullYear() - dobDate.getFullYear();
+        if (age < 18 || age > 100) {
+          throw new BadRequestException('Age must be between 18 and 100 years');
+        }
+      }
+
+      const staffInfo = new StaffInfo();
+      staffInfo.staff_id = staffId;
+      staffInfo.full_name = dto.full_name.trim();
+      staffInfo.dob = dto.dob;
+      staffInfo.phone = dto.phone.trim();
+      staffInfo.gender = dto.gender;
+      staffInfo.position = dto.position.trim();
+      staffInfo.staff_type = dto.type === 'doctor' ? 'doctor' : 'employee';
+      staffInfo.profile_img_id = dto.profile_img_id;
+
+      setAudit(staffInfo, currentUser);
+
+      const createdStaffInfo = await this.staffInfoRepository.create(staffInfo);
+
+      if (dto.type === 'doctor') {
+        const updateData = updateAudit(
+          { staffInfo: createdStaffInfo },
+          currentUser,
+        );
+        await this.doctorRepository.findOneAndUpdate(
+          { id: staffId },
+          updateData,
+        );
+      }
+
+      return createdStaffInfo;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to create doctor profile');
     }
+  }
 
-    return createdStaffInfo;
+  async updateDoctorProfile(
+    doctorId: string,
+    dto: UpdateProfileDto,
+    currentUser: TokenPayload,
+  ): Promise<StaffInfo> {
+    try {
+      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
+
+      const existingStaffInfo = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
+
+      if (!existingStaffInfo) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      if (dto.dob) {
+        const dobDate = new Date(dto.dob);
+        const now = new Date();
+        const age = now.getFullYear() - dobDate.getFullYear();
+        if (age < 18 || age > 100) {
+          throw new BadRequestException('Age must be between 18 and 100 years');
+        }
+      }
+
+      const updatedFields: QueryDeepPartialEntity<StaffInfo> = {
+        full_name: dto.full_name.trim(),
+        dob: dto.dob,
+        phone: dto.phone.trim(),
+        gender: dto.gender,
+        position: dto.position.trim(),
+        profile_img_id: dto.profile_img_id,
+        staff_type: existingStaffInfo.staff_type,
+      };
+
+      updateAudit(updatedFields, currentUser);
+
+      const updatedStaffInfo = await this.staffInfoRepository.findOneAndUpdate(
+        { id: existingStaffInfo.id },
+        updatedFields,
+      );
+
+      return updatedStaffInfo;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update doctor profile');
+    }
+  }
+
+  async getDegreeList(doctorId: string): Promise<Degree[]> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
+
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const degrees = await this.degreeRepository.find({
+        staff_info: { id: staff.id },
+      });
+
+      return degrees;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to retrieve degrees');
+    }
   }
 
   async addDoctorDegree(
-    staffInfoId: string,
+    doctorId: string,
     dto: DoctorDegreeDto,
     currentUser: TokenPayload,
   ): Promise<Degree> {
-    const staff = await this.staffInfoRepository.findOne({ id: staffInfoId });
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
 
-    const degree = new Degree();
-    degree.name = dto.name;
-    degree.description = dto.description;
-    degree.image_id = dto.image_id;
-    degree.staff_info = staff;
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
 
-    setAudit(degree, currentUser);
+      const existingDegrees = await this.degreeRepository.find({
+        staff_info: { id: staff.id },
+      });
 
-    return await this.degreeRepository.create(degree);
+      const duplicateDegree = existingDegrees.find(
+        (degree) => degree.name.toLowerCase() === dto.name.trim().toLowerCase(),
+      );
+
+      if (duplicateDegree) {
+        throw new ConflictException(
+          `Degree with name "${dto.name}" already exists for this doctor`,
+        );
+      }
+
+      const degree = new Degree();
+      degree.name = dto.name.trim();
+      degree.description = dto.description.trim();
+      degree.image_id = dto.image_id;
+      degree.staff_info = staff;
+
+      setAudit(degree, currentUser);
+
+      const createdDegree = await this.degreeRepository.create(degree);
+
+      return createdDegree;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to add degree');
+    }
   }
 
-  async getDegreeList(staffInfoId: string): Promise<Degree[]> {
-    const degrees = await this.degreeRepository.find({
-      staff_info: { id: staffInfoId },
-    });
+  async updateDoctorDegree(
+    doctorId: string,
+    degreeId: string,
+    dto: UpdateDegreeDto,
+    currentUser: TokenPayload,
+  ): Promise<Degree> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
 
-    return degrees;
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const existingDegree = await this.degreeRepository.findOne({
+        id: degreeId,
+        staff_info: { id: staff.id },
+      });
+
+      if (!existingDegree) {
+        throw new NotFoundException(
+          `Degree with ID ${degreeId} not found for doctor ${doctorId}`,
+        );
+      }
+
+      const otherDegrees = await this.degreeRepository.find({
+        staff_info: { id: staff.id },
+      });
+
+      const duplicateDegree = otherDegrees.find(
+        (degree) =>
+          degree.id !== degreeId &&
+          degree.name.toLowerCase() === dto.name?.trim().toLowerCase(),
+      );
+
+      if (duplicateDegree) {
+        throw new ConflictException(
+          `Another degree with name "${dto.name}" already exists for this doctor`,
+        );
+      }
+
+      const updatedFields: QueryDeepPartialEntity<Degree> = {
+        name: dto.name?.trim(),
+        description: dto.description?.trim(),
+        image_id: dto.image_id,
+        staff_info: staff,
+      };
+
+      updateAudit(updatedFields, currentUser);
+
+      const updatedDegree = await this.degreeRepository.findOneAndUpdate(
+        { id: degreeId },
+        updatedFields,
+      );
+
+      return updatedDegree;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update degree');
+    }
+  }
+
+  async deleteDoctorDegree(doctorId: string, degreeId: string): Promise<void> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
+
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const degree = await this.degreeRepository.findOne(
+        {
+          id: degreeId,
+          staff_info: { staff_id: doctorId },
+        },
+        ['staff_info'],
+      );
+
+      if (!degree) {
+        throw new NotFoundException(
+          `Degree with ID ${degreeId} not found for doctor ${doctorId}`,
+        );
+      }
+
+      await this.degreeRepository.findOneAndDelete({ id: degreeId });
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to delete degree');
+    }
+  }
+
+  async getSpecializeList(doctorId: string): Promise<Specialize[]> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
+
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const specializes = await this.specializeRepository.find({
+        staff_info: { id: staff.id },
+      });
+
+      return specializes;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to retrieve specializations',
+      );
+    }
   }
 
   async addDoctorSpecialize(
-    staffInfoId: string,
+    doctorId: string,
     dto: DoctorSpecializeDto,
     currentUser: TokenPayload,
   ): Promise<Specialize> {
-    const staff = await this.staffInfoRepository.findOne({ id: staffInfoId });
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
 
-    const specialize = new Specialize();
-    specialize.name = dto.name;
-    specialize.description = dto.description;
-    specialize.image_id = dto.image_id;
-    specialize.staff_info = staff;
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
 
-    setAudit(specialize, currentUser);
+      const existingSpecializations = await this.specializeRepository.find({
+        staff_info: { id: staff.id },
+      });
 
-    return await this.specializeRepository.create(specialize);
+      const duplicateSpecialization = existingSpecializations.find(
+        (spec) => spec.name.toLowerCase() === dto.name?.trim().toLowerCase(),
+      );
+
+      if (duplicateSpecialization) {
+        throw new ConflictException(
+          `Specialization with name "${dto.name}" already exists for this doctor`,
+        );
+      }
+
+      const specialize = new Specialize();
+      specialize.name = dto.name.trim();
+      specialize.description = dto.description.trim();
+      specialize.image_id = dto.image_id;
+      specialize.staff_info = staff;
+
+      setAudit(specialize, currentUser);
+
+      const createdSpecialize =
+        await this.specializeRepository.create(specialize);
+
+      return createdSpecialize;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to add specialization');
+    }
   }
 
-  async getSpecializeList(staffInfoId: string): Promise<Degree[]> {
-    const specializes = await this.specializeRepository.find({
-      staff_info: { id: staffInfoId },
-    });
+  async updateDoctorSpecialize(
+    doctorId: string,
+    specializeId: string,
+    dto: UpdateSpecializeDto,
+    currentUser: TokenPayload,
+  ): Promise<Specialize> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
 
-    return specializes;
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const existingSpecialize = await this.specializeRepository.findOne({
+        id: specializeId,
+        staff_info: { id: staff.id },
+      });
+
+      if (!existingSpecialize) {
+        throw new NotFoundException(
+          `Specialization with ID ${specializeId} not found for doctor ${doctorId}`,
+        );
+      }
+
+      const otherSpecializations = await this.specializeRepository.find({
+        staff_info: { id: staff.id },
+      });
+
+      const duplicateSpecialization = otherSpecializations.find(
+        (spec) =>
+          spec.id !== specializeId &&
+          spec.name.toLowerCase() === dto.name?.trim().toLowerCase(),
+      );
+
+      if (duplicateSpecialization) {
+        throw new ConflictException(
+          `Another specialization with name "${dto.name}" already exists for this doctor`,
+        );
+      }
+
+      const updatedFields: QueryDeepPartialEntity<Specialize> = {
+        name: dto.name?.trim(),
+        description: dto.description?.trim(),
+        image_id: dto.image_id,
+        staff_info: staff,
+      };
+
+      updateAudit(updatedFields, currentUser);
+
+      const updatedSpecialize =
+        await this.specializeRepository.findOneAndUpdate(
+          { id: specializeId },
+          updatedFields,
+        );
+
+      return updatedSpecialize;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update specialization');
+    }
   }
 
-  // async createDoctorProfileStepTwo(
-  //   payload: any,
-  //   user: { id: string; type: ActorType },
-  // ): Promise<StaffInfo> {
-  //   const staffInfo = await this.staffInfoRepository.findOne({});
-  //   return null;
-  // }
+  async deleteDoctorSpecialize(
+    doctorId: string,
+    specializeId: string,
+  ): Promise<void> {
+    try {
+      const staff = await this.staffInfoRepository.findOne({
+        staff_id: doctorId,
+      });
+
+      if (!staff) {
+        throw new NotFoundException(
+          `Staff info not found for doctor ${doctorId}`,
+        );
+      }
+
+      const specialize = await this.specializeRepository.findOne({
+        id: specializeId,
+        staff_info: { id: staff.id },
+      });
+
+      if (!specialize) {
+        throw new NotFoundException(
+          `Specialization with ID ${specializeId} not found for doctor ${doctorId}`,
+        );
+      }
+
+      await this.specializeRepository.findOneAndDelete({ id: specializeId });
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to delete specialization');
+    }
+  }
 }

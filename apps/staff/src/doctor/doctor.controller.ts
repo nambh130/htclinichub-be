@@ -5,8 +5,13 @@ import {
   DoctorDegreeDto,
   DoctorSpecializeDto,
   TokenPayload,
+  UpdateDegreeDto,
+  UpdateSpecializeDto,
 } from '@app/common';
-import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
+import {
+  DoctorProfileDto,
+  UpdateProfileDto,
+} from '@app/common/dto/staffs/doctor-profile.dto';
 
 @Controller('staff/doctor')
 export class DoctorController {
@@ -18,6 +23,19 @@ export class DoctorController {
     @Query('limit') limit: string = '10',
   ) {
     return this.doctorService.getDoctorAccountList(+page, +limit);
+  }
+
+  @Get('account-list-with-profile')
+  getDoctorListWithProfile(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.doctorService.getDoctorListWithProfile(+page, +limit);
+  }
+
+  @Get('details/:id')
+  getDoctorDetails(@Param('id') doctorId: string) {
+    return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 
   @Get(':id')
@@ -67,76 +85,142 @@ export class DoctorController {
     );
   }
 
-  @Get('details/:id')
-  getDoctorDetails(@Param('id') doctorId: string) {
-    return this.doctorService.getStaffInfoByDoctorId(doctorId);
-  }
-
-  @Post('create-profile/step-one')
-  createDoctorProfileStepOne(
+  @Post('create-profile')
+  createDoctorProfile(
     @Body()
     payload: {
       staffId: string;
-      dto: DoctorStepOneDto;
+      dto: DoctorProfileDto;
       currentUser: TokenPayload;
     },
   ) {
-    return this.doctorService.createDoctorProfileStepOne(
+    return this.doctorService.createDoctorProfile(
       payload.staffId,
       payload.dto,
       payload.currentUser,
     );
   }
 
-  @Post('add-degree')
-  addDoctorDegree(
+  @Post('update-profile')
+  async updateDoctorProfile(
     @Body()
-    payload: {
-      staffInfoId: string;
-      dto: DoctorDegreeDto;
+    body: {
+      doctorId: string;
+      dto: UpdateProfileDto;
       currentUser: TokenPayload;
     },
   ) {
-    const { staffInfoId, dto, currentUser } = payload;
-    return this.doctorService.addDoctorDegree(staffInfoId, dto, currentUser);
+    const { doctorId, dto, currentUser } = body;
+    return this.doctorService.updateDoctorProfile(doctorId, dto, currentUser);
   }
 
   @Post('get-degrees')
   getDegreeList(
     @Body()
     payload: {
-      staffInfoId: string;
+      doctorId: string;
     },
   ) {
-    const { staffInfoId } = payload;
-    return this.doctorService.getDegreeList(staffInfoId);
+    const { doctorId } = payload;
+    return this.doctorService.getDegreeList(doctorId);
   }
 
-  @Post('add-specialize')
-  addDoctorSpecialize(
+  @Post('add-degree')
+  addDoctorDegree(
     @Body()
     payload: {
-      staffInfoId: string;
-      dto: DoctorSpecializeDto;
+      doctorId: string;
+      dto: DoctorDegreeDto;
       currentUser: TokenPayload;
     },
   ) {
-    const { staffInfoId, dto, currentUser } = payload;
-    return this.doctorService.addDoctorSpecialize(
-      staffInfoId,
+    const { doctorId, dto, currentUser } = payload;
+    return this.doctorService.addDoctorDegree(doctorId, dto, currentUser);
+  }
+
+  @Post('update-degree')
+  updateDoctorDegree(
+    @Body()
+    payload: {
+      doctorId: string;
+      degreeId: string;
+      dto: UpdateDegreeDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { doctorId, degreeId, dto, currentUser } = payload;
+    return this.doctorService.updateDoctorDegree(
+      doctorId,
+      degreeId,
       dto,
       currentUser,
     );
+  }
+
+  @Post('delete-degree')
+  deleteDoctorDegree(
+    @Body()
+    payload: {
+      doctorId: string;
+      degreeId: string;
+    },
+  ) {
+    const { doctorId, degreeId } = payload;
+    return this.doctorService.deleteDoctorDegree(doctorId, degreeId);
   }
 
   @Post('get-specializes')
   getSpecializeList(
     @Body()
     payload: {
-      staffInfoId: string;
+      doctorId: string;
     },
   ) {
-    const { staffInfoId } = payload;
-    return this.doctorService.getSpecializeList(staffInfoId);
+    const { doctorId } = payload;
+    return this.doctorService.getSpecializeList(doctorId);
+  }
+
+  @Post('add-specialize')
+  addDoctorSpecialize(
+    @Body()
+    payload: {
+      doctorId: string;
+      dto: DoctorSpecializeDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { doctorId, dto, currentUser } = payload;
+    return this.doctorService.addDoctorSpecialize(doctorId, dto, currentUser);
+  }
+
+  @Post('update-specialize')
+  updateDoctorSpecialize(
+    @Body()
+    payload: {
+      doctorId: string;
+      specializeId: string;
+      dto: UpdateSpecializeDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { doctorId, specializeId, dto, currentUser } = payload;
+    return this.doctorService.updateDoctorSpecialize(
+      doctorId,
+      specializeId,
+      dto,
+      currentUser,
+    );
+  }
+
+  @Post('delete-specialize')
+  deleteDoctorSpecialize(
+    @Body()
+    payload: {
+      doctorId: string;
+      specializeId: string;
+    },
+  ) {
+    const { doctorId, specializeId } = payload;
+    return this.doctorService.deleteDoctorSpecialize(doctorId, specializeId);
   }
 }

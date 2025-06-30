@@ -15,5 +15,5 @@ export class ClinicUserLoginDto {
   password: string;
 
   @IsEnum(ActorEnum)
-  userType: ActorType
+  userType: ActorType;
 }

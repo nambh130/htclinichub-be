@@ -2,7 +2,7 @@ import { Doctor } from '../models/doctor.entity';
 import { StaffInfo } from '../models/staffInfo.entity';
 
 // doctor-profile.mapper.ts
-export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo) {
+export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo | null) {
   return {
     account: {
       id: doctor.id,
@@ -16,23 +16,25 @@ export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo) {
       invitations: doctor.invitations,
       services: doctor.services,
       clinics: doctor.clinics,
-      staffInfo: {
-        id: staffInfo.id,
-        full_name: staffInfo.full_name,
-        dob: staffInfo.dob,
-        phone: staffInfo.phone,
-        gender: staffInfo.gender,
-        position: staffInfo.position,
-        staff_type: staffInfo.staff_type,
-        profile_img_id: staffInfo.profile_img_id,
-        createdAt: staffInfo.createdAt,
-        updatedAt: staffInfo.updatedAt,
-        createdById: staffInfo.createdById,
-        updatedById: staffInfo.updatedById,
-        deletedAt: staffInfo.deletedAt,
-        degrees: staffInfo.degrees,
-        specializes: staffInfo.specializes,
-      },
+      staffInfo: staffInfo
+        ? {
+            id: staffInfo.id,
+            full_name: staffInfo.full_name,
+            dob: staffInfo.dob,
+            phone: staffInfo.phone,
+            gender: staffInfo.gender,
+            position: staffInfo.position,
+            staff_type: staffInfo.staff_type,
+            profile_img_id: staffInfo.profile_img_id,
+            createdAt: staffInfo.createdAt,
+            updatedAt: staffInfo.updatedAt,
+            createdById: staffInfo.createdById,
+            updatedById: staffInfo.updatedById,
+            deletedAt: staffInfo.deletedAt,
+            degrees: staffInfo.degrees,
+            specializes: staffInfo.specializes,
+          }
+        : null,
     },
   };
 }

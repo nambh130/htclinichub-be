@@ -18,7 +18,7 @@ export class MongoAbstractDocument {
 
   @Prop({
     type: String,
-    enum: ['doctor', 'employee', 'patient'],
+    enum: ['doctor', 'employee', 'patient', 'admin'],
     required: false,
   })
   createdByType?: ActorType;
