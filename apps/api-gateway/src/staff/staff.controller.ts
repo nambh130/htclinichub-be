@@ -18,10 +18,15 @@ import {
   TokenPayload,
 } from '@app/common';
 import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
+import { ClinicService } from '../clinics/clinic.service';
+import { IClinic, IMappedClinicLink } from './interfaces/staff.interface';
 
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(
+    private readonly staffService: StaffService,
+    private readonly clinicService: ClinicService
+  ) { }
 
   //Doctor-enpoints
   @Get('doctor/account-list')
@@ -38,12 +43,41 @@ export class StaffController {
   async getDoctorById(@Param('id') doctorId: string) {
     return await this.staffService.getDoctorById(doctorId);
   }
- 
-  
+
   @Get('doctor-by-clinic/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getDoctorByClinic(@Param('clinicId') clinicId: string) {
     return this.staffService.getDoctorByClinic(clinicId);
+  }
+
+  @Get('clinics-by-doctor')
+  @UseGuards(JwtAuthGuard)
+  async getClinicByDoctor(
+    @CurrentUser() user: TokenPayload
+  ) {
+    // {linkId, clinicId}
+    const doctorClinicsLink =
+      await this.staffService.getClinicIdsByDoctor({userId: user.userId});
+
+    const clinicIds = doctorClinicsLink.map((data) => data.clinic);
+    // Get clinic infos
+    const clinics: IClinic[] = await this.clinicService.getClinicByIds(clinicIds);
+
+    const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
+      const clinicInfo = clinics.find((c) => c.id === link.clinic);
+      const isAdmin = clinicInfo?.ownerOf === user.userId;
+      return {
+        link_id: link.linkId,
+        clinic: {
+          id: clinicInfo?.id ?? '',
+          name: clinicInfo?.name ?? '',
+          location: clinicInfo?.location ?? '',
+          isAdmin
+        },
+      };
+    });
+
+    return result;
   }
 
   @Get('doctor-details/:id')

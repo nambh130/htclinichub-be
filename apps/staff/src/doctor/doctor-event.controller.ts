@@ -6,7 +6,7 @@ import { ActorEnum } from '@app/common/enum/actor-type';
 
 @Controller()
 export class DoctorEventController {
-  constructor(private readonly doctorService: DoctorService) {}
+  constructor(private readonly doctorService: DoctorService) { }
 
   @EventPattern('clinic-user-created')
   createDoctorAccount(
@@ -29,5 +29,13 @@ export class DoctorEventController {
         },
       );
     }
+  }
+
+  @EventPattern('user-clinic-joined')
+  userJoinClinic(
+    @Payload() payload: { userId: string, clinicId: string }
+  ) {
+    const { userId, clinicId } = payload
+    this.doctorService.doctorJoinClinic(userId, clinicId)
   }
 }

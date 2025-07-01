@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { httpClientConfig, HttpModules } from '../api/http.client';
 import { MEDIA_SERVICE, STAFF_SERVICE } from '@app/common';
 import { MediaModule } from '../media/media.module';
+import { ClinicModule } from '../clinics/clinic.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MediaModule } from '../media/media.module';
 
     MediaModule,
     AuthModule,
+    ClinicModule,
   ],
   controllers: [StaffController],
   providers: [StaffService],

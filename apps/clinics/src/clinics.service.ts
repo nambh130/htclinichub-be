@@ -6,6 +6,7 @@ import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
 import { PinoLogger } from 'nestjs-pino';
 import { nanoid } from 'nanoid';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ClinicsService {
@@ -178,6 +179,11 @@ export class ClinicsService {
       });
       throw error;
     }
+  }
+
+  async getClinicByIds(clinicIds: string[]) {
+    const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
+    return clinics;
   }
 
   async updateClinic(

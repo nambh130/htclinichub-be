@@ -35,6 +35,7 @@ import { Clinic } from './models/clinic.entity';
 import { ClinicEventController } from './clinic/clinic-event.controller';
 import { ClinicRepository } from './clinic/clinic.repository';
 import { ClinicService } from './clinic/clinic.service';
+import { DoctorClinicRepo } from './repositories/doctor-clinic-map.repository';
 
 @Module({
   imports: [
@@ -90,7 +91,8 @@ import { ClinicService } from './clinic/clinic.service';
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
-    ClinicRepository
+    ClinicRepository,
+    DoctorClinicRepo
     
   ],
   exports: [StaffService],
