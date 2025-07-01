@@ -203,15 +203,18 @@ export class AuthController {
     // Step 5: Set new refresh token cookie
     const expireDate = this.configService.get("REFRESH_TOKEN_EXPIRES");
     console.log(expireDate)
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/auth/refresh',
-      maxAge: expireDate, // 7 days
-    });
+    this.setAuthCookies(res, accessToken, newRefreshToken);
 
-    return { token: accessToken };
+    return {
+      token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        roles: tokenPayload.roles,
+        currentClinics: tokenPayload.currentClinics,
+        adminOf: tokenPayload.adminOf,
+      },
+    };
   }
 
   @Post('logout')
@@ -227,7 +230,10 @@ export class AuthController {
     });
 
     res.clearCookie('refreshToken', {
-      path: '/auth/refresh',
+      path: '/', // MUST match exactly
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
     });
 
     return { message: 'Logged out successfully' };
@@ -281,7 +287,7 @@ export class AuthController {
     }
 
     const user = await this.userService.find({ email: email, actorType: userType });
-    user.password = dto.password
+    user.password = await this.userService.hashPassword(dto.password);
     const updatedUser = this.userService.updateUser(email, user);
     if (!updatedUser) {
       throw new Error();
@@ -345,7 +351,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/',
       maxAge: refreshTokenExpiryMs, // ✅ milliseconds
     });
   }

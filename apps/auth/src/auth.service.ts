@@ -219,7 +219,7 @@ export class AuthService implements OnModuleInit {
   async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string) {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
-      email,
+      email: email.toLowerCase().trim(),
       actorType: userType,
     });
     if (!user) throw new BadRequestException('User not found');

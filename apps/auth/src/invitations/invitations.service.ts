@@ -25,11 +25,11 @@ export class InvitationsService extends BaseService {
     user: { id: string; type: ActorType },
   ) {
     const {
-      email,
       clinic,
       role: roleId,
       isOwnerInvitation,
     } = createInvitationDto;
+    const email = createInvitationDto.email.toLowerCase().trim();
     const token = randomBytes(32).toString('hex');
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms

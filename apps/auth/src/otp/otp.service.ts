@@ -5,7 +5,6 @@ import { OtpPurpose, OtpTargetType } from '../constants/enums';
 import { RequestOtpInput } from '../constants/interfaces';
 import { ConfigService } from '@nestjs/config';
 import { ActorType } from '@app/common';
-import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -65,7 +64,7 @@ export class OtpService {
     const check = await this.cacheManager.get<string>(key);
     if (!check) throw new Error("Failed to cache OTP");
 
-    const frontEndUrl = this.configService.get("FRONT_END_URL");
+    const frontEndUrl = this.configService.get("RESET_PWD_URL");
     console.log(`Sending url: ${frontEndUrl}/?token=${token} to email ${email} for password reset`);
     // TODO: Send Email here
 

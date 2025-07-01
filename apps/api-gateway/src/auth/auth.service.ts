@@ -193,7 +193,7 @@ export class AuthService implements OnModuleInit {
     );
 
     res.clearCookie('Authentication', { path: '/' });
-    res.clearCookie('refreshToken', { path: '/auth/refresh' });
+    res.clearCookie('refreshToken', { path: '/' });
 
     return res.json({ message: 'Logged out successfully' }); // ✅ this forces flush
   }
