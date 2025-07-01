@@ -12,11 +12,11 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.enableCors({
-    origin: ['http://localhost:8080'],
+    origin: ['http://localhost:8081', 'http://localhost:8000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // allow cookies/auth headers
   });
-
+  
   // Get ConfigService and Logger
   const configService = app.get(ConfigService);
   app.useLogger(app.get(Logger));

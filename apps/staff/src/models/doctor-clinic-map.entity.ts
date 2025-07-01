@@ -21,4 +21,3 @@ export class DoctorClinicMap {
   @Column({ name: 'clinic_id' })
   clinic: string;
 }
-

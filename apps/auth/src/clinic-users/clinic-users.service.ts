@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClinicUserRepository } from './clinic-users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ClinicUser } from './models/clinic-user.entity';
+import { User } from './models/clinic-user.entity';
 import * as bcrypt from 'bcrypt';
 import { ClinicRepository } from '../clinics/clinics.repository';
 import { RoleRepository } from '../roles/roles.repository';
@@ -14,14 +14,14 @@ export class ClinicUsersService {
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly roleRepository: RoleRepository,
-  ) {}
+  ) { }
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
     const saltRounds = 12;
     const hash = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    const newUser = new ClinicUser({
+    const newUser = new User({
       ...createUserDto,
       actorType: actorType,
       password: hash,
@@ -55,7 +55,7 @@ export class ClinicUsersService {
     );
   }
 
-  async find(query: Partial<ClinicUser>) {
+  async find(query: Partial<User>) {
     return await this.userRepository.findOne(query, {
       roles: {
         permissions: true,
@@ -68,8 +68,17 @@ export class ClinicUsersService {
   }
   async updateUser(
     email: string,
-    updateData: Partial<ClinicUser>,
-  ): Promise<ClinicUser> {
-    return await this.userRepository.create(new ClinicUser(updateData));
+    updateData: Partial<User>,
+  ): Promise<User> {
+    if (updateData.password)
+      updateData.password = await this.hashPassword(updateData.password)
+
+    return await this.userRepository.create(new User(updateData));
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 12;
+    const hash = await bcrypt.hash(password, saltRounds);
+    return hash
   }
 }

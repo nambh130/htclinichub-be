@@ -6,20 +6,20 @@ import { INPUT_VITAL_SIGNS_CONSUMER_GROUP, INPUT_VITAL_SIGNS_SERVICE } from '@ap
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { HttpModule } from '@nestjs/axios';
-import { httpClientConfig } from '../api/http.client';
+import { httpClientConfig, HttpModules } from '../api/http.client';
 
 @Module({
   imports: [
     ConfigModule,
-    HttpModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) =>
-        httpClientConfig(
-          configService.get<string>('VITAL_SERVICE_HOST'),
-          configService.get<string>('VITAL_SERVICE_PORT'),
-        ),
-      inject: [ConfigService],
-    }),
+
+ HttpModules.registerAsync([
+      httpClientConfig(
+        INPUT_VITAL_SIGNS_SERVICE,
+        'VITAL_SERVICE_HOST',
+        'VITAL_SERVICE_PORT',
+      ),
+    ]),
+
     ClientsModule.registerAsync([
       {
         name: INPUT_VITAL_SIGNS_SERVICE,

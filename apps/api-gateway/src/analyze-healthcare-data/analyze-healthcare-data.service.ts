@@ -1,4 +1,4 @@
-import { TokenPayload } from '@app/common';
+import { INPUT_VITAL_SIGNS_SERVICE, TokenPayload } from '@app/common';
 import { InputVitalDto, UpdateVitalDto } from '@app/common/dto/analyze-healthcare-data';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AnalyzeHealthcareDataService {
-  constructor(private readonly httpService: HttpService) { }
+  constructor(@Inject(INPUT_VITAL_SIGNS_SERVICE) private readonly httpService: HttpService) { }
 
   async inputVital(
     inputVitalDto: InputVitalDto,

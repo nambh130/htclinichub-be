@@ -56,19 +56,19 @@ services:
       timeout: 5s
       retries: 10
 
-  # postgres-test:
-  #   image: postgres
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: randompassword
-  #     POSTGRES_DB: authservice
-  #   ports:
-  #     - '5432:5432'
-  #   healthcheck:
-  #     test: ['CMD', 'pg_isready', '-U', 'postgres']
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 10
+  postgres-test:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: authservice
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api-gateway:
     build:
@@ -100,35 +100,35 @@ services:
     ports:
       - '3000:3000'
 
-  # clinics:
-  #   build:
-  #     context: .
-  #     dockerfile: ./apps/clinics/Dockerfile
-  #     target: development
-  #   command: sh -c "sleep 10 && pnpm run start:dev clinics"
-  #   develop:
-  #     watch:
-  #       - action: sync
-  #         path: ./apps/clinics/src
-  #         target: /app/apps/clinics/src
-  #         ignore:
-  #           - node_modules/
-  #       - action: sync
-  #         path: ./libs
-  #         target: /app/libs
-  #         ignore:
-  #           - node_modules/
-  #       - action: rebuild
-  #         path: ./package.json
-  #   env_file:
-  #     - ./apps/clinics/.env
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     postgres:
-  #       condition: service_healthy
-  #     mongo:
-  #       condition: service_healthy
+  clinics:
+    build:
+      context: .
+      dockerfile: ./apps/clinics/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev clinics"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/clinics/src
+          target: /app/apps/clinics/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    env_file:
+      - ./apps/clinics/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
   auth:
     build:
       context: .

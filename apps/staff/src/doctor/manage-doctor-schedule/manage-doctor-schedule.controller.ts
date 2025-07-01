@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { ActorType, CreateDoctorAccountDto, TokenPayload } from '@app/common';
+import { ActorType, CreateDoctorAccountDto, CurrentUser, TokenPayload } from '@app/common';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule.service';
+import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
+import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 
 @Controller('manage-doctor-schedule')
 export class ManageDoctorScheduleController {
@@ -33,4 +35,52 @@ export class ManageDoctorScheduleController {
       throw error;
     }
   }
+
+  @Post('setup-working-shift/:doctorId')
+  async setUpWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Body()
+    payload: {
+      dto: SetupWorkingShiftDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    try {
+      const { dto, currentUser } = payload;
+      const shift = await this.manageDoctorScheduleService
+        .setUpWorkingShiftByDoctorId(doctorId, dto, currentUser);
+      return shift;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+@Put(':doctorId/change-working-shift/:shiftId')
+async changeWorkingShiftByDoctorId(
+  @Param('shiftId') shiftId: string,
+  @Param('doctorId') doctorId: string,
+  @Body()
+  payload: {
+    dto: ChangeWorkingShiftDto;
+    currentUser: TokenPayload;
+  },
+) {
+  try {
+    const { dto, currentUser } = payload;
+
+    const shift = await this.manageDoctorScheduleService.changeWorkingShiftByDoctorId(
+      dto,
+      doctorId,
+      shiftId,
+      currentUser,
+    );
+
+    return shift;
+  } catch (error) {
+    console.error('Error in changeWorkingShiftByDoctorId controller:', error);
+    throw error;
+  }
+}
+
 }

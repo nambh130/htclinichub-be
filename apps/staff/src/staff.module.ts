@@ -31,6 +31,10 @@ import { SpecializeRepository } from './repositories/specialize.repository';
 import { DoctorEventController } from './doctor/doctor-event.controller';
 import { EmployeeEventController } from './employee/employee-event.controller';
 import { DoctorClinicMap } from './models/doctor-clinic-map.entity';
+import { Clinic } from './models/clinic.entity';
+import { ClinicEventController } from './clinic/clinic-event.controller';
+import { ClinicRepository } from './clinic/clinic.repository';
+import { ClinicService } from './clinic/clinic.service';
 import { ManageDoctorScheduleModule } from './doctor/manage-doctor-schedule/manage-doctor-schedule.module';
 import { Doctor_WorkShift } from './models/doctor_workshift.entity';
 import { ManageDoctorScheduleRepository } from './doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
@@ -69,6 +73,7 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
       Specialize,
       StaffInfo,
       DoctorClinicMap,
+      Clinic,
       Doctor_WorkShift,
     ]),
   ],
@@ -78,6 +83,7 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
     EmployeeController,
     DoctorEventController,
     EmployeeEventController,
+    ClinicEventController,
     ManageDoctorScheduleController
   ],
   providers: [
@@ -87,11 +93,13 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
     DegreeRepository,
     SpecializeRepository,
     EmployeeService,
+    ClinicService,
     CommonRepository,
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
-    ManageDoctorScheduleRepository
+    ManageDoctorScheduleRepository,
+    ClinicRepository
   ],
   exports: [StaffService],
 })

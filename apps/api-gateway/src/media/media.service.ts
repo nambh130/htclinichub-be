@@ -1,18 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { Readable } from 'stream';
 import FormData from 'form-data';
-import { MediaDto, TokenPayload } from '@app/common';
+import { MEDIA_SERVICE, MediaDto, TokenPayload } from '@app/common';
 
 @Injectable()
 export class MediaService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    @Inject(MEDIA_SERVICE) private readonly mediaService: HttpService,
+  ) {}
 
-  async getFileById(id: string): Promise<unknown> {
+  async getFileById(id: string | null | undefined): Promise<unknown> {
+    if (!id) return null;
+
     const response = await lastValueFrom(
-      this.httpService.get(`/media/get/${id}`),
+      this.mediaService.get(`/media/get/${id}`),
     );
+
     return response.data;
   }
 
@@ -32,7 +37,7 @@ export class MediaService {
       'x-current-user': JSON.stringify(currentUser),
     };
 
-    const response$ = this.httpService.post<MediaDto>(
+    const response$ = this.mediaService.post<MediaDto>(
       `/media/${endpoint}`,
       form,
       {
@@ -63,7 +68,7 @@ export class MediaService {
       'x-current-user': JSON.stringify(currentUser),
     };
 
-    const response$ = this.httpService.post<MediaDto[]>(
+    const response$ = this.mediaService.post<MediaDto[]>(
       `/media/${endpoint}`,
       form,
       {
@@ -92,7 +97,7 @@ export class MediaService {
       'x-current-user': JSON.stringify(currentUser),
     };
 
-    const response$ = this.httpService.post<MediaDto>(
+    const response$ = this.mediaService.post<MediaDto>(
       `/media/update/${id}`,
       form,
       { headers },
@@ -106,7 +111,7 @@ export class MediaService {
     const payload = { id, currentUser };
 
     const response = await lastValueFrom(
-      this.httpService.post(`/media/delete/${id}`, payload),
+      this.mediaService.post(`/media/delete/${id}`, payload),
     );
     return response.data;
   }

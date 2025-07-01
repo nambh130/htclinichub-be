@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { PostgresAbstractEntity, PostgresAbstractRepository } from '@app/common';
+import { Clinic } from './clinic.entity';
 // import { Clinic } from './clinic.entity';
 
 @Entity({ name: 'doctor_workshift' })
@@ -16,9 +17,9 @@ export class Doctor_WorkShift extends PostgresAbstractEntity<Doctor_WorkShift> {
     @JoinColumn({ name: 'doctor_id' })
     doctor: Doctor;
 
-    //   @ManyToOne(() => Clinic, { nullable: false })
-    //   @JoinColumn({ name: 'clinic_id' })
-    //   clinic: Clinic;
+    @ManyToOne(() => Clinic, { nullable: false })
+    @JoinColumn({ name: 'clinic_id' })
+    clinic: Clinic;
 
     @Column({ type: 'timestamp', name: 'start_time' })
     startTime: Date;

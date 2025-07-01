@@ -17,6 +17,10 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @Column({ default: false })
   is_locked: boolean;
 
+  @OneToOne(() => StaffInfo)
+  @JoinColumn({ name: 'staff_info_id', referencedColumnName: 'id' })
+  staffInfo: StaffInfo;
+
   @OneToMany(() => Invitation, (invitation) => invitation.doctor)
   invitations: Invitation[];
 

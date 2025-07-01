@@ -2,7 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  OnModuleInit,
+  OnModuleInit, UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PatientRepository } from './patients/patients.repository';
@@ -15,7 +15,7 @@ import { InvitationSignupDto } from './dto/invitation-signup.dto';
 import { ClinicUsersService } from './clinic-users/clinic-users.service';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import * as bcrypt from 'bcrypt';
-import { ActorEnum } from './clinic-users/models/clinic-user.entity';
+import { ActorEnum, User } from './clinic-users/models/clinic-user.entity';
 import { InvitationEnum } from './invitations/models/invitation.entity';
 import { ClinicRepository } from './clinics/clinics.repository';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
@@ -23,6 +23,10 @@ import { AUTH_SERVICE } from '@app/common';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ClinicOwnerAdded } from '@app/common/events/auth/clinic-owner-added.event';
 import { PatientCreated } from '@app/common/events/auth/patient-created.event';
+import { RefreshTokenRepository } from './refresh-token/refresh-token.repository';
+import { RefreshToken } from './refresh-token/models/refresh-token.model';
+import * as argon2 from 'argon2';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -33,9 +37,10 @@ export class AuthService implements OnModuleInit {
     private readonly invitationService: InvitationsService,
     private readonly clinicUserService: ClinicUsersService,
     private readonly clinicRepository: ClinicRepository,
+    private readonly refreshTokenRepo: RefreshTokenRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -67,10 +72,6 @@ export class AuthService implements OnModuleInit {
     const token = await this.jwtService.signAsync(tokenPayload);
 
     return { user: patient, token };
-  }
-
-  async verifyToken(token: string): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync(token);
   }
 
   // ------------------------------ EMPLOYEE ---------------------------------
@@ -147,6 +148,8 @@ export class AuthService implements OnModuleInit {
     });
     const email = user.email;
 
+    // getInvitationByToken() automatically check and update invitation status
+    // if it is expired
     const invitation = await this.invitationService.getInvitationByToken({
       token,
       email,
@@ -214,7 +217,7 @@ export class AuthService implements OnModuleInit {
     return { message: 'Invitation accepted', user };
   }
 
-  async clinicUserLogin(dto: ClinicUserLoginDto) {
+  async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string) {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
       email,
@@ -225,34 +228,10 @@ export class AuthService implements OnModuleInit {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new BadRequestException('Invalid credentials');
 
-    const tokenPayload: TokenPayload = {
-      userId: user.id,
-      email: user.email,
-      actorType: user.actorType as ActorEnum,
-      permissions: Array.from(
-        new Set(
-          user.roles.flatMap((role) => role.permissions.map((p) => p.name)),
-        ),
-      ),
-      roles: user.roles.map((r) => r.name),
-    };
-
-    const currentClinics = user.clinics;
-    tokenPayload.currentClinics = currentClinics.map((clinic) => clinic.id);
-
-    const adminOf = user.ownerOf.map((clinic) => clinic.id);
-    tokenPayload.isAdminOf = adminOf;
-    //if (user.clinics && user.clinics.length > 0) {
-    //  const currentClinic = user.clinics[0];
-    //  if (currentClinic) {
-    //    tokenPayload.currentClinic = currentClinic.id;
-    //    if (currentClinic.owner?.id === user.id) {
-    //      tokenPayload.isAdmin = true;
-    //    }
-    //  }
-    //}
-
+    const tokenPayload = this.buildTokenPayload(user);
     const token = await this.createJWT(tokenPayload);
+
+    const refreshToken = await this.createRefreshToken(user.id, userAgent, ip);
 
     return {
       user: {
@@ -260,19 +239,91 @@ export class AuthService implements OnModuleInit {
         email: user.email,
         roles: tokenPayload.roles,
         currentClinics: tokenPayload.currentClinics,
-        adminOf,
+        adminOf: tokenPayload.isAdminOf,
       },
       token,
+      refreshToken,
     };
   }
 
+  // ------------------------------ UTILITIES ---------------------------------
   async createJWT(payload: TokenPayload) {
-    const expires = new Date();
-    const jwtExpiration = Number(
-      this.configService.get('JWT_EXPIRES_IN') ?? 3600,
-    );
-    expires.setSeconds(expires.getSeconds() + jwtExpiration);
-    const token = await this.jwtService.signAsync(payload);
+    const jwtExpirationMin = Number(this.configService.get<number>('JWT_EXPIRES_IN') || 15);
+
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn: jwtExpirationMin * 60,
+    });
+
     return token;
+  }
+
+  async createRefreshToken(userId: string, userAgent?: string, ip?: string): Promise<string> {
+    try {
+      const expireDate = this.configService.get("REFRESH_TOKEN_EXPIRES");
+
+      const selector = randomBytes(16).toString('hex'); // used to look up the token
+      const verifier = randomBytes(64).toString('hex'); // will be hashed and stored
+      const token = `${selector}.${verifier}`; // send this to the client
+      const hashedVerifier = await argon2.hash(verifier);
+
+      try {
+        this.refreshTokenRepo.create(new RefreshToken({
+          userId: userId,
+          userAgent,
+          ipAddress: ip,
+          tokenHash: hashedVerifier,
+          selector,
+          expiresAt: new Date(Date.now() + expireDate)// 7 days
+        }));
+      } catch (error) {
+        throw new Error("Failed to create refresh token");
+      }
+
+      return token
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async verifyRefreshToken(token: string): Promise<RefreshToken> {
+    const [selector, verifier] = token.split('.') ?? [];
+
+    const record = await this.refreshTokenRepo.findOne({ selector });
+    if (!record) throw new UnauthorizedException("Token not found");
+
+    const isValid = await argon2.verify(record.tokenHash, verifier);
+    if (!isValid || record.expiresAt < new Date()) {
+      throw new UnauthorizedException("Token expired or invalid!");
+    }
+
+    return record;
+  }
+
+  buildTokenPayload(user: User): TokenPayload {
+    const currentClinics = user.clinics.map((clinic) => clinic.id);
+    const adminOf = user.ownerOf.map((clinic) => clinic.id);
+    const permissions = Array.from(
+      new Set(user.roles.flatMap((role) => role.permissions.map((p) => p.name)))
+    );
+
+    return {
+      userId: user.id,
+      email: user.email,
+      actorType: user.actorType as ActorEnum,
+      roles: user.roles.map((r) => r.name),
+      permissions,
+      currentClinics,
+      isAdminOf: adminOf,
+    };
+  }
+
+  async invalidateRefreshToken(token: string): Promise<void> {
+    const [selector] = token.split('.');
+
+    if (!selector) {
+      throw new BadRequestException('Invalid refresh token format');
+    }
+
+    await this.refreshTokenRepo.delete({ selector });
   }
 }

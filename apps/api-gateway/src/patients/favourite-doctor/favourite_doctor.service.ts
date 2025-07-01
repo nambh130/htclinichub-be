@@ -11,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class FavouriteDoctorService {
-  constructor(private readonly httpService: HttpService) { }
+  constructor(@Inject(PATIENT_SERVICE) private readonly httpService: HttpService) { }
   // Patient-related methods
   async addFavouriteDoctor(
     user: TokenPayload,

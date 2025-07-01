@@ -27,6 +27,10 @@ export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
     return doctor !== null;
   }
 
+  get repo(): Repository<Doctor> {
+    return this.itemsRepository;
+  }
+
   async findDoctorsByIds(ids: number[]): Promise<Doctor[]> {
     return this.entityRepository.find({
       where: { id: In(ids) }

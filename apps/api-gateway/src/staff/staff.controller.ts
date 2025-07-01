@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Put,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
@@ -20,6 +21,8 @@ import {
 } from '@app/common';
 
 import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
+import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
+import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 
 @Controller('staff')
 export class StaffController {
@@ -42,6 +45,19 @@ export class StaffController {
   @UseGuards(JwtAuthGuard)
   async getDoctorById(@Param('id') doctorId: string) {
     return await this.staffService.getDoctorById(doctorId);
+  }
+
+
+  @Get('doctor-by-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorByClinic(@Param('clinicId') clinicId: string) {
+    return this.staffService.getDoctorByClinic(clinicId);
+  }
+
+  @Get('doctor-details/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorDetailsById(@Param('id') doctorId: string) {
+    return await this.staffService.getDoctorDetailsById(doctorId);
   }
 
   @Post('doctor/create-account')
@@ -101,6 +117,12 @@ export class StaffController {
     return this.staffService.addDoctorDegree(staffInfoId, dto, currentUser);
   }
 
+  @Get('doctor/:id/degrees')
+  @UseGuards(JwtAuthGuard)
+  getDegreesByStaffInfoId(@Param('id') staffInfoId: string) {
+    return this.staffService.getDegreesByStaffInfoId(staffInfoId);
+  }
+
   @Post('doctor/:id/add-specialize')
   @UseGuards(JwtAuthGuard)
   addDoctorSpecialize(
@@ -109,6 +131,12 @@ export class StaffController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     return this.staffService.addDoctorSpecialize(staffInfoId, dto, currentUser);
+  }
+
+  @Get('doctor/:id/specializes')
+  @UseGuards(JwtAuthGuard)
+  getSpecializesByStaffInfoId(@Param('id') staffInfoId: string) {
+    return this.staffService.getSpecializesByStaffInfoId(staffInfoId);
   }
 
   //Employee-endpoints
@@ -145,6 +173,12 @@ export class StaffController {
     return this.staffService.unlockEmployeeAccount(id, currentUser);
   }
 
+  @Get('doctor-account-byId/:id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorAccountById(@Param('id') id: string) {
+    return this.staffService.getDoctorAccountById(id);
+  }
+
   // View Working Hours
   // Set Up Working Hours
   // Change Working Hours
@@ -174,6 +208,42 @@ export class StaffController {
     try {
       const doctor = await this.manageDoctorScheduleService
         .getDetailShift(shiftId, user);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Post('/doctor/setup-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async setUpWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Body() dto: SetupWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService
+        .setUpWorkingShiftByDoctorId(dto, doctorId, currentUser);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Put('/doctor/:doctorId/change-working-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async changeWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Param('shiftId') shiftId: string,
+    @Body() dto: ChangeWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+
+      const doctor = await this.manageDoctorScheduleService
+        .changeWorkingShiftByDoctorId(dto, doctorId, shiftId, currentUser);
       return doctor;
     } catch (error) {
       console.error('Error retrieving patient:', error);

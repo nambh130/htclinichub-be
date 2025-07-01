@@ -3,14 +3,13 @@ import { PatientService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto, FavouriteDoctorDto, TokenPayload } from '@app/common';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
-import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
 
 @Controller('patient')
 export class PatientsController {
   constructor(
     private readonly patientService: PatientService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
-    private readonly downLoadMedicalReport: DownLoadMedicalReportService,
+    // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
 
   ) { }
 

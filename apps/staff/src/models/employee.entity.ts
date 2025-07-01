@@ -1,6 +1,7 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { EmployeeRoleLink } from './employeeRoleLinks.entity';
+import { StaffInfo } from './staffInfo.entity';
 
 @Entity()
 export class Employee extends PostgresAbstractEntity<Employee> {
@@ -18,4 +19,8 @@ export class Employee extends PostgresAbstractEntity<Employee> {
 
   @OneToMany(() => EmployeeRoleLink, (link) => link.employee)
   roles: EmployeeRoleLink[];
+
+  @OneToOne(() => StaffInfo)
+  @JoinColumn({ name: 'staff_info_id', referencedColumnName: 'id' })
+  staffInfo: StaffInfo;
 }
