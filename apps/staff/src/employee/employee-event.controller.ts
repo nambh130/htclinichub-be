@@ -22,7 +22,7 @@ export class EmployeeEventController {
       return this.employeeService.createEmployeeAccount(
         {
           email,
-          clinic_id: clinicId,
+          clinic: clinicId,
           password: 'Abc@123.com',
         },
         {

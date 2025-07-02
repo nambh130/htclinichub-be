@@ -7,11 +7,9 @@ import {
   TokenPayload,
   UpdateDegreeDto,
   UpdateSpecializeDto,
-} from '@app/common';
-import {
   DoctorProfileDto,
   UpdateProfileDto,
-} from '@app/common/dto/staffs/doctor-profile.dto';
+} from '@app/common';
 
 @Controller('staff/doctor')
 export class DoctorController {

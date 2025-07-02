@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
-import { StaffService } from './staff.service';
-import { StaffController } from './staff.controller';
+import { DoctorService } from './doctor/doctor.service';
+import { DoctorController } from './doctor/doctor.controller';
+import { EmployeeService } from './employee/employee.service';
+import { EmployeeController } from './employee/employee.controller';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { httpClientConfig, HttpModules } from '../api/http.client';
@@ -26,7 +28,7 @@ import { MediaModule } from '../media/media.module';
     MediaModule,
     AuthModule,
   ],
-  controllers: [StaffController],
-  providers: [StaffService],
+  controllers: [DoctorController, EmployeeController],
+  providers: [DoctorService, EmployeeService],
 })
 export class StaffModule {}

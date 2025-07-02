@@ -1,15 +1,12 @@
-import { Optional } from '@nestjs/common';
 import {
   IsEmail,
   IsString,
   MinLength,
   Matches,
-  IsNumber,
+  IsOptional,
 } from 'class-validator';
 
-export class CreateEmployeeAccountDto {
-  @Optional()
-  id?: string;
+export class CreateDoctorAccountDto {
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
@@ -26,6 +23,7 @@ export class CreateEmployeeAccountDto {
   })
   password: string;
 
-  @IsNumber({}, { message: 'clinic_id must be a string' })
-  clinic_id: string;
+  @IsOptional()
+  @IsString()
+  clinic?: string;
 }

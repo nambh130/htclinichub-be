@@ -19,8 +19,6 @@ import { DoctorController } from './doctor/doctor.controller';
 import { DoctorService } from './doctor/doctor.service';
 import { EmployeeController } from './employee/employee.controller';
 import { EmployeeService } from './employee/employee.service';
-import { StaffController } from './staff.controller';
-import { StaffService } from './staff.service';
 
 import { CommonRepository } from './repositories/common.repository';
 import { DoctorRepository } from './repositories/doctor.repository';
@@ -68,19 +66,17 @@ import { ClinicService } from './clinic/clinic.service';
       Specialize,
       StaffInfo,
       DoctorClinicMap,
-      Clinic
+      Clinic,
     ]),
   ],
   controllers: [
-    StaffController,
     DoctorController,
     EmployeeController,
     DoctorEventController,
     EmployeeEventController,
-    ClinicEventController
+    ClinicEventController,
   ],
   providers: [
-    StaffService,
     DoctorService,
     DegreeRepository,
     SpecializeRepository,
@@ -90,9 +86,8 @@ import { ClinicService } from './clinic/clinic.service';
     DoctorRepository,
     EmployeeRepository,
     StaffInfoRepository,
-    ClinicRepository
-    
+    ClinicRepository,
   ],
-  exports: [StaffService],
+  exports: [],
 })
 export class StaffModule {}
