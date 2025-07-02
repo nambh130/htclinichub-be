@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ClinicsService } from './clinics.service';
 import { CreateReservationDto, ReservationCreatedEvent } from '@app/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -61,5 +61,10 @@ export class ClinicsController {
   @EventPattern('clinic-added')
   handleClinicAdded(@Payload() clinicAddedEvent: ClinicAddedEvent) {
     clinicAddedEvent.toString();
+  }
+  @Post('/get-clinics-by-ids')
+  async getClinicsByIds(@Body() body: { clinicIds: string[] }) {
+    const { clinicIds } = body;
+    return this.clinicsService.getClinicsByIds(clinicIds);
   }
 }

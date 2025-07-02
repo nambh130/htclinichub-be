@@ -17,6 +17,7 @@ import {
   PATIENTS_TO_STAFF_SERVICE,
   PATIENTS_TO_STAFF_CLIENT,
   PATIENTS_TO_STAFF_CONSUMER,
+  CLINIC_SERVICE,
 } from '@app/common';
 import * as Joi from 'joi';
 import { FavouriteDoctorModule } from './favourite-doctor/favourite_doctor.module';
@@ -29,9 +30,13 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
+import { HttpModule, HttpService } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule.register({
+      baseURL: 'http://clinics:3007',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -129,6 +134,10 @@ import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.
     JwtModule,
     PatientAccountRepository,
     PatientClinicLinkRepository,
+    {
+      provide: CLINIC_SERVICE,
+      useExisting: HttpService,
+    },
   ],
   exports: [
     PatientsService,

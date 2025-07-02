@@ -238,6 +238,18 @@ export class PatientsController {
     }
   }
 
+  @Get('/:id/clinics')
+  @UseGuards(JwtAuthGuard)
+  async getPatientClinics(@Param('id') id: string) {
+    try {
+      const result = await this.patientService.getPatientClinics(id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient clinics:', error);
+      throw error;
+    }
+  }
+
 
 
 }

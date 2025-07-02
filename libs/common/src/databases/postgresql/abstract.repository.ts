@@ -5,6 +5,7 @@ import {
   FindOptionsOrder,
   Repository,
   DeepPartial,
+  In,
 } from 'typeorm';
 import { Logger, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -164,5 +165,8 @@ export abstract class PostgresAbstractRepository<
       page,
       limit,
     };
+  }
+  async findMany(where: FindOptionsWhere<T>): Promise<T[]> {
+    return this.entityRepository.find({ where });
   }
 }

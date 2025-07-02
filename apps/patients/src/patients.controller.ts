@@ -220,4 +220,15 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('get-patient-clinics/:id')
+  async getPatientClinics(@Param('id') id: string) {
+    try {
+      const result = await this.patientsService.getPatientClinics(id);
+      return result;
+    } catch (error) {
+      console.error('Error in getPatientClinics:', error);
+      throw error;
+    }
+  }
 }

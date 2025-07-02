@@ -169,4 +169,16 @@ export class PatientService {
       throw error;
     }
   }
+
+  async getPatientClinics(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-clinics/${id}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }

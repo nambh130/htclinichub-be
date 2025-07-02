@@ -2,13 +2,15 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePatientDto } from '@app/common/dto/patients/create-patients.dto';
 import { UpdatePatientDto } from '@app/common/dto/patients/update-patient.dto';
 import { PatientRepository } from './patients.repository';
-import { PATIENT_SERVICE } from '@app/common';
+import { CLINIC_SERVICE, PATIENT_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
 import { BadRequestException } from '@nestjs/common';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class PatientsService {
@@ -18,6 +20,7 @@ export class PatientsService {
     private readonly patientClinicLinkRepo: PatientClinicLinkRepository,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
+    @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
   ) {}
 
   async createPatient(createPatientDto: CreatePatientDto, userId: string) {
@@ -477,5 +480,23 @@ export class PatientsService {
       console.error('Error assigning patient to clinic:', error);
       throw error;
     }
+  }
+
+  async getPatientClinics(id: string) {
+    // Lấy list clinicIds
+    const links = await this.patientClinicLinkRepo.repo.find({
+      where: { patientAccount: { id } },
+    });
+    const clinicIds = links.map((link) => link.clinic_id);
+    if (clinicIds.length === 0) return [];
+
+    // Gửi request sang clinic-service
+    const clinics = await firstValueFrom(
+      this.clinicsHttpService.post('/clinics/get-clinics-by-ids', {
+        clinicIds,
+      }),
+    );
+
+    return clinics.data;
   }
 }
