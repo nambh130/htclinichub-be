@@ -8,10 +8,8 @@ import { RefreshTokenRepository } from './refresh-token.repository';
     PostgresDatabaseModule,
     PostgresDatabaseModule.forFeature([RefreshToken]),
     LoggerModule,
-
   ],
   providers: [RefreshTokenRepository],
-  exports: [RefreshTokenRepository]
+  exports: [RefreshTokenRepository],
 })
 export class RefreshTokenModule {}
-

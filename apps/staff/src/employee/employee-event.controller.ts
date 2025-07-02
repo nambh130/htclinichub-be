@@ -31,6 +31,7 @@ export class EmployeeEventController {
         },
       );
     }
+    return null;
   }
 
   @MessagePattern('lock-employee-account')

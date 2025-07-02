@@ -225,11 +225,13 @@ export class ClinicsService {
       const clinicToUpdate = new Clinic();
       clinicToUpdate.id = id;
 
+      console.log(updateClinicDto)
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
           ...clinic,
           ...updateClinicDto,
+          ownerId: updateClinicDto.ownerId,
           updatedById: userId,
         }, // data to update
       );

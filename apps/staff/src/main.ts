@@ -3,7 +3,8 @@ import { StaffModule } from './staff.module';
 import { Logger } from 'nestjs-pino';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { KafkaExceptionFilter, STAFF_CONSUMER_GROUP } from '@app/common';
+import { HttpServiceExceptionFilter, STAFF_CONSUMER_GROUP } from '@app/common';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(StaffModule); // HTTP + DI context
@@ -31,8 +32,17 @@ async function bootstrap() {
     },
   });
 
-  // Use Kafka exception filter for Kafka context only
-  app.useGlobalFilters(new KafkaExceptionFilter());
+  // Use HTTP exception filter for HTTP endpoints
+  app.useGlobalFilters(new HttpServiceExceptionFilter());
+
+  // Global pipes for validation
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   const port = configService.get<number>('STAFF_SERVICE_PORT') as number;
 

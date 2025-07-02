@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import {
@@ -16,10 +17,15 @@ import {
   DoctorSpecializeDto,
   JwtAuthGuard,
   TokenPayload,
+  UpdateDegreeDto,
+  UpdateSpecializeDto,
 } from '@app/common';
-import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
 import { ClinicService } from '../clinics/clinic.service';
 import { IClinic, IMappedClinicLink } from './interfaces/staff.interface';
+import {
+  DoctorProfileDto,
+  UpdateProfileDto,
+} from '@app/common/dto/staffs/doctor-profile.dto';
 
 @Controller('staff')
 export class StaffController {
@@ -28,7 +34,10 @@ export class StaffController {
     private readonly clinicService: ClinicService
   ) { }
 
-  //Doctor-enpoints
+  // ============================================================================
+  // DOCTOR ACCOUNT MANAGEMENT
+  // ============================================================================
+
   @Get('doctor/account-list')
   @UseGuards(JwtAuthGuard)
   async getDoctorAccountList(
@@ -36,6 +45,15 @@ export class StaffController {
     @Query('limit') limit: string = '10',
   ) {
     return this.staffService.getDoctorAccountList(+page, +limit);
+  }
+
+  @Get('doctor/account-list-with-profile')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorListWithProfile(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return await this.staffService.getDoctorListWithProfile(+page, +limit);
   }
 
   @Get('doctor/:id')
@@ -57,7 +75,7 @@ export class StaffController {
   ) {
     // {linkId, clinicId}
     const doctorClinicsLink =
-      await this.staffService.getClinicIdsByDoctor({userId: user.userId});
+      await this.staffService.getClinicIdsByDoctor({ userId: user.userId });
 
     const clinicIds = doctorClinicsLink.map((data) => data.clinic);
     // Get clinic infos
@@ -65,7 +83,8 @@ export class StaffController {
 
     const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
       const clinicInfo = clinics.find((c) => c.id === link.clinic);
-      const isAdmin = clinicInfo?.ownerOf === user.userId;
+      const isAdmin = clinicInfo?.ownerId === user.userId;
+      console.log(clinicInfo, isAdmin)
       return {
         link_id: link.linkId,
         clinic: {
@@ -113,59 +132,130 @@ export class StaffController {
     return this.staffService.unlockDoctorAccount(id, currentUser);
   }
 
+  // ============================================================================
+  // DOCTOR PROFILE MANAGEMENT
+  // ============================================================================
+
   @Get('doctor/:id/profile')
   @UseGuards(JwtAuthGuard)
   async getStaffInfoByDoctorId(@Param('id') doctorId: string) {
     return this.staffService.getStaffInfoByDoctorId(doctorId);
   }
 
-  @Post('doctor/:id/create-profile/step-one')
+  @Post('doctor/:id/create-profile')
   @UseGuards(JwtAuthGuard)
-  async createDoctorProfileStepOne(
+  async createDoctorProfile(
     @Param('id') staffId: string,
-    @Body() dto: DoctorStepOneDto,
+    @Body() dto: DoctorProfileDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createDoctorProfileStepOne(
-      staffId,
-      dto,
-      currentUser,
-    );
+    return this.staffService.createDoctorProfile(staffId, dto, currentUser);
+  }
+
+  @Post('doctor/:id/update-profile')
+  @UseGuards(JwtAuthGuard)
+  async updateDoctorProfile(
+    @Param('id') doctorId: string,
+    @Body() dto: UpdateProfileDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.staffService.updateDoctorProfile(doctorId, dto, currentUser);
+  }
+
+  // ============================================================================
+  // DOCTOR DEGREES MANAGEMENT
+  // ============================================================================
+
+  @Get('doctor/:id/degrees')
+  @UseGuards(JwtAuthGuard)
+  getDegreesByDoctorId(@Param('id') doctorId: string) {
+    return this.staffService.getDegreesByDoctorId(doctorId);
   }
 
   @Post('doctor/:id/add-degree')
   @UseGuards(JwtAuthGuard)
   addDoctorDegree(
-    @Param('id') staffInfoId: string,
+    @Param('id') doctorId: string,
     @Body() dto: DoctorDegreeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.addDoctorDegree(staffInfoId, dto, currentUser);
+    return this.staffService.addDoctorDegree(doctorId, dto, currentUser);
   }
 
-  @Get('doctor/:id/degrees')
+  @Post('doctor/:id/update-degree/:degreeId')
   @UseGuards(JwtAuthGuard)
-  getDegreesByStaffInfoId(@Param('id') staffInfoId: string) {
-    return this.staffService.getDegreesByStaffInfoId(staffInfoId);
+  updateDoctorDegree(
+    @Param('id') doctorId: string,
+    @Param('degreeId') degreeId: string,
+    @Body() dto: UpdateDegreeDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.staffService.updateDoctorDegree(
+      doctorId,
+      degreeId,
+      dto,
+      currentUser,
+    );
+  }
+
+  @Delete('doctor/:id/delete-degree/:degreeId')
+  @UseGuards(JwtAuthGuard)
+  deleteDoctorDegree(
+    @Param('id') doctorId: string,
+    @Param('degreeId') degreeId: string,
+  ) {
+    return this.staffService.deleteDoctorDegree(doctorId, degreeId);
+  }
+
+  // ============================================================================
+  // DOCTOR SPECIALIZATIONS MANAGEMENT
+  // ============================================================================
+
+  @Get('doctor/:id/specializes')
+  @UseGuards(JwtAuthGuard)
+  getSpecializesByDoctorId(@Param('id') doctorId: string) {
+    return this.staffService.getSpecializesByDoctorId(doctorId);
   }
 
   @Post('doctor/:id/add-specialize')
   @UseGuards(JwtAuthGuard)
   addDoctorSpecialize(
-    @Param('id') staffInfoId: string,
+    @Param('id') doctorId: string,
     @Body() dto: DoctorSpecializeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.addDoctorSpecialize(staffInfoId, dto, currentUser);
+    return this.staffService.addDoctorSpecialize(doctorId, dto, currentUser);
   }
 
-  @Get('doctor/:id/specializes')
+  @Post('doctor/:id/update-specialize/:specializeId')
   @UseGuards(JwtAuthGuard)
-  getSpecializesByStaffInfoId(@Param('id') staffInfoId: string) {
-    return this.staffService.getSpecializesByStaffInfoId(staffInfoId);
+  updateDoctorSpecialize(
+    @Param('id') doctorId: string,
+    @Param('specializeId') specializeId: string,
+    @Body() dto: UpdateSpecializeDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.staffService.updateDoctorSpecialize(
+      doctorId,
+      specializeId,
+      dto,
+      currentUser,
+    );
   }
 
-  //Employee-endpoints
+  @Delete('doctor/:id/delete-specialize/:specializeId')
+  @UseGuards(JwtAuthGuard)
+  deleteDoctorSpecialize(
+    @Param('id') doctorId: string,
+    @Param('specializeId') specializeId: string,
+  ) {
+    return this.staffService.deleteDoctorSpecialize(doctorId, specializeId);
+  }
+
+  // ============================================================================
+  // EMPLOYEE MANAGEMENT
+  // ============================================================================
+
   @Get('employee-account-list')
   @UseGuards(JwtAuthGuard)
   async viewEmployeeAccountList() {

@@ -22,6 +22,10 @@ export class ClinicService extends BaseClinicService<Clinic> {
     );
   }
 
+  async save(clinicData: Partial<Clinic>) {
+    return await this.clinicRepo.create(new Clinic(clinicData));
+  }
+
   async addClinic(clinicData: Partial<Clinic>) {
     const clinic = new Clinic(clinicData);
     const createdClinic = await this.clinicRepo.create(clinic);

@@ -174,7 +174,7 @@ export class AuthController {
     );
     this.setAuthCookies(res, response.token, response.refreshToken);
 
-    return { user: response.user };
+    return { user: response.user, token: response.token };
   }
 
   @Post('refresh')

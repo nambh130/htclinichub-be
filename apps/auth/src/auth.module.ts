@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, LoggerModule } from '@app/common';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { PatientsModule } from './patients/patients.module';
@@ -21,7 +21,7 @@ import { ClinicEventController } from './clinics/clinic-event.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/auth/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         AUTH_SERVICE_DB: Joi.string().required(),
@@ -68,10 +68,10 @@ import { ClinicEventController } from './clinics/clinic-event.controller';
     InvitationsModule,
     RolesModule,
     PermissionsModule,
-    RefreshTokenModule
+    RefreshTokenModule,
   ],
   controllers: [AuthController, ClinicEventController],
   exports: [AuthService, JwtModule],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

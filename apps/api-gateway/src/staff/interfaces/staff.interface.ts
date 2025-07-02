@@ -7,7 +7,7 @@ export interface IClinic {
   id: string;
   name: string;
   location: string;
-  ownerOf: string;
+  ownerId: string;
   // add other fields as needed
 }
 
