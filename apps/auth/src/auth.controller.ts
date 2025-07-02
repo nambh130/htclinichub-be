@@ -20,7 +20,7 @@ import { ClinicUsersService } from './clinic-users/clinic-users.service';
 import { ClinicsService } from './clinics/clinics.service';
 import { CreateUserDto } from './clinic-users/dto/create-user.dto';
 import { UserCreatedEvent } from '@app/common/events/users/user-created.event';
-import { AUTH_SERVICE, CurrentUser, JwtAuthGuard } from '@app/common';
+import { AUTH_SERVICE, CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
 import { InvitationCheckDto } from './dto/invitation-check.dto';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
@@ -29,13 +29,14 @@ import { Request, Response } from 'express';
 import { AuthorizationGuard } from '@app/common/auth/authorization.guard';
 import { Authorizations } from '@app/common/decorators/authorizations.decorator';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
-import { TokenPayload } from './interfaces/token-payload.interface';
 import { ActorEnum } from '@app/common/enum/actor-type';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { ConfigService } from '@nestjs/config';
 import { OtpPurpose, OtpTargetType } from './constants/enums';
 import { PasswordRecoveryDto } from './dto/user-recover-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { randomBytes } from 'crypto';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +47,7 @@ export class AuthController {
     private readonly otpService: OtpService,
     private readonly invitationService: InvitationsService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
   ) { }
@@ -172,7 +174,7 @@ export class AuthController {
     );
     this.setAuthCookies(res, response.token, response.refreshToken);
 
-    return { user: response.user };
+    return { user: response.user, token: response.token };
   }
 
   @Post('refresh')
@@ -201,15 +203,18 @@ export class AuthController {
     // Step 5: Set new refresh token cookie
     const expireDate = this.configService.get("REFRESH_TOKEN_EXPIRES");
     console.log(expireDate)
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/auth/refresh',
-      maxAge: expireDate, // 7 days
-    });
+    this.setAuthCookies(res, accessToken, newRefreshToken);
 
-    return { token: accessToken };
+    return {
+      token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        roles: tokenPayload.roles,
+        currentClinics: tokenPayload.currentClinics,
+        adminOf: tokenPayload.adminOf,
+      },
+    };
   }
 
   @Post('logout')
@@ -225,7 +230,10 @@ export class AuthController {
     });
 
     res.clearCookie('refreshToken', {
-      path: '/auth/refresh',
+      path: '/', // MUST match exactly
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
     });
 
     return { message: 'Logged out successfully' };
@@ -237,55 +245,50 @@ export class AuthController {
     return await this.clinicService.createClinic(createClinicDto);
   }
 
-  @Post('recover-password')
+  // Create token for password reset
+  @Post('forget-password')
   async recoverPassword(@Body() dto: PasswordRecoveryDto) {
-    const actorPurposeMap: Record<string, OtpPurpose> = {
-      [ActorEnum.DOCTOR]: OtpPurpose.DOCTOR_RESET_PASSWORD,
-      [ActorEnum.ADMIN]: OtpPurpose.ADMIN_RESET_PASSWORD,
-      [ActorEnum.EMPLOYEE]: OtpPurpose.STAFF_RESET_PASSWORD,
-    };
-
-    const purpose = actorPurposeMap[dto.actorType];
-    if (!purpose) {
-      throw new BadRequestException(`Invalid actor type: ${dto.actorType}`);
-    }
 
     const checkUser = await this.userService.findUserByEmail(dto.email);
     if (!checkUser) {
       throw new BadRequestException("Email not found!");
     }
 
-    return this.otpService.sendOtp({
-      target: dto.email,
-      type: OtpTargetType.EMAIL,
-      purpose,
-    });
+    const selector = randomBytes(16).toString('hex'); // used to look up the token
+    const token = await this.jwtService.signAsync({
+      email: dto.email,
+      userType: dto.actorType,
+      selector
+    }, { expiresIn: 60 * 10 });
+
+    return await this.otpService.sendPasswordToken(dto.email, dto.actorType, selector, token);
   }
 
-
+  // Use the token to reset the password
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    const actorPurposeMap: Record<string, OtpPurpose> = {
-      [ActorEnum.DOCTOR]: OtpPurpose.DOCTOR_RESET_PASSWORD,
-      [ActorEnum.ADMIN]: OtpPurpose.ADMIN_RESET_PASSWORD,
-      [ActorEnum.EMPLOYEE]: OtpPurpose.STAFF_RESET_PASSWORD,
-    };
+    const { token } = dto;
+    const isVerify = await this.jwtService.verifyAsync(
+      token, this.configService.get("JWT_SECRET")
+    );
+    if (!isVerify) {
+      throw new BadRequestException("Invalid token");
+    }
+    const decoded = this.jwtService.decode(token);
+    if (!decoded || typeof decoded !== "object") throw new BadRequestException("Invalid token");
 
-    const purpose = actorPurposeMap[dto.actorType];
-    const verifyOtp = this.otpService.verifyOtp(
-      dto.email,
-      OtpTargetType.EMAIL,
-      purpose,
-      dto.otp
-    )
+    const { email, userType, selector } = decoded;
+    const verifyToken = await this.otpService.verifyPasswordToken(
+      email, userType, selector
+    );
 
-    if (!verifyOtp) {
+    if (!verifyToken) {
       throw new BadRequestException("Invalid OTP");
     }
 
-    const user = await this.userService.find({ email: dto.email, actorType: dto.actorType });
-    user.password = dto.password
-    const updatedUser = this.userService.updateUser(dto.email, user);
+    const user = await this.userService.find({ email: email, actorType: userType });
+    user.password = await this.userService.hashPassword(dto.password);
+    const updatedUser = this.userService.updateUser(email, user);
     if (!updatedUser) {
       throw new Error();
     }
@@ -348,7 +351,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/',
       maxAge: refreshTokenExpiryMs, // ✅ milliseconds
     });
   }

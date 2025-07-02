@@ -34,6 +34,7 @@ import { StaffInfoRepository } from '../repositories/staffInfo.repository';
 import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
+import { DoctorClinicRepo } from '../repositories/doctor-clinic-map.repository';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -42,6 +43,7 @@ export class DoctorService extends BaseService {
     private readonly staffInfoRepository: StaffInfoRepository,
     private readonly degreeRepository: DegreeRepository,
     private readonly specializeRepository: SpecializeRepository,
+    private readonly doctorClinicRepo: DoctorClinicRepo,
   ) {
     super();
   }
@@ -139,6 +141,31 @@ export class DoctorService extends BaseService {
     }
   }
 
+  async getClinicsByDoctor(doctorId: string) {
+    const doctor = await this.doctorRepository.findOne(
+      { id: doctorId }, { clinics: true }
+    );
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    return doctor.clinics;
+  }
+
+  async doctorJoinClinic(doctorId: string, clinicId: string) {
+    const doctor = await this.doctorRepository.findOne(
+      { id: doctorId }
+    );
+
+    const doctorClinicLink = new DoctorClinicMap({
+      clinic: clinicId,
+      doctor: doctor
+    });
+
+    return this.doctorClinicRepo.saveLink(doctorClinicLink);
+  }
+
   async createDoctorAccount(
     dto: CreateDoctorAccountDto,
     currentUser: TokenPayload,
@@ -155,6 +182,9 @@ export class DoctorService extends BaseService {
       }
 
       const doctor = new Doctor();
+      // In case event from other service
+      if (dto.id) doctor.id = dto.id
+
       doctor.email = email;
       doctor.password = await bcrypt.hash(dto.password, 10);
 

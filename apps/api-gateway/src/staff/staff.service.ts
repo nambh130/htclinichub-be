@@ -18,12 +18,14 @@ import {
   UpdateProfileDto,
 } from '@app/common/dto/staffs/doctor-profile.dto';
 import { MediaService } from '../media/media.service';
+import { IDoctorClinicLink } from './interfaces/staff.interface';
 import { AxiosError } from 'axios';
 
 @Injectable()
 export class StaffService {
   constructor(
     private readonly mediaService: MediaService,
+    @Inject(STAFF_SERVICE) private readonly httpService: HttpService,
     @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
   ) {}
 
@@ -112,16 +114,16 @@ export class StaffService {
       for (const degree of staffInfo.degrees ?? []) {
         degree.image = degree.image_id
           ? ((await this.mediaService.getFileById(
-              degree.image_id,
-            )) as Media | null)
+            degree.image_id,
+          )) as Media | null)
           : null;
       }
 
       for (const specialize of staffInfo.specializes ?? []) {
         specialize.image = specialize.image_id
           ? ((await this.mediaService.getFileById(
-              specialize.image_id,
-            )) as Media | null)
+            specialize.image_id,
+          )) as Media | null)
           : null;
       }
     }
@@ -139,6 +141,22 @@ export class StaffService {
       this.staffService.post('/staff/doctor/create-account', payload),
     );
     return response.data;
+  }
+
+  async getClinicIdsByDoctor(
+    dto: { userId: string },
+  ): Promise<IDoctorClinicLink[]> {
+    const response = await firstValueFrom(
+      this.httpService.get<IDoctorClinicLink[]>(`/staff/doctor/clinic-by-doctor/${dto.userId}`),
+    );
+
+    const clinicByDoctors = response.data;
+
+    if (!clinicByDoctors) {
+      throw new Error("Something has gone wrong!");
+    }
+
+    return clinicByDoctors;
   }
 
   async lockDoctorAccount(

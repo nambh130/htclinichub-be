@@ -20,6 +20,8 @@ import {
   UpdateDegreeDto,
   UpdateSpecializeDto,
 } from '@app/common';
+import { ClinicService } from '../clinics/clinic.service';
+import { IClinic, IMappedClinicLink } from './interfaces/staff.interface';
 import {
   DoctorProfileDto,
   UpdateProfileDto,
@@ -27,7 +29,10 @@ import {
 
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(
+    private readonly staffService: StaffService,
+    private readonly clinicService: ClinicService
+  ) { }
 
   // ============================================================================
   // DOCTOR ACCOUNT MANAGEMENT
@@ -61,6 +66,37 @@ export class StaffController {
   @UseGuards(JwtAuthGuard)
   async getDoctorByClinic(@Param('clinicId') clinicId: string) {
     return this.staffService.getDoctorByClinic(clinicId);
+  }
+
+  @Get('clinics-by-doctor')
+  @UseGuards(JwtAuthGuard)
+  async getClinicByDoctor(
+    @CurrentUser() user: TokenPayload
+  ) {
+    // {linkId, clinicId}
+    const doctorClinicsLink =
+      await this.staffService.getClinicIdsByDoctor({ userId: user.userId });
+
+    const clinicIds = doctorClinicsLink.map((data) => data.clinic);
+    // Get clinic infos
+    const clinics: IClinic[] = await this.clinicService.getClinicByIds(clinicIds);
+
+    const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
+      const clinicInfo = clinics.find((c) => c.id === link.clinic);
+      const isAdmin = clinicInfo?.ownerId === user.userId;
+      console.log(clinicInfo, isAdmin)
+      return {
+        link_id: link.linkId,
+        clinic: {
+          id: clinicInfo?.id ?? '',
+          name: clinicInfo?.name ?? '',
+          location: clinicInfo?.location ?? '',
+          isAdmin
+        },
+      };
+    });
+
+    return result;
   }
 
   @Get('doctor-details/:id')

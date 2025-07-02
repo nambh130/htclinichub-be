@@ -44,6 +44,17 @@ export class DoctorController {
     return this.doctorService.getDoctorByClinic(clinicId);
   }
 
+  @Get('clinic-by-doctor/:doctorId')
+  async getClinicsByDoctor(@Param('doctorId') doctorId: string) {
+    const links = await this.doctorService.getClinicsByDoctor(doctorId);
+    const transformed = links.map(item => {return {
+      linkId: item.id,
+      clinic: item.clinic
+    }});
+
+    return transformed
+  }
+
   @Get('doctor-account-byId/:id')
   viewDoctorAccountById(@Param('id') id: string) {
     return this.doctorService.getDoctorAccountById(id);

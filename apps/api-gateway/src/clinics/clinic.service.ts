@@ -20,7 +20,7 @@ export class ClinicService implements OnModuleInit {
     @Inject(CLINIC_SERVICE) private readonly clinicClient: ClientKafka,
     @Inject(AUTH_SERVICE)
     private readonly authClient: ClientKafka,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     this.clinicClient.subscribeToResponseOf('add-clinic');
@@ -28,6 +28,7 @@ export class ClinicService implements OnModuleInit {
     this.clinicClient.subscribeToResponseOf('delete-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinics-by-ids');
 
     this.authClient.subscribeToResponseOf('authenticate');
 
@@ -59,9 +60,20 @@ export class ClinicService implements OnModuleInit {
     );
   }
 
+  // Get by 1 id
   async getClinicById(id: string, userId: string): Promise<ClinicDto> {
     return firstValueFrom(
       this.clinicClient.send('get-clinic-by-id', { id, userId }),
+    );
+  }
+
+  // Get by array of ids
+  async getClinicByIds(
+    ids: string[],
+  ): Promise<any> {
+    console.log({ids})
+    return firstValueFrom(
+      this.clinicClient.send('get-clinics-by-ids', { ids }),
     );
   }
 

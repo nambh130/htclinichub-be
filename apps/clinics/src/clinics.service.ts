@@ -6,6 +6,7 @@ import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
 import { PinoLogger } from 'nestjs-pino';
 import { nanoid } from 'nanoid';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ClinicsService {
@@ -180,6 +181,11 @@ export class ClinicsService {
     }
   }
 
+  async getClinicByIds(clinicIds: string[]) {
+    const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
+    return clinics;
+  }
+
   async updateClinic(
     id: string,
     updateClinicDto: UpdateClinicDto,
@@ -219,11 +225,13 @@ export class ClinicsService {
       const clinicToUpdate = new Clinic();
       clinicToUpdate.id = id;
 
+      console.log(updateClinicDto)
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
           ...clinic,
           ...updateClinicDto,
+          ownerId: updateClinicDto.ownerId,
           updatedById: userId,
         }, // data to update
       );
