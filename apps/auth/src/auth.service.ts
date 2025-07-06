@@ -236,6 +236,7 @@ export class AuthService implements OnModuleInit {
       user: {
         id: user.id,
         email: user.email,
+        actorType: userType,
         roles: tokenPayload.roles,
         currentClinics: tokenPayload.currentClinics,
         adminOf: tokenPayload.adminOf,

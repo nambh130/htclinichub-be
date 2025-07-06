@@ -9,6 +9,7 @@ import { Role } from '../roles/models/role.entity';
 import { RoleRepository } from '../roles/roles.repository';
 import { ActorEnum } from '../clinic-users/models/clinic-user.entity';
 import { ClinicUserRepository } from '../clinic-users/clinic-users.repository';
+import { FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class InvitationsService extends BaseService {
@@ -72,11 +73,14 @@ export class InvitationsService extends BaseService {
       createdByType: user.type,
     });
 
-    // Save to database
-    return {
-      token: token,
-      invitation: await this.invitationRepository.create(newInvitation),
-    };
+    console.log(
+      {
+        token: token,
+        invitation: await this.invitationRepository.create(newInvitation),
+      }
+    )
+
+    return { success: true };
   }
 
   async getInvitationByToken({
@@ -101,6 +105,29 @@ export class InvitationsService extends BaseService {
       );
     }
     return invitation;
+  }
+
+  async getInvitation({ page, limit, where }:
+    { page: number, limit: number, where: FindOptionsWhere<EmployeeInvitation> }) {
+    const take = limit;
+    const skip = (page - 1) * take;
+
+    const [data, total] = await this.invitationRepository.findAndCount(
+      where,
+      skip,
+      take,
+      ["role"],
+      {
+        createdAt: 'DESC'
+      }
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async updateInvitationStatus(id: string, status: InvitationType) {

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, Query, Patch, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
@@ -6,11 +6,16 @@ import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { ClinicService } from '../clinics/clinic.service';
+import { P } from 'pino';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly clinicService: ClinicService
+  ) { }
 
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
@@ -60,12 +65,24 @@ export class AuthController {
   }
 
   // ------------------------------INVITATION ------------------------------
-  @Post('invitation')
-  async createInvitation(
+  @Post('invitation/clinic')
+  async createInvitationOwner(
     @Body() invitationDto: CreateInvitationDto,
     @Req() req: Request,
   ) {
-    const response = await this.authService.createInvitation(
+    const response = await this.authService.createInvitationOwner(
+      invitationDto,
+      req,
+    );
+    return response;
+  }
+
+  @Post('invitation/clinic')
+  async createInvitationAdmin(
+    @Body() invitationDto: CreateInvitationDto,
+    @Req() req: Request,
+  ) {
+    const response = await this.authService.createInvitationAdmin(
       invitationDto,
       req,
     );
@@ -74,7 +91,66 @@ export class AuthController {
 
   @Post('invitation/check')
   async invitationCheck(@Req() req: Request) {
-    return await this.authService.invitationCheck(req);
+    const check = await this.authService.invitationCheck(req);
+    if (check.clinicId) {
+      try {
+        const { clinicId, ...rest } = check;
+        console.log(rest)
+        const clinic = await this.clinicService.getClinicById(clinicId, '')
+        if (clinic) {
+          return {
+            ...rest,
+            clinic: {
+              id: check.clinicId,
+              name: clinic.name
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    return check;
+  }
+
+  @Post('invitation/signup')
+  async invitationSignup(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    return await this.authService.invitationSignup(req, res);
+  }
+
+  @Post('invitation/join-clinic')
+  async invitationAccept(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    return await this.authService.invitationAccept(req, res);
+  }
+
+  @Get('invitation/clinic')
+  async invitationByClinic(
+    @Query() query: Record<string, any>,
+    @Req() req: Request
+  ) {
+    return await this.authService.getInvitationByClinic(query, req);
+  }
+
+  @Patch('invitation/:id/revoke')
+  async revokeInvitation(
+    @Param() param: Record<string, string>,
+    @Req() req: Request
+  ) {
+    return await this.authService.revokeInvitation(param, req);
+  }
+  // ------------------------------ Roles ------------------------------
+  @Get('roles/clinic')
+  async getRolesForClinic(
+    @Query() query: Record<string, any>,
+    @Req() req: Request
+  ) {
+    return await this.authService.getRolesForClinic(query, req);
   }
   // ------------------------------ LOGUT, REFRESH ------------------------------
   @Post('refresh')

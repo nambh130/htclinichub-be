@@ -5,6 +5,9 @@ import { User } from './models/clinic-user.entity';
 import * as bcrypt from 'bcrypt';
 import { ClinicRepository } from '../clinics/clinics.repository';
 import { RoleRepository } from '../roles/roles.repository';
+import { In } from 'typeorm';
+import { ActorEnum } from '@app/common/enum/actor-type';
+import { ActorType } from '@app/common';
 
 @Injectable()
 export class ClinicUsersService {
@@ -53,6 +56,12 @@ export class ClinicUsersService {
     );
   }
 
+  async findUserByIds(ids: string[]) {
+    return await this.userRepository.find(
+      { id: In(ids) }
+    );
+  }
+
   async find(query: Partial<User>) {
     return await this.userRepository.findOne(query, {
       roles: {
@@ -64,6 +73,16 @@ export class ClinicUsersService {
       ownerOf: true,
     });
   }
+
+  async findByEmailAndClinic(email: string, clinicId: string, actorType: ActorType) {
+    return this.userRepository.createQueryBuilder('user')
+      .leftJoin('user.clinics', 'clinic')
+      .where('user.email = :email', { email })
+      .andWhere('clinic.id = :clinicId', { clinicId })
+      .andWhere('user.actor_type = :actorType', { actorType })
+      .getOne();
+  }
+
   async updateUser(
     email: string,
     updateData: Partial<User>,
