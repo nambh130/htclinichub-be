@@ -32,4 +32,8 @@ export class ClinicsService {
   async getClinics() {
     return await this.clinicRepository.findAll();
   }
+
+  async getClinicById(id: string) {
+    return await this.clinicRepository.findOne({ id });
+  }
 }

@@ -107,12 +107,23 @@ export class AuthController {
     if (invitation && invitation.status != 'pending') {
       throw new BadRequestException();
     }
+    // Check if doctor already exists
     try {
-      const user = await this.userService.findUserByEmail(invitation.email);
+      const user = await this.userService.find({ email: invitation.email, actorType: invitation.role.roleType });
     } catch (error) {
-      return false;
+      // If not exists, the front end directs to signup
+      return {
+        exists: false,
+        clinicId: invitation.clinic.id
+      };
     }
-    return true;
+
+    // If exists, the front end directs to join-clinic
+    return {
+      exists: true,
+      actorType: invitation.role.roleType,
+      clinicId: invitation.clinic.id
+    };
   }
 
   @Post('invitation/signup') // Create an account by invitation
@@ -153,7 +164,7 @@ export class AuthController {
     const response = await this.authService.userLogin(dto, userAgent, ip);
     this.setAuthCookies(res, response.token, response.refreshToken);
 
-    return { user: response.user };
+    return { user: response.user, token: response.token };
   }
 
   @Post('admin/login')

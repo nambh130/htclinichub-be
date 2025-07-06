@@ -20,5 +20,6 @@ export class CreateInvitationDto {
   role: string;
 
   @IsBoolean()
-  isOwnerInvitation: boolean;
+  @IsOptional()
+  isOwnerInvitation?: boolean;
 }
