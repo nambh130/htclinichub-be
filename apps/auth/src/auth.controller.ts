@@ -37,6 +37,7 @@ import { PasswordRecoveryDto } from './dto/user-recover-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import AuthResponse from '@app/common/dto/auth/login-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -190,7 +191,7 @@ export class AuthController {
 
   @Post('refresh')
   async refreshToken(@Req() req: Request,
-    @Res({ passthrough: true }) res: Response) {
+    @Res({ passthrough: true }) res: Response): Promise<AuthResponse> {
     const rawToken = req.cookies['refreshToken'];
     const userAgent = req.headers['user-agent'] || 'unknown';
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').toString();
@@ -221,9 +222,10 @@ export class AuthController {
       user: {
         id: user.id,
         email: user.email,
-        roles: tokenPayload.roles,
-        currentClinics: tokenPayload.currentClinics,
-        adminOf: tokenPayload.adminOf,
+        actorType: user.actorType,
+        roles: tokenPayload.roles ?? [],
+        currentClinics: tokenPayload.currentClinics ?? [],
+        adminOf: tokenPayload.adminOf ?? [],
       },
     };
   }

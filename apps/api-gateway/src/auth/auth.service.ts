@@ -17,6 +17,8 @@ import { AUTH_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { Request, Response } from 'express';
+import { AxiosResponse } from 'axios';
+import AuthResponse from '@app/common/dto/auth/login-response.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -77,12 +79,13 @@ export class AuthService implements OnModuleInit {
 
   // ------------------- LOGIN, LOGOUT, REFRESHTOKEN ------------------- 
 
-  async clinicUserLogin(req: Request, res: Response): Promise<any> {
+  async clinicUserLogin(req: Request)
+  : Promise<AxiosResponse<AuthResponse & { refreshToken: string }>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
     const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
 
-    const response = await firstValueFrom(
+    return await firstValueFrom(
       this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, req.body, {
         withCredentials: true,
         headers: {
@@ -97,12 +100,6 @@ export class AuthService implements OnModuleInit {
         })
       )
     );
-    const setCookie = response.headers['set-cookie'];
-    if (setCookie) {
-      res.setHeader('Set-Cookie', setCookie);
-    }
-
-    return res.status(response.status).send(response.data);
   }
 
   async adminLogin(req: Request, res: Response): Promise<any> {

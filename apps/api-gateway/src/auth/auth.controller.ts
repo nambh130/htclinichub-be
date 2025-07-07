@@ -8,6 +8,7 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ClinicService } from '../clinics/clinic.service';
 import { P } from 'pino';
+import { ActorEnum } from '@app/common/enum/actor-type';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -54,8 +55,31 @@ export class AuthController {
     description: 'User created successfully',
   })
   async clinicUserLogin(@Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.clinicUserLogin(req, res);
-    return response;
+    const loginData = await this.authService.clinicUserLogin(req);
+    const { user } = loginData?.data;
+
+    // Set cookie
+    const setCookie = loginData.headers?.['set-cookie'];
+    if (setCookie) res.setHeader('Set-Cookie', setCookie);
+
+    if (user.actorType === ActorEnum.EMPLOYEE) {
+      const { currentClinics, adminOf, ...rest } = user;
+      const clinicData = await this.clinicService.getClinicById(currentClinics[0], user.id);
+
+      return res.status(loginData.status).send({
+        token: loginData.data.token,
+        user: {
+          ...rest,
+        },
+        currentClinic: {
+          id: currentClinics[0],
+          name: clinicData.name,
+        }
+      });
+    }
+
+    // For non-employees, just forward the original response
+    return res.status(loginData.status).send(loginData.data);
   }
 
   @Post('admin/login')
