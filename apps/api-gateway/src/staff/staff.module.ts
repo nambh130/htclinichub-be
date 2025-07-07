@@ -8,6 +8,7 @@ import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, MEDIA_SERVICE, STAFF_CONSUMER_GROUP,
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MediaModule } from '../media/media.module';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
+import { ClinicModule } from '../clinics/clinic.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doc
     ]),
     MediaModule,
     AuthModule,
+    ClinicModule,
   ],
   controllers: [StaffController],
   providers: [StaffService, ManageDoctorScheduleService],

@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { PatientRepository } from './patients/patients.repository';
 import { Patient } from './patients/models/patient.entity';
 import { ConfigService } from '@nestjs/config';
-import { TokenPayload } from './interfaces/token-payload.interface';
 import { ClientKafka } from '@nestjs/microservices';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
@@ -19,7 +18,7 @@ import { ActorEnum, User } from './clinic-users/models/clinic-user.entity';
 import { InvitationEnum } from './invitations/models/invitation.entity';
 import { ClinicRepository } from './clinics/clinics.repository';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
-import { AUTH_SERVICE } from '@app/common';
+import { AUTH_SERVICE, TokenPayload } from '@app/common';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ClinicOwnerAdded } from '@app/common/events/auth/clinic-owner-added.event';
 import { PatientCreated } from '@app/common/events/auth/patient-created.event';
@@ -69,7 +68,7 @@ export class AuthService implements OnModuleInit {
       this.configService.get('JWT_EXPIRES_IN') ?? 3600,
     );
     expires.setSeconds(expires.getSeconds() + jwtExpiration);
-    const token = await this.jwtService.signAsync(tokenPayload);
+    const token = await this.jwtService.signAsync(tokenPayload, { expiresIn: 60 * 60 * 24 });
 
     return { user: patient, token };
   }
@@ -220,7 +219,7 @@ export class AuthService implements OnModuleInit {
   async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string) {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
-      email,
+      email: email.toLowerCase().trim(),
       actorType: userType,
     });
     if (!user) throw new BadRequestException('User not found');
@@ -239,7 +238,7 @@ export class AuthService implements OnModuleInit {
         email: user.email,
         roles: tokenPayload.roles,
         currentClinics: tokenPayload.currentClinics,
-        adminOf: tokenPayload.isAdminOf,
+        adminOf: tokenPayload.adminOf,
       },
       token,
       refreshToken,
@@ -313,7 +312,7 @@ export class AuthService implements OnModuleInit {
       roles: user.roles.map((r) => r.name),
       permissions,
       currentClinics,
-      isAdminOf: adminOf,
+      adminOf: adminOf,
     };
   }
 

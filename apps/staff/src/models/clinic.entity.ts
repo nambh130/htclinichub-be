@@ -31,3 +31,4 @@ export class Clinic extends BaseClinic {
   // @OneToMany(() => Doctor_WorkShift, (workshift) => workshift.clinic)
   // workShifts: Doctor_WorkShift[];
 }
+

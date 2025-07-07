@@ -13,11 +13,10 @@ import { PermissionsModule } from '../permissions/permissions.module';
     PostgresDatabaseModule.forFeature([Role]),
     LoggerModule,
 
-    PermissionsModule
+    PermissionsModule,
   ],
   providers: [RolesService, RoleRepository],
   controllers: [RolesController],
-  exports: [RolesService, RoleRepository]
+  exports: [RolesService, RoleRepository],
 })
-export class RolesModule {
-}
+export class RolesModule {}

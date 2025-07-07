@@ -12,7 +12,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.enableCors({
-    origin: ['http://localhost:8081', 'http://localhost:8000'],
+    origin: ['http://localhost:8081', 'http://localhost:8000', 'http://localhost:8080'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // allow cookies/auth headers
   });

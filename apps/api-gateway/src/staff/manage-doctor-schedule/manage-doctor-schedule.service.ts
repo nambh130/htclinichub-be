@@ -41,15 +41,16 @@ export class ManageDoctorScheduleService {
     async setUpWorkingShiftByDoctorId(
         dto: SetupWorkingShiftDto,
         doctorId: string,
-        user: TokenPayload,
+        currentUser: TokenPayload,
     ) {
         try {
             const payload = {
-                dto, user
+                dto, currentUser
             }
             const response = await firstValueFrom(
                 this.httpService.post(`/manage-doctor-schedule/setup-working-shift/${doctorId}`, payload)
             );
+            console.log("Log: input ", payload)
             return response.data;
         } catch (error) {
             console.error('Error retrieving working shift:', error.response?.data || error.message);
@@ -74,6 +75,22 @@ export class ManageDoctorScheduleService {
             const response = await firstValueFrom(
                 this.httpService.put(`/manage-doctor-schedule/${doctorId}/change-working-shift/${shiftId}`, payload)
             );
+
+            return response.data;
+        } catch (error) {
+            console.error('Error retrieving working shift:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    async getShiftsInDate(date: string, user: TokenPayload) {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`/manage-doctor-schedule/doctor/shifts-by-date/${date}`, {
+                    params: {
+                        doctorId: user.userId,
+                    },
+                }));
 
             return response.data;
         } catch (error) {

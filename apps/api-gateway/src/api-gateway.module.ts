@@ -1,4 +1,3 @@
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
@@ -38,7 +37,6 @@ import { ClinicModule } from './clinics/clinic.module';
     PatientsModule,
     AuthModule,
     AnalyzeHealthcareDataModule,
-    HttpModule,
     LoggerModule,
     MediaModule,
     ClinicModule,

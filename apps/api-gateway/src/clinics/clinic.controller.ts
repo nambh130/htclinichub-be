@@ -14,7 +14,6 @@ import {
   CurrentUser,
   JwtAuthGuard,
   TokenPayload,
-  UserDocument,
 } from '@app/common';
 import {
   AddClinicDto,

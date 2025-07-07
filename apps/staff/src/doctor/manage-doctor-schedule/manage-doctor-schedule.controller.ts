@@ -47,6 +47,7 @@ export class ManageDoctorScheduleController {
   ) {
     try {
       const { dto, currentUser } = payload;
+      console.log(payload);
       const shift = await this.manageDoctorScheduleService
         .setUpWorkingShiftByDoctorId(doctorId, dto, currentUser);
       return shift;
@@ -56,31 +57,38 @@ export class ManageDoctorScheduleController {
     }
   }
 
-@Put(':doctorId/change-working-shift/:shiftId')
-async changeWorkingShiftByDoctorId(
-  @Param('shiftId') shiftId: string,
-  @Param('doctorId') doctorId: string,
-  @Body()
-  payload: {
-    dto: ChangeWorkingShiftDto;
-    currentUser: TokenPayload;
-  },
-) {
-  try {
-    const { dto, currentUser } = payload;
+  @Put(':doctorId/change-working-shift/:shiftId')
+  async changeWorkingShiftByDoctorId(
+    @Param('shiftId') shiftId: string,
+    @Param('doctorId') doctorId: string,
+    @Body()
+    payload: {
+      dto: ChangeWorkingShiftDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    try {
+      const { dto, currentUser } = payload;
 
-    const shift = await this.manageDoctorScheduleService.changeWorkingShiftByDoctorId(
-      dto,
-      doctorId,
-      shiftId,
-      currentUser,
-    );
+      const shift = await this.manageDoctorScheduleService.changeWorkingShiftByDoctorId(
+        dto,
+        doctorId,
+        shiftId,
+        currentUser,
+      );
 
-    return shift;
-  } catch (error) {
-    console.error('Error in changeWorkingShiftByDoctorId controller:', error);
-    throw error;
+      return shift;
+    } catch (error) {
+      console.error('Error in changeWorkingShiftByDoctorId controller:', error);
+      throw error;
+    }
   }
-}
 
+  @Get('/doctor/shifts-by-date/:date')
+  getDoctorShiftsByDate(
+    @Param('date') date: string,
+    @Query('doctorId') doctorId: string,
+  ) {
+    return this.manageDoctorScheduleService.getShiftsInDate(date, doctorId);
+  }
 }

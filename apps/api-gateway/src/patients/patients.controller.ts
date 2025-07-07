@@ -3,6 +3,7 @@ import { PatientService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto, FavouriteDoctorDto, TokenPayload } from '@app/common';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 
 @Controller('patient')
 export class PatientsController {
@@ -10,7 +11,7 @@ export class PatientsController {
     private readonly patientService: PatientService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
-
+    private readonly manageMedicalRecordService: ManageMedicalRecordService,
   ) { }
 
   // Patient routes
@@ -48,20 +49,20 @@ export class PatientsController {
     }
   }
 
-@Delete('/delete-patient/:id')
-@UseGuards(JwtAuthGuard)
-async deletePatient(
-  @Param('id') id: string,
-  @CurrentUser() user: TokenPayload,
-) {
-  try {
-    const deletedPatient = await this.patientService.deletePatient(id, user);
-    return deletedPatient;
-  } catch (error) {
-    console.error('Error deleting patient:', error);
-    throw error;
+  @Delete('/delete-patient/:id')
+  @UseGuards(JwtAuthGuard)
+  async deletePatient(
+    @Param('id') id: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const deletedPatient = await this.patientService.deletePatient(id, user);
+      return deletedPatient;
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      throw error;
+    }
   }
-}
 
   @Get('/get-patient-by-id/:id')
   @UseGuards(JwtAuthGuard)
@@ -108,7 +109,7 @@ async deletePatient(
     }
   }
 
-   @Get('/get-patient-by-cid/:cid')
+  @Get('/get-patient-by-cid/:cid')
   @UseGuards(JwtAuthGuard)
   async getPatientByCid(
     @Param('cid') cid: string,
@@ -123,7 +124,7 @@ async deletePatient(
     }
   }
 
-   @Get('/get-patient-by-hid/:hid')
+  @Get('/get-patient-by-hid/:hid')
   @UseGuards(JwtAuthGuard)
   async getPatientByHid(
     @Param('hid') hid: string,
@@ -170,7 +171,7 @@ async deletePatient(
   @Get('/get-favourite-doctors-list/:patientId')
   @UseGuards(JwtAuthGuard)
   async getFavouriteDoctors(
-     @Param('patientId') patientId: string,
+    @Param('patientId') patientId: string,
     @CurrentUser() user: TokenPayload,
   ) {
     try {
@@ -211,4 +212,19 @@ async deletePatient(
   //     throw error;
   //   }
   // }
+
+  @Get('/get-medical-records-by-userId/:userId')
+  @UseGuards(JwtAuthGuard)
+  async getMedicalRecordsByUserId(
+    @Param('userId') userId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.manageMedicalRecordService.getMedicalRecordsByUserId(userId, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }

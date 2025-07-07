@@ -13,9 +13,9 @@ import { ClinicUsersModule } from '../clinic-users/clinic-users.module';
     PostgresDatabaseModule.forFeature([Clinic]),
 
     LoggerModule,
-    forwardRef(() => ClinicUsersModule)
+    forwardRef(() => ClinicUsersModule),
   ],
   providers: [ClinicsService, ClinicRepository],
-  exports: [ClinicsService, ClinicRepository]
+  exports: [ClinicsService, ClinicRepository],
 })
-export class ClinicsModule { }
+export class ClinicsModule {}

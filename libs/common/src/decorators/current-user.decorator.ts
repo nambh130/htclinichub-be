@@ -4,6 +4,7 @@ import { ActorType } from '@app/common';
 
 export interface TokenPayload {
   userId: string;
+  email?: string;
   actorType: ActorType;
   roles?: string[];
   permissions?: string[];

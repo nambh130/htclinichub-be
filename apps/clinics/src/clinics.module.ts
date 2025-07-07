@@ -12,6 +12,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
+import { ClinicEventController } from './clinic-event.controller';
 
 @Module({
   imports: [
@@ -70,7 +71,7 @@ import { Clinic } from './models';
 
     // MongoDB configuration
   ],
-  controllers: [ClinicsController],
+  controllers: [ClinicsController, ClinicEventController],
   providers: [ClinicsService, ClinicRepository],
 })
 export class ClinicsModule {}

@@ -1,4 +1,4 @@
-import { IsString, IsDateString, IsBoolean, IsOptional, Matches } from 'class-validator';
+import { IsString, IsDateString, IsBoolean, IsOptional, Matches, IsNotEmpty, IsNumber, IsEnum } from 'class-validator';
 
 export class ChangeWorkingShiftDto {
     @IsOptional()
@@ -12,8 +12,13 @@ export class ChangeWorkingShiftDto {
     })
     duration?: string;
 
-    @IsBoolean()
     @IsOptional()
-    isActivate?: boolean;
-
+    @IsEnum(['available', 'booked', 'cancelled'], {
+        message: 'status must be one of: available, booked, or cancelled',
+    })
+    status?: 'available' | 'booked' | 'cancelled';
+ 
+    @IsOptional()
+    @IsNumber()
+    space?: number;
 }

@@ -40,6 +40,7 @@ import { Doctor_WorkShift } from './models/doctor_workshift.entity';
 import { ManageDoctorScheduleRepository } from './doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
 import { ManageDoctorScheduleController } from './doctor/manage-doctor-schedule/manage-doctor-schedule.controller';
 import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/manage-doctor-schedule.service';
+import { DoctorClinicRepo } from './repositories/doctor-clinic-map.repository';
 
 @Module({
   imports: [
@@ -99,7 +100,8 @@ import { ManageDoctorScheduleService } from './doctor/manage-doctor-schedule/man
     EmployeeRepository,
     StaffInfoRepository,
     ManageDoctorScheduleRepository,
-    ClinicRepository
+    ClinicRepository,
+    DoctorClinicRepo
   ],
   exports: [StaffService],
 })

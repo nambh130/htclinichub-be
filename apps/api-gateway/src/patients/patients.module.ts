@@ -13,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { HttpModule } from '@nestjs/axios';
 import { httpClientConfig, HttpModules } from '../api/http.client';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 
 @Module({
   imports: [
@@ -73,7 +74,7 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
     AuthModule
   ],
   controllers: [PatientsController],
-  providers: [PatientService, FavouriteDoctorService],
-  exports: [PatientService, FavouriteDoctorService],
+  providers: [PatientService, FavouriteDoctorService, ManageMedicalRecordService],
+  exports: [PatientService, FavouriteDoctorService, ManageMedicalRecordService],
 })
 export class PatientsModule { }

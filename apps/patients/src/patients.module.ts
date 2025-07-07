@@ -13,6 +13,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
+import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
+import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
 
 @Module({
   imports: [
@@ -98,12 +102,17 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
 
     // Import Postgre module con
     FavouriteDoctorModule,
+    ManageMedicalRecordModule
   ],
   controllers: [PatientsController, FavouriteDoctorController],
-  providers: [PatientsService, PatientRepository, FavouriteDoctorService, FavouriteDoctorRepository, JwtModule],
+  providers: [PatientsService, PatientRepository,
+     FavouriteDoctorService, FavouriteDoctorRepository,
+    //  ManageMedicalRecordService, ManageMedicalReportRepository,
+     JwtModule],
   exports: [
     PatientsService,
     PatientRepository,
+    // ManageMedicalRecordService, ManageMedicalReportRepository,
     FavouriteDoctorService, FavouriteDoctorRepository,
   ],
 })

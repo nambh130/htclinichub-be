@@ -2,31 +2,31 @@ import {
     Column,
     Entity,
     ManyToOne,
-    PrimaryGeneratedColumn,
     JoinColumn,
 } from 'typeorm';
-import { Doctor } from './doctor.entity';
-import { PostgresAbstractEntity, PostgresAbstractRepository } from '@app/common';
-import { Clinic } from './clinic.entity';
-// import { Clinic } from './clinic.entity';
+import { PostgresAbstractEntity } from '@app/common';
+import { DoctorClinicMap } from './doctor-clinic-map.entity';
 
 @Entity({ name: 'doctor_workshift' })
 export class Doctor_WorkShift extends PostgresAbstractEntity<Doctor_WorkShift> {
 
-    @ManyToOne(() => Doctor, { nullable: false })
-    @JoinColumn({ name: 'doctor_id' })
-    doctor: Doctor;
-
-    @ManyToOne(() => Clinic, { nullable: false })
-    @JoinColumn({ name: 'clinic_id' })
-    clinic: Clinic;
+    @ManyToOne(() => DoctorClinicMap, { nullable: false })
+    @JoinColumn({ name: 'doctor_clinic_link_id' })
+    doctor_clinic_link_id: DoctorClinicMap;
 
     @Column({ type: 'timestamp', name: 'start_time' })
     startTime: Date;
 
-    @Column({ type: 'interval' }) // or 'int' if you're storing minutes/hours
-    duration: string; // e.g. '02:00:00' for 2 hours
+    @Column({ type: 'interval' })
+    duration: string;
 
-    @Column({ type: 'boolean', default: true })
-    isActivate: boolean;
+    @Column({
+        type: 'enum',
+        enum: ['available', 'booked', 'cancelled'],
+        default: 'available'
+    })
+    status: 'available' | 'booked' | 'cancelled';
+
+    @Column({ type: 'int', default: 0 })
+    space: number;
 }

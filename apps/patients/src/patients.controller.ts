@@ -15,29 +15,40 @@ export class PatientsController {
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
   ) { }
 
-  @Post('create-patient')
-  async createPatient(
-    @Body()
-    payload: {
-      createPatientDto: CreatePatientDto;
-      currentUser: TokenPayload;
-    },
-  ) {
-    try {
-      const { createPatientDto, currentUser } = payload;
+ @Post('create-patient')
+async createPatient(
+  @Body()
+  payload: {
+    createPatientDto: CreatePatientDto;
+    currentUser: TokenPayload;
+  },
+) {
+  try {
+    const { createPatientDto, currentUser } = payload;
 
-      const createdPatient = await this.patientsService.createPatient(
-        createPatientDto,
-        currentUser.userId,
-      );
+    const createdPatient = await this.patientsService.createPatient(
+      createPatientDto,
+      currentUser.userId,
+    );
 
-      return createdPatient;
-    } catch (error) {
-      console.error('Error in createPatient:', error?.response?.data || error);
-    }
+    return {
+      success: true,
+      data: createdPatient,
+    };
+  } catch (error) {
+    console.error('Error in createPatient:', error?.response?.data || error);
+
+    return {
+      success: false,
+      message: 'Failed to create patient',
+      error: error?.message || 'Unknown error',
+    };
   }
+}
+
 
   @EventPattern('patient-created')
+
   handleCreatedPatient(@Payload() patientCreatedEvent: PatientCreatedEvent) {
     patientCreatedEvent.toString();
   }
@@ -65,21 +76,28 @@ export class PatientsController {
   }
 
   @Delete('delete-patient/:id')
-  async removePatient(
-    @Param('id') id: string,
-  ) {
-    try {
-      const deletedPatient = await this.patientsService.deletePatient(id);
+async removePatient(
+  @Param('id') id: string,
+) {
+  try {
+    const deletedPatient = await this.patientsService.deletePatient(id);
 
-      return {
-        success: true,
-        message: 'Patient deleted successfully',
-        data: deletedPatient,
-      };
-    } catch (error) {
-      console.error('Error in removePatient:', error);
-    }
+    return {
+      success: true,
+      message: 'Patient deleted successfully',
+      data: deletedPatient,
+    };
+  } catch (error) {
+    console.error('Error in removePatient:', error);
+
+    return {
+      success: false,
+      message: 'Failed to delete patient',
+      error: error?.message || 'Unknown error',
+    };
   }
+}
+
 
   @Get('get-patient-by-id/:id')
   async getPatientById(
