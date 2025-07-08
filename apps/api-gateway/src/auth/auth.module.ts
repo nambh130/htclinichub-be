@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AUTH_CONSUMER_GROUP, AUTH_SERVICE } from '@app/common';
@@ -7,11 +7,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { ClinicModule } from '../clinics/clinic.module';
 
 @Module({
   imports: [
     HttpModule,
-    PassportModule.register({ defaultStrategy: 'jwt'}),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,
@@ -34,9 +35,10 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
         inject: [ConfigService],
       },
     ]),
+    ClinicModule
   ],
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService, ClientsModule],
 })
-export class AuthModule {}
+export class AuthModule { }

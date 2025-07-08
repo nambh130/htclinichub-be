@@ -26,6 +26,7 @@ import { RefreshTokenRepository } from './refresh-token/refresh-token.repository
 import { RefreshToken } from './refresh-token/models/refresh-token.model';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
+import AuthResponse from '@app/common/dto/auth/login-response.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -216,7 +217,8 @@ export class AuthService implements OnModuleInit {
     return { message: 'Invitation accepted', user };
   }
 
-  async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string) {
+  async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string)
+    : Promise<AuthResponse & { refreshToken: string }> {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
       email: email.toLowerCase().trim(),
@@ -236,9 +238,10 @@ export class AuthService implements OnModuleInit {
       user: {
         id: user.id,
         email: user.email,
-        roles: tokenPayload.roles,
-        currentClinics: tokenPayload.currentClinics,
-        adminOf: tokenPayload.adminOf,
+        actorType: userType,
+        roles: tokenPayload.roles ?? [],
+        currentClinics: tokenPayload.currentClinics ?? [],
+        adminOf: tokenPayload.adminOf ?? [],
       },
       token,
       refreshToken,

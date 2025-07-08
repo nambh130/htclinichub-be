@@ -7,7 +7,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { GetRoleDto } from './dto/get-role.dto';
 import { PermissionRepository } from '../permissions/permissions.repository';
-import { In } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 
 @Injectable()
 export class RolesService extends BaseService {
@@ -32,13 +32,13 @@ export class RolesService extends BaseService {
   async updateRole(id: string, updateRoleDto: UpdateRoleDto) {
     const { permissionIds, ...rest } = updateRoleDto;
 
-    const role = await this.roleRepository.findOne({ id }, ['permissions'] );
+    const role = await this.roleRepository.findOne({ id }, ['permissions']);
 
     if (!role) throw new NotFoundException('Role not found');
 
     if (permissionIds) {
       const permissions = await this.permissionRepository.find({
-         id: In(permissionIds) ,
+        id: In(permissionIds),
       });
       role.permissions = permissions;
     }
@@ -70,5 +70,13 @@ export class RolesService extends BaseService {
       page,
       limit,
     };
+  }
+
+  async getAll(filter: FindOptionsWhere<Role>) {
+    return this.roleRepository.find({ ...filter });
+  }
+
+  async getById(id: string) {
+    return this.roleRepository.findOne({ id });
   }
 }
