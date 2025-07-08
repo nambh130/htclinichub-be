@@ -389,4 +389,22 @@ export class StaffController {
       throw error;
     }
   }
+
+  @Get('doctor/shifts/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getShiftsByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(doctorId, clinicId, user);
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+  
+  
 }

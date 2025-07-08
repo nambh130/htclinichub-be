@@ -169,4 +169,7 @@ export abstract class PostgresAbstractRepository<
   async findMany(where: FindOptionsWhere<T>): Promise<T[]> {
     return this.entityRepository.find({ where });
   }
+  async count(where: FindOptionsWhere<T>): Promise<number> {
+    return this.entityRepository.count({ where });
+  }
 }

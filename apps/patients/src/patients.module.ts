@@ -26,7 +26,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
-import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
 import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
@@ -35,6 +34,9 @@ import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
 import { HttpModule, HttpService } from '@nestjs/axios';
+import { Appointment } from './models/appointment.entity';
+import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
+import { AppointmentRepository } from './repositories/appointment.repository';
 
 @Module({
   imports: [
@@ -80,6 +82,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
       FavouriteDoctor,
       PatientAccount,
       PatientClinicLink,
+      Appointment,
     ]),
 
     ClientsModule.registerAsync([
@@ -128,24 +131,25 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 
     // Import Postgre module con
     FavouriteDoctorModule,
-    ManageMedicalRecordModule
+    ManageMedicalRecordModule,
   ],
   controllers: [PatientsController, FavouriteDoctorController],
   providers: [
     PatientsService,
     PatientRepository,
-   
-     FavouriteDoctorService,
+
+    FavouriteDoctorService,
     FavouriteDoctorRepository,
-   
+
     //  ManageMedicalRecordService, ManageMedicalReportRepository,
-     JwtModule,
+    JwtModule,
     PatientAccountRepository,
     PatientClinicLinkRepository,
     {
       provide: CLINIC_SERVICE,
       useExisting: HttpService,
     },
+    AppointmentRepository,
   ],
   exports: [
     PatientsService,
@@ -155,6 +159,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
     FavouriteDoctorRepository,
     PatientAccountRepository,
     PatientClinicLinkRepository,
+    AppointmentRepository,
   ],
 })
 export class PatientsModule {}

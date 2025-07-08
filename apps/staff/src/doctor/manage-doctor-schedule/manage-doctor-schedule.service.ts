@@ -11,6 +11,7 @@ import { ClinicRepository } from '../../clinic/clinic.repository';
 import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 import { DoctorClinicRepo } from '../../repositories/doctor-clinic-map.repository';
 import { Between } from 'typeorm';
+import { spawn } from 'child_process';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -22,7 +23,9 @@ export class ManageDoctorScheduleService extends BaseService {
     private readonly doctorRepository: DoctorRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly doctorClinicRepo: DoctorClinicRepo,
-  ) { super(); }
+  ) {
+    super();
+  }
 
   async getViewWorkingShiftService(doctorId: string) {
     if (!doctorId) {
@@ -36,21 +39,22 @@ export class ManageDoctorScheduleService extends BaseService {
         throw new NotFoundException(`Doctor with id ${doctorId} not found`);
       }
 
-      const { data: shifts } = await this.manageDoctorScheduleRepository.findAll({
-        where: {
-          doctor_clinic_link_id: {
-            doctor: { id: doctor.id },
+      const { data: shifts } =
+        await this.manageDoctorScheduleRepository.findAll({
+          where: {
+            doctor_clinic_link_id: {
+              doctor: { id: doctor.id },
+            },
           },
-        },
-        relations: {
-          doctor_clinic_link_id: {
-            clinic: true,
+          relations: {
+            doctor_clinic_link_id: {
+              clinic: true,
+            },
           },
-        },
-        order: {
-          startTime: 'ASC',
-        },
-      });
+          order: {
+            startTime: 'ASC',
+          },
+        });
 
       return {
         doctorId: doctor.id,
@@ -58,7 +62,9 @@ export class ManageDoctorScheduleService extends BaseService {
         totalShift: shifts.length,
         shifts: shifts.map((shift) => ({
           shiftId: shift.id,
-          startTime: dayjs(shift.startTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm'),
+          startTime: dayjs(shift.startTime)
+            .tz('Asia/Ho_Chi_Minh')
+            .format('DD/MM/YYYY HH:mm'),
           duration: shift.duration,
           space: shift.space || 0,
           status: shift.status,
@@ -93,7 +99,9 @@ export class ManageDoctorScheduleService extends BaseService {
 
       return {
         shiftId: shift.id,
-        startTime: dayjs(shift.startTime).tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY HH:mm'),
+        startTime: dayjs(shift.startTime)
+          .tz('Asia/Ho_Chi_Minh')
+          .format('DD/MM/YYYY HH:mm'),
         duration: this.formatDurationToString(shift.duration),
         clinicName: clinic?.name ?? null,
         space: shift.space || 0,
@@ -136,7 +144,10 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Doctor not found');
     }
 
-    const doctorClinicLink = await this.doctorClinicRepo.findLinkByDoctorAndClinic(dto.doctor_clinic_link_id);
+    const doctorClinicLink =
+      await this.doctorClinicRepo.findLinkByDoctorAndClinic(
+        dto.doctor_clinic_link_id,
+      );
     if (!doctorClinicLink) {
       throw new NotFoundException('Doctor-clinic link not found');
     }
@@ -147,6 +158,8 @@ export class ManageDoctorScheduleService extends BaseService {
     workShift.duration = dto.duration;
     workShift.createdById = currentUser.userId;
     workShift.createdByType = currentUser.actorType;
+    //missing space
+    workShift.space = dto.space;
     return await this.manageDoctorScheduleRepository.create(workShift);
   }
 
@@ -161,7 +174,9 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Doctor not found');
     }
 
-    const shift = await this.manageDoctorScheduleRepository.findOne({ id: shiftId });
+    const shift = await this.manageDoctorScheduleRepository.findOne({
+      id: shiftId,
+    });
 
     if (!shift) {
       throw new NotFoundException('Shift not found');
@@ -191,7 +206,7 @@ export class ManageDoctorScheduleService extends BaseService {
         ...(dto.space && { space: dto.space }),
         updatedById: currentUser.userId,
         updatedByType: currentUser.actorType,
-      }
+      },
     );
   }
 
@@ -200,7 +215,9 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Missing doctorId or date');
     }
 
-    const doctor = await this.doctorRepository.findOne({ id: "43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10" });
+    const doctor = await this.doctorRepository.findOne({
+      id: '43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10',
+    });
 
     if (!doctor) {
       throw new NotFoundException(`Doctor with id ${doctorId} not found`);
@@ -213,7 +230,7 @@ export class ManageDoctorScheduleService extends BaseService {
       where: {
         startTime: Between(start, end),
         doctor_clinic_link_id: {
-          doctor: { id: "43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10" },
+          doctor: { id: '43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10' },
         },
       },
       relations: {
@@ -233,7 +250,9 @@ export class ManageDoctorScheduleService extends BaseService {
       totalShift: shifts.length,
       shifts: shifts.map((shift) => ({
         shiftId: shift.id,
-        startTime: dayjs(shift.startTime).tz('Asia/Ho_Chi_Minh').format('HH:mm'),
+        startTime: dayjs(shift.startTime)
+          .tz('Asia/Ho_Chi_Minh')
+          .format('HH:mm'),
         duration: shift.duration,
         space: shift.space || 0,
         status: shift.status,
@@ -245,7 +264,9 @@ export class ManageDoctorScheduleService extends BaseService {
   private formatDurationToString(
     duration: string | { hours?: number; minutes?: number; seconds?: number },
   ): string {
-    let hours = 0, minutes = 0, seconds = 0;
+    let hours = 0,
+      minutes = 0,
+      seconds = 0;
 
     if (typeof duration === 'string') {
       const parts = duration.split(':');
@@ -263,5 +284,41 @@ export class ManageDoctorScheduleService extends BaseService {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
 
-}
+  async getShiftsByDoctorIdAndClinicId(doctorId: string, clinicId: string) {
+    // Tìm mapping giữa doctor và clinic
+    const mapping = await this.doctorClinicRepo.findOne({
+      doctor: { id: doctorId },
+      clinic: { id: clinicId },
+    });
 
+    if (!mapping) {
+      throw new NotFoundException('Doctor is not mapped to this clinic');
+    }
+
+    // Lấy danh sách ca làm việc theo mapping id
+    const shifts =
+      await this.manageDoctorScheduleRepository.findByDoctorClinicLink(
+        mapping.id,
+      );
+
+    const result = shifts.map((shift) => ({
+      shiftId: shift.id,
+      startTime: shift.startTime,
+      duration: this.formatDurationToString(shift.duration),
+      space: shift.space,
+      status: shift.status,
+    }));
+
+    return result;
+  }
+
+  async updateShifttFull(shiftId: string) {
+    const shift = await this.manageDoctorScheduleRepository.findOne({ id: shiftId });
+    if (!shift) {
+      throw new NotFoundException('Shift not found');
+    }
+    return await this.manageDoctorScheduleRepository.findOneAndUpdate({ id: shiftId }, { status: 'fully-booked' });
+  } 
+
+  
+}

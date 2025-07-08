@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePatientDto } from '@app/common/dto/patients/create-patients.dto';
 import { UpdatePatientDto } from '@app/common/dto/patients/update-patient.dto';
 import { PatientRepository } from './patients.repository';
-import { CLINIC_SERVICE, PATIENT_SERVICE } from '@app/common';
+import { CLINIC_SERVICE, PATIENT_SERVICE, TokenPayload } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { Patient } from './models';
 import { BadRequestException } from '@nestjs/common';
@@ -11,13 +11,22 @@ import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { CreateAppointmentDto } from '@app/common/dto/appointment';
+import { AppointmentRepository } from './repositories/appointment.repository';
+import { Appointment } from './models/appointment.entity';
+import { DataSource, In } from 'typeorm';
+import { ManageDoctorScheduleRepository } from 'apps/staff/src/doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
 
 @Injectable()
 export class PatientsService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly patientsRepository: PatientRepository,
     private readonly patientAccountRepo: PatientAccountRepository,
     private readonly patientClinicLinkRepo: PatientClinicLinkRepository,
+    private readonly appointmentRepository: AppointmentRepository,
+    private readonly httpService: HttpService,
+
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
@@ -235,8 +244,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }
+          bloodGroup: patient.bloodGroup,
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -279,8 +288,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }))
+          bloodGroup: patient.bloodGroup,
+        })),
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -325,8 +334,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }
+          bloodGroup: patient.bloodGroup,
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -369,8 +378,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }
+          bloodGroup: patient.bloodGroup,
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -413,8 +422,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }
+          bloodGroup: patient.bloodGroup,
+        },
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -451,8 +460,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-          bloodGroup: patient.bloodGroup
-        }))
+          bloodGroup: patient.bloodGroup,
+        })),
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -466,10 +475,14 @@ export class PatientsService {
     }
 
     try {
-      const patients = await this.patientsRepository.find({ patient_account_id: account_id });
+      const patients = await this.patientsRepository.find({
+        patient_account_id: account_id,
+      });
 
       if (!patients || patients.length === 0) {
-        throw new NotFoundException(`No patient records found for account ID ${account_id}`);
+        throw new NotFoundException(
+          `No patient records found for account ID ${account_id}`,
+        );
       }
 
       return {
@@ -498,14 +511,13 @@ export class PatientsService {
             personal_history: patient.medical_history?.personal_history || [],
             family_history: patient.medical_history?.family_history || [],
           },
-          bloodGroup: patient.bloodGroup
+          bloodGroup: patient.bloodGroup,
         })),
       };
     } catch (error) {
       throw error;
     }
   }
-
 
   async assignToClinic(patient_account_id: string, clinicId: string) {
     try {
@@ -583,7 +595,7 @@ export class PatientsService {
   }
   async getPatientByAccountId(id: string) {
     try {
-      const patient = await this.patientsRepository.findOne({
+      const patient = await this.patientsRepository.find({
         patient_account_id: id,
       });
       return patient;
@@ -595,5 +607,231 @@ export class PatientsService {
       // Nếu lỗi khác thì mới throw
       throw error;
     }
+  }
+
+  async getShiftById(shiftId: string) {
+    const url = `http://staff:3003/manage-doctor-schedule/detail-working-shift/${shiftId}`;
+    const response = await firstValueFrom(this.httpService.get(url));
+    return response.data; // data từ staff service trả về
+  }
+  async updateShiftToFullyBook(shiftId: string) {
+    console.log(shiftId);
+    const url = `http://staff:3003/manage-doctor-schedule/doctor/shift/${shiftId}/status/fully-booked`;
+    const response = await firstValueFrom(this.httpService.put(url));
+    return response.data; // data từ staff service trả về
+  }
+
+  async createAppointment(
+    createAppointmentDto: CreateAppointmentDto,
+    user: TokenPayload,
+  ) {
+    // Lấy shift info từ staff service qua HTTP
+    const shift = await this.getShiftById(createAppointmentDto.slot_id);
+
+    if (!shift) {
+      throw new NotFoundException('Không tìm thấy ca khám');
+    }
+
+    // Đếm số lượng appointment hiện tại cho slot đó trong local DB
+    const currentCount = await this.appointmentRepository.count({
+      slot_id: createAppointmentDto.slot_id,
+    });
+
+    if (currentCount >= shift.space) {
+      throw new BadRequestException('Ca khám này đã đầy chỗ.');
+    }
+
+    // Tạo mới appointment
+    const appointment = new Appointment();
+    appointment.patient_profile_id = createAppointmentDto.patient_profile_id;
+    appointment.clinic_id = createAppointmentDto.clinic_id;
+    appointment.doctor_id = createAppointmentDto.doctor_id;
+    appointment.slot_id = createAppointmentDto.slot_id;
+    appointment.reason = createAppointmentDto.reason;
+    appointment.symptoms = createAppointmentDto.symptoms;
+    appointment.note = createAppointmentDto.note ?? null;
+    appointment.createdById = user.userId.toString();
+    appointment.createdByType = user.actorType;
+    appointment.status = 'pending';
+    await this.appointmentRepository.create(appointment);
+
+    // // ✅ Option: nếu currentCount + 1 >= space thì gửi 1 HTTP PUT sang staff để cập nhật status slot
+    if (currentCount + 1 >= shift.space) {
+      await this.updateShiftToFullyBook(shift.shiftId);
+    }
+
+    return appointment;
+  }
+
+  async getAppointmentsWithDetailsByAccountId(accountId: string) {
+    const profiles = await this.getPatientByAccountId(accountId);
+    if (!profiles || !profiles.length) return [];
+
+    const profileIds = profiles.map((p) => p._id.toString());
+    const appointments = await this.appointmentRepository.findMany({
+      patient_profile_id: In(profileIds),
+    });
+
+    const results = await Promise.all(
+      appointments.map(async (appointment) => {
+        // Call các API detail song song
+        const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
+          firstValueFrom(
+            this.httpService.get(
+              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Clinic API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Doctor API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Slot API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://patient:3005/patient-service/get-patient-by-id/${appointment.patient_profile_id}`,
+            ),
+          )
+            .then((res) => {
+              console.log('Profile Response:', res.data);
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Profile API error:', err);
+              return null;
+            }),
+        ]);
+
+        return {
+          id: appointment.id,
+          reason: appointment.reason,
+          symptoms: appointment.symptoms,
+          status: appointment.status,
+          note: appointment.note,
+          createdAt: appointment.createdAt,
+          clinic: clinicRes,
+          doctor: doctorRes,
+          slot: slotRes,
+          profile: profileRes,
+        };
+      }),
+    );
+
+    return results;
+  }
+
+  async getAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) {
+      throw new NotFoundException('Không tìm thấy appointment');
+    }
+
+    const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
+      firstValueFrom(
+        this.httpService.get(
+          `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+        ),
+      )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.error('Clinic API error:', err);
+          return null;
+        }),
+
+      firstValueFrom(
+        this.httpService.get(
+          `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+        ),
+      )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.error('Doctor API error:', err);
+          return null;
+        }),
+
+      firstValueFrom(
+        this.httpService.get(
+          `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+        ),
+      )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.error('Slot API error:', err);
+          return null;
+        }),
+
+      firstValueFrom(
+        this.httpService.get(
+          `http://patient:3005/patient-service/get-patient-by-id/${appointment.patient_profile_id}`,
+        ),
+      )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.error('Profile API error:', err);
+          return null;
+        }),
+    ]);
+
+    return {
+      id: appointment.id,
+      reason: appointment.reason,
+      symptoms: appointment.symptoms,
+      status: appointment.status,
+      note: appointment.note,
+      createdAt: appointment.createdAt,
+      clinic: clinicRes,
+      doctor: doctorRes,
+      slot: slotRes,
+      profile: profileRes,
+    };
+  }
+  async cancelAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) throw new Error('Appointment not found');
+
+    const result = await this.appointmentRepository.update(appointment, {
+      status: 'cancel',
+    });
+    return result;
   }
 }

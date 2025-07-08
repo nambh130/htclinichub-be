@@ -19,6 +19,8 @@ import {
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { CreateAppointmentDto } from '@app/common/dto/appointment';
+import { AppointmentService } from './appointment/appointment.service';
 
 @Controller('patient')
 export class PatientsController {
@@ -26,7 +28,9 @@ export class PatientsController {
     private readonly patientService: PatientService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
-    private readonly manageMedicalRecordService: ManageMedicalRecordService,  ) {}
+    private readonly manageMedicalRecordService: ManageMedicalRecordService,
+    private readonly appointmentService: AppointmentService,
+  ) {}
 
   // Patient routes
   @Post('/create-patient')
@@ -200,7 +204,10 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const result = await this.favouriteDoctorService.getFavouriteDoctors(user, patientId);
+      const result = await this.favouriteDoctorService.getFavouriteDoctors(
+        user,
+        patientId,
+      );
       return result;
     } catch (error) {
       console.error('Error retrieving favourite doctors:', error);
@@ -215,7 +222,10 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const patient = await this.patientService.getPatientProfileByAccountId(account_id, user);
+      const patient = await this.patientService.getPatientProfileByAccountId(
+        account_id,
+        user,
+      );
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -245,7 +255,11 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const patient = await this.manageMedicalRecordService.getMedicalRecordsByUserId(userId, user);
+      const patient =
+        await this.manageMedicalRecordService.getMedicalRecordsByUserId(
+          userId,
+          user,
+        );
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -313,6 +327,57 @@ export class PatientsController {
       return result;
     } catch (error) {
       console.error('Error retrieving patient account:', error);
+      throw error;
+    }
+  }
+
+  @Post('create-appointment')
+  @UseGuards(JwtAuthGuard)
+  async createAppointment(
+    @Body() createAppointmentDto: CreateAppointmentDto,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      
+      const result =
+        await this.appointmentService.createAppointment(createAppointmentDto,user);
+      return result;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-appointments-by-patientAccountId/:id')
+  @UseGuards(JwtAuthGuard)
+  async getAppointments(@Param('id') id: string) {
+    try {
+      const result = await this.appointmentService.getAppointmentsByPatientAccountId(id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+  @Get('get-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async getAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result = await this.appointmentService.getAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+  @Put('cancel-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async updateAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result = await this.appointmentService.cancelAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
       throw error;
     }
   }

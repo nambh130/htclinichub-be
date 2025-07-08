@@ -18,6 +18,7 @@ import {
 import { PatientCreatedEvent } from '@app/common/events/patients';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { CurrentUser, TokenPayload } from '@app/common';
+import { CreateAppointmentDto } from '@app/common/dto/appointment';
 // import { DownLoadMedicalReportService } from './medical-report/download_medical_report';
 
 @Controller('patient-service')
@@ -28,40 +29,38 @@ export class PatientsController {
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
   ) {}
 
- @Post('create-patient')
-async createPatient(
-  @Body()
-  payload: {
-    createPatientDto: CreatePatientDto;
-    currentUser: TokenPayload;
-  },
-) {
-  try {
-    const { createPatientDto, currentUser } = payload;
+  @Post('create-patient')
+  async createPatient(
+    @Body()
+    payload: {
+      createPatientDto: CreatePatientDto;
+      currentUser: TokenPayload;
+    },
+  ) {
+    try {
+      const { createPatientDto, currentUser } = payload;
 
-    const createdPatient = await this.patientsService.createPatient(
-      createPatientDto,
-      currentUser.userId,
-    );
+      const createdPatient = await this.patientsService.createPatient(
+        createPatientDto,
+        currentUser.userId,
+      );
 
-    return {
-      success: true,
-      data: createdPatient,
-    };
-  } catch (error) {
-    console.error('Error in createPatient:', error?.response?.data || error);
+      return {
+        success: true,
+        data: createdPatient,
+      };
+    } catch (error) {
+      console.error('Error in createPatient:', error?.response?.data || error);
 
-    return {
-      success: false,
-      message: 'Failed to create patient',
-      error: error?.message || 'Unknown error',
-    };
+      return {
+        success: false,
+        message: 'Failed to create patient',
+        error: error?.message || 'Unknown error',
+      };
+    }
   }
-}
-
 
   @EventPattern('patient-created')
-
   handleCreatedPatient(@Payload() patientCreatedEvent: PatientCreatedEvent) {
     patientCreatedEvent.toString();
   }
@@ -90,28 +89,25 @@ async createPatient(
   }
 
   @Delete('delete-patient/:id')
-async removePatient(
-  @Param('id') id: string,
-) {
-  try {
-    const deletedPatient = await this.patientsService.deletePatient(id);
+  async removePatient(@Param('id') id: string) {
+    try {
+      const deletedPatient = await this.patientsService.deletePatient(id);
 
-    return {
-      success: true,
-      message: 'Patient deleted successfully',
-      data: deletedPatient,
-    };
-  } catch (error) {
-    console.error('Error in removePatient:', error);
+      return {
+        success: true,
+        message: 'Patient deleted successfully',
+        data: deletedPatient,
+      };
+    } catch (error) {
+      console.error('Error in removePatient:', error);
 
-    return {
-      success: false,
-      message: 'Failed to delete patient',
-      error: error?.message || 'Unknown error',
-    };
+      return {
+        success: false,
+        message: 'Failed to delete patient',
+        error: error?.message || 'Unknown error',
+      };
+    }
   }
-}
-
 
   @Get('get-patient-by-id/:id')
   async getPatientById(@Param('id') id: string) {
@@ -220,11 +216,10 @@ async removePatient(
   // }
 
   @Get('get-patientProfile-by-account_id/:account_id')
-  async getPatientProfileByAccountId(
-    @Param('account_id') account_id: string,
-  ) {
+  async getPatientProfileByAccountId(@Param('account_id') account_id: string) {
     try {
-      const patient = await this.patientsService.getPatientProfileByAccountId(account_id);
+      const patient =
+        await this.patientsService.getPatientProfileByAccountId(account_id);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -297,5 +292,35 @@ async removePatient(
       };
     }
     return patient;
+  }
+
+  @Post('appointment')
+  async createAppointment(
+    @Body('createAppointmentDto') createAppointmentDto: CreateAppointmentDto,
+    @Body('user') user: TokenPayload,
+  ) {
+    const result = await this.patientsService.createAppointment(
+      createAppointmentDto,
+      user,
+    );
+    return result;
+  }
+
+  @Get('appointment/patient-account/:id')
+  async getAppointmentsByPatientAccountId(@Param('id') id: string) {
+    const result = await this.patientsService.getAppointmentsWithDetailsByAccountId(id);
+    return result;
+  }
+
+  @Get('appointment/:id')
+  async getAppointment(@Param('id') id: string) {
+    const result = await this.patientsService.getAppointment(id);
+    return result;
+  }
+
+  @Put('cancel-appointment/:id')
+  async updateAppointment(@Param('id') id: string) {
+    const result = await this.patientsService.cancelAppointment(id);
+    return result;
   }
 }

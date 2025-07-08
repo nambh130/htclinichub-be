@@ -11,8 +11,9 @@ import {
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
-import { httpClientConfig, HttpModules, HttpModules } from '../api/http.client';
+import { httpClientConfig, HttpModules } from '../api/http.client';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { AppointmentService } from './appointment/appointment.service';
 
 @Module({
   imports: [
@@ -77,11 +78,14 @@ import { ManageMedicalRecordService } from './manage-medical-record/manage_medic
     PatientService,
     FavouriteDoctorService,
     ManageMedicalRecordService,
+    AppointmentService,
   ],
   exports: [
     PatientService,
     FavouriteDoctorService,
     ManageMedicalRecordService,
+    AppointmentService,
+
   ],
 })
 export class PatientsModule { }

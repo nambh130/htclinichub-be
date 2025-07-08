@@ -22,10 +22,10 @@ export class Doctor_WorkShift extends PostgresAbstractEntity<Doctor_WorkShift> {
 
     @Column({
         type: 'enum',
-        enum: ['available', 'booked', 'cancelled'],
+        enum: ['available', 'fully-booked', 'cancelled'],
         default: 'available'
     })
-    status: 'available' | 'booked' | 'cancelled';
+    status: 'available' | 'fully-booked' | 'cancelled';
 
     @Column({ type: 'int', default: 0 })
     space: number;

@@ -181,6 +181,47 @@ export class ClinicsService {
     }
   }
 
+  async getClinicByIdHTTP(id: string): Promise<Clinic> {
+    try {
+      const clinic = await this.clinicsRepository.findOne({ id: id });
+
+      if (!clinic) {
+        this.logger.warn({
+          msg: 'Clinic not found',
+          type: 'audit-log',
+          context: 'ClinicService',
+          operation: 'GET_CLINIC_BY_ID',
+          status: 'NOT_FOUND',
+          clinicId: id,
+        });
+        throw new Error('Clinic not found');
+      }
+
+      this.logger.info({
+        msg: 'Clinic retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'SUCCESS',
+        clinicId: clinic.id,
+      });
+
+      return JSON.parse(JSON.stringify(clinic));
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to retrieve clinic',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+        clinicId: id,
+      });
+      throw error;
+    }
+  }
+
   async getClinicByIds(clinicIds: string[]) {
     const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
     return clinics;
@@ -225,7 +266,7 @@ export class ClinicsService {
       const clinicToUpdate = new Clinic();
       clinicToUpdate.id = id;
 
-      console.log(updateClinicDto)
+      console.log(updateClinicDto);
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
