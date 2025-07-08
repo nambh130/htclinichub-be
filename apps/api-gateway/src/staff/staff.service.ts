@@ -192,7 +192,7 @@ export class StaffService {
   //Employee services
   async viewEmployeeAccountList(): Promise<unknown> {
     const response = await firstValueFrom(
-      this.httpService.get('/staff/employee-account-list'),
+      this.httpService.get('/staff/employee/employee-account-list'),
     );
     return response.data;
   }

@@ -181,4 +181,39 @@ export class PatientService {
       throw error;
     }
   }
+
+  async getPatientAccount(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-account/${id}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  async getPatientAccounts() {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-accounts`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByAccountId(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-by-account-id/${id}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }

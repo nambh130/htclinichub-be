@@ -250,6 +250,39 @@ export class PatientsController {
     }
   }
 
+  @Get('patient-account/:id')
+  @UseGuards(JwtAuthGuard)
+  async getPatientAccount(@Param('id') id: string) {
+    try {
+      const result = await this.patientService.getPatientAccount(id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient account:', error);
+      throw error;
+    }
+  }
 
+  @Get('patient-accounts')
+  @UseGuards(JwtAuthGuard)
+  async getPatientAccounts() {
+    try {
+      const result = await this.patientService.getPatientAccounts();
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient accounts:', error);
+      throw error;
+    }
+  }
 
+  @Get('get-patient-by-accountId/:id')
+  @UseGuards(JwtAuthGuard)
+  async getPatientByAccountId(@Param('id') id: string) {
+    try {
+      const result = await this.patientService.getPatientByAccountId(id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient account:', error);
+      throw error;
+    }
+  }
 }

@@ -231,4 +231,38 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('get-patient-account/:id')
+  async getPatientAccount(@Param('id') id: string) {
+    try {
+      const result = await this.patientsService.getPatientAccount(id);
+      return result;
+    } catch (error) {
+      console.error('Error in getPatientAccount:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-patient-accounts')
+  async getPatientAccounts() {
+    try {
+      const result = await this.patientsService.getPatientAccounts();
+      return result;
+    } catch (error) {
+      console.error('Error in getPatientAccounts:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-patient-by-account-id/:id')
+  async getPatientByAccountId(@Param('id') id: string) {
+    const patient = await this.patientsService.getPatientByAccountId(id);
+    if (!patient) {
+      return {
+        message: 'Không có hồ sơ bệnh nhân',
+        data: null,
+      };
+    }
+    return patient;
+  }
 }

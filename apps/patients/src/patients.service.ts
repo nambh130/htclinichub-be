@@ -499,4 +499,45 @@ export class PatientsService {
 
     return clinics.data;
   }
+
+  async getPatientAccount(id: string) {
+    try {
+      const patientAcount = await this.patientAccountRepo.findOne({ id: id });
+      if (!patientAcount) {
+        throw new NotFoundException('patientAcount not found');
+      }
+      return patientAcount;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientAccounts() {
+    try {
+      const patientAccounts = await this.patientAccountRepo.find({});
+      if (!patientAccounts) {
+        throw new NotFoundException('patientAccounts not found');
+      }
+      return patientAccounts;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  async getPatientByAccountId(id: string) {
+    try {
+      const patient = await this.patientsRepository.findOne({
+        patient_account_id: id,
+      });
+      return patient;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        // Không có thì trả null thôi
+        return null;
+      }
+      // Nếu lỗi khác thì mới throw
+      throw error;
+    }
+  }
 }

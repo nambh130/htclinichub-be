@@ -11,7 +11,7 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
   imports: [
     HttpModules.registerAsync([
       httpClientConfig(
-        CLINIC_SERVICE,
+        'CLINIC_HTTP_SERVICE',
         'CLINIC_SERVICE_HOST',
         'CLINIC_SERVICE_PORT',
       ),

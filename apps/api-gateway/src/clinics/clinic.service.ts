@@ -23,16 +23,16 @@ export class ClinicService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // this.clinicClient.subscribeToResponseOf('add-clinic');
-    // this.clinicClient.subscribeToResponseOf('get-clinics');
-    // this.clinicClient.subscribeToResponseOf('delete-clinic');
-    // this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
-    // this.clinicClient.subscribeToResponseOf('update-clinic');
+    this.clinicClient.subscribeToResponseOf('add-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinics');
+    this.clinicClient.subscribeToResponseOf('delete-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
+    this.clinicClient.subscribeToResponseOf('update-clinic');
 
-    // this.authClient.subscribeToResponseOf('authenticate');
+    this.authClient.subscribeToResponseOf('authenticate');
 
-    // await this.authClient.connect();
-    // await this.clinicClient.connect();
+    await this.authClient.connect();
+    await this.clinicClient.connect();
   }
 
   // create(dto: AddClinicDto) {
