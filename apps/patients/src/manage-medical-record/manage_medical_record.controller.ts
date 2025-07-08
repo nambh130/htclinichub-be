@@ -12,6 +12,7 @@ export class ManageMedicalRecordController {
   ) {
     try {
       const result = await this.manageMedicalRecordService.getMedicalRecordsByUserId(userId);
+    
       return result;
     } catch (error) {
       console.error('Error deleting patient:', error);

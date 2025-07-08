@@ -1,10 +1,11 @@
-import { Inject, Injectable, BadRequestException, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, BadRequestException, OnModuleInit, NotFoundException } from '@nestjs/common';
 import { AUTH_SERVICE, FavouriteDoctorDto, PATIENTS_TO_STAFF_SERVICE } from '@app/common';
 import { ClientKafka, MessagePattern, Payload } from '@nestjs/microservices';
 import { FavouriteDoctor } from '../models/favourite_doctor.entity';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { ManageMedicalReportRepository } from './manage_medical_record.repository';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ManageMedicalRecordService {
@@ -15,19 +16,20 @@ export class ManageMedicalRecordService {
     ) { }
     async getMedicalRecordsByUserId(userId: string) {
         try {
-            // const favs = await this.manageMedicalReportRepository.find({
-            //     patient_id: userId,
-            // });
+            const records = await this.manageMedicalReportRepository.findAndSort(
+                {
+                    patient_id: new Types.ObjectId(userId),
+                },
+                {
+                    sort: { createdAt: -1 },
+                }
+            );
 
-            // const doctorIds = favs.map((f) => f.doctor_id);
+            if (!records || records.length === 0) {
+                throw new NotFoundException(`No medical records found for patient ID ${userId}`);
+            }
 
-            // console.log('Doctor IDs:', doctorIds);
-
-            // return {
-            //     doctorIds,
-            //     total: doctorIds.length
-            // };
-            return userId + "thành công";
+            return records;
         } catch (error) {
             console.error('Error in getFavouriteDoctorsList:', error);
             throw error;

@@ -36,6 +36,7 @@ export class DoctorController {
 
   @Get('details/:id')
   getDoctorDetails(@Param('id') doctorId: string) {
+    console.log('[DEBUG] doctorId truyền vào Doctor Controller:', doctorId);
     return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 

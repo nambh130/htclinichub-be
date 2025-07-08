@@ -284,12 +284,16 @@ export class DoctorService extends BaseService {
   }
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
+        console.log('[DEBUG] doctorId truyền vào Doctor Service:', doctorId);
+
     try {
       const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
         'clinics',
         'services',
         'invitations',
       ]);
+
+      console.log('[DEBUG] doctor found:', doctor.email);
 
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
@@ -301,7 +305,7 @@ export class DoctorService extends BaseService {
       );
 
       const profile = toDoctorProfile(doctor, staffInfo);
-
+      console.log('[DEBUG] doctor profile:', profile);
       return profile;
     } catch (error) {
       if (
