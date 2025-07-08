@@ -12,9 +12,7 @@ export class ClinicsService {
   ) { }
 
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
-    const newClinic: Partial<Clinic> = {};
-    newClinic.name = createClinicDto.name;
-    newClinic.location = createClinicDto.location;
+    const newClinic: Partial<Clinic> = { id: createClinicDto.id };
 
     if (createClinicDto.owner) {
       try {
@@ -28,10 +26,6 @@ export class ClinicsService {
       }
     }
 
-    //const newClinic = new Clinic({
-    //  location, name,
-    //  owner
-    //});
     return await this.clinicRepository.create(new Clinic(newClinic));
   }
 

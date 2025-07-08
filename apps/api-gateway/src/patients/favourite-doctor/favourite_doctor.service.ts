@@ -36,9 +36,16 @@ export class FavouriteDoctorService  {
     }
   }
 
-//   async getFavouriteDoctors(userId: string) {
-//   return await firstValueFrom(
-//     this.patientClient.send('get-favourite-doctors-list', { userId })
-//   );
-// }
+  async getFavouriteDoctors(user: TokenPayload, patientId: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/favourite-doctor/get-favourite-doctors-list/${patientId}`)
+      );
+      return result.data;
+
+    } catch (error) {
+      console.error('Error add doctor:', error);
+      throw error;
+    }
+  }
 }

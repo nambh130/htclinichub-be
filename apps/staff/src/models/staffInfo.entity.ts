@@ -1,5 +1,5 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Column, Entity, OneToMany, Unique, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, Unique } from 'typeorm';
 import { Specialize } from './specialize.entity';
 import { Degree } from './degree.entity';
 import { Doctor } from './doctor.entity';

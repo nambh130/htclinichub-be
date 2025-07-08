@@ -18,15 +18,15 @@ import {
 } from '@app/common';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
-import { DownLoadMedicalReportService } from './medical-report/download_medical_report.service';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 
 @Controller('patient')
 export class PatientsController {
   constructor(
     private readonly patientService: PatientService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
-    private readonly downLoadMedicalReport: DownLoadMedicalReportService,
-  ) {}
+    // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
+    private readonly manageMedicalRecordService: ManageMedicalRecordService,  ) {}
 
   // Patient routes
   @Post('/create-patient')
@@ -193,19 +193,35 @@ export class PatientsController {
     }
   }
 
-  // @Get('/get-favourite-doctors-list')
-  // @UseGuards(JwtAuthGuard)
-  // async getFavouriteDoctors(
-  //   @CurrentUser() user: TokenPayload,
-  // ) {
-  //   try {
-  //     const result = await this.favouriteDoctorService.getFavouriteDoctors(user._id.toString());
-  //     return result;
-  //   } catch (error) {
-  //     console.error('Error retrieving favourite doctors:', error);
-  //     throw error;
-  //   }
-  // }
+  @Get('/get-favourite-doctors-list/:patientId')
+  @UseGuards(JwtAuthGuard)
+  async getFavouriteDoctors(
+    @Param('patientId') patientId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const result = await this.favouriteDoctorService.getFavouriteDoctors(user, patientId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving favourite doctors:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-patientProfile-by-account_id/:account_id')
+  @UseGuards(JwtAuthGuard)
+  async getPatientProfileByAccountId(
+    @Param('account_id') account_id: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientProfileByAccountId(account_id, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 
   // @Post('/download-medical-report/:patient_account_id')
   // @UseGuards(JwtAuthGuard)
@@ -221,6 +237,21 @@ export class PatientsController {
   //     throw error;
   //   }
   // }
+
+  @Get('/get-medical-records-by-userId/:userId')
+  @UseGuards(JwtAuthGuard)
+  async getMedicalRecordsByUserId(
+    @Param('userId') userId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.manageMedicalRecordService.getMedicalRecordsByUserId(userId, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 
   //khanhlq
   @Post('/assign-to-clinic/:clinicId')

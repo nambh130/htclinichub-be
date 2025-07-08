@@ -9,22 +9,23 @@ import {
   ValidateNested,
   IsDateString,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class MedicalHistoryDto {
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   allergies: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   personal_history: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   family_history: string;
 }
@@ -40,12 +41,12 @@ export class CreatePatientDto {
   fullname: string;
 
   @IsString()
-  @IsOptional()
-  @MaxLength(255)
-  relation: string;
+  //@IsOptional()
+  @IsEnum(['Chính chủ', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'])
+  relation: 'Chính chủ' | 'Vợ' | 'Con' | 'Bố' | 'Mẹ' | 'Ông' | 'Bà' | 'Chị' | 'Anh' | 'Em' | 'Cháu' | 'Khác';
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @Matches(/^\d+$/, { message: 'CCCD must contain only numbers' })
   @Length(12, 12, { message: 'CCCD must be exactly 12 digits' })
   citizen_id: string;
@@ -57,12 +58,12 @@ export class CreatePatientDto {
   health_insurance_id: string
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(255)
   ethnicity: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(255)
   marital_status: string;
 
@@ -72,38 +73,42 @@ export class CreatePatientDto {
   address1: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   address2: string;
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   @Matches(/^\d+$/, { message: 'Phone must contain only numbers' })
   @Length(10, 10, { message: 'Phone must be exactly 10 digits' })
   phone: string;
 
   @IsBoolean()
-  @IsOptional()
+  //@IsOptional()
   gender: boolean;
 
   @IsDateString()
-  @IsOptional()
+  //@IsOptional()
   dOB: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   nation: string;
 
   @IsString()
-  @IsOptional()
+  //@IsOptional()
   @MaxLength(500)
   work_address: string;
 
   @ValidateNested()
   @Type(() => MedicalHistoryDto)
-  @IsOptional()
+  //@IsOptional()
   medical_history: MedicalHistoryDto;
+
+  @IsEnum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+  bloodGroup: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 
   // @IsString()
   // @IsNotEmpty()

@@ -67,6 +67,7 @@ export class PatientsService {
         personal_history: createPatientDto.medical_history.personal_history,
         family_history: createPatientDto.medical_history.family_history,
       },
+      bloodGroup: createPatientDto.bloodGroup,
     };
 
     try {
@@ -98,7 +99,7 @@ export class PatientsService {
 
     try {
       const patient = await this.patientsRepository.findOne({
-        patient_account_id: parseInt(patient_account_id),
+        _id: patient_account_id,
       });
 
       if (!patient) {
@@ -218,8 +219,10 @@ export class PatientsService {
           patient_account_id: patient.patient_account_id,
           fullName: patient.fullname,
           relation: patient.relation,
+          dOB: patient.dOB,
           citizen_id: patient.citizen_id,
           health_insurance_id: patient.health_insurance_id,
+          ethnicity: patient.ethnicity,
           marital_status: patient.marital_status,
           address1: patient.address1,
           address2: patient.address2 ? patient.address2 : 'Trống',
@@ -232,7 +235,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        },
+          bloodGroup: patient.bloodGroup
+        }
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -275,7 +279,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        })),
+          bloodGroup: patient.bloodGroup
+        }))
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -320,7 +325,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        },
+          bloodGroup: patient.bloodGroup
+        }
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -363,7 +369,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        },
+          bloodGroup: patient.bloodGroup
+        }
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -406,7 +413,8 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        },
+          bloodGroup: patient.bloodGroup
+        }
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -443,13 +451,61 @@ export class PatientsService {
             personal_history: patient.medical_history.personal_history,
             family_history: patient.medical_history.family_history,
           },
-        })),
+          bloodGroup: patient.bloodGroup
+        }))
       };
     } catch (error) {
       console.error('Error retrieving patient:', error);
       throw error;
     }
   }
+
+  async getPatientProfileByAccountId(account_id: string) {
+    if (!account_id) {
+      throw new NotFoundException('Invalid account ID');
+    }
+
+    try {
+      const patients = await this.patientsRepository.find({ patient_account_id: account_id });
+
+      if (!patients || patients.length === 0) {
+        throw new NotFoundException(`No patient records found for account ID ${account_id}`);
+      }
+
+      return {
+        data: patients.map((patient) => ({
+          id: patient._id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          dOB: patient.dOB,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 || 'Trống',
+          phone: patient.phone,
+          gender:
+            typeof patient.gender === 'boolean'
+              ? patient.gender
+                ? 'Nam'
+                : 'Nữ'
+              : 'Không xác định',
+          nation: patient.nation,
+          work_address: patient.work_address,
+          medical_history: {
+            allergies: patient.medical_history?.allergies || [],
+            personal_history: patient.medical_history?.personal_history || [],
+            family_history: patient.medical_history?.family_history || [],
+          },
+          bloodGroup: patient.bloodGroup
+        })),
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
   async assignToClinic(patient_account_id: string, clinicId: string) {
     try {

@@ -19,7 +19,7 @@ export class Patient extends MongoAbstractDocument {
     @Prop()
     fullname: string;
 
-    @Prop()
+    @Prop({ type: String, enum: ['Chính chủ', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'], default: 'Khác' })
     relation: string;
 
     @Prop({ unique: true, sparse: true })
@@ -61,6 +61,13 @@ export class Patient extends MongoAbstractDocument {
         personal_history: string;
         family_history: string;
     };
+
+    @Prop({
+        type: String,
+        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+        default: 'O+'
+    })
+    bloodGroup: string;
 
     @Prop()
     createdBy: string;

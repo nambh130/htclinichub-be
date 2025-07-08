@@ -5,7 +5,7 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { ClinicUser } from './clinic-user.entity';
+import { User } from './clinic-user.entity';
 import { Clinic } from '../../clinics/models/clinic.entity';
 
 @Entity({ name: 'user_clinic_links' })
@@ -14,9 +14,9 @@ export class UserClinicLink {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => ClinicUser, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'user' })
-  user: ClinicUser;
+  user: User;
 
   @ManyToOne(() => Clinic, (clinic) => clinic.id)
   @JoinColumn({ name: 'clinic' })

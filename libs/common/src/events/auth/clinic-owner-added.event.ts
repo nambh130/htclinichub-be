@@ -14,7 +14,7 @@ export class ClinicOwnerAdded {
   toString() {
     return JSON.stringify({
       clinicId: this.clinicId,
-      onwerId: this.ownerId,
+      ownerId: this.ownerId,
     });
   }
 }

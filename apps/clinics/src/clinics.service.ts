@@ -181,6 +181,11 @@ export class ClinicsService {
     }
   }
 
+  async getClinicByIds(clinicIds: string[]) {
+    const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
+    return clinics;
+  }
+
   async updateClinic(
     id: string,
     updateClinicDto: UpdateClinicDto,
@@ -220,11 +225,13 @@ export class ClinicsService {
       const clinicToUpdate = new Clinic();
       clinicToUpdate.id = id;
 
+      console.log(updateClinicDto)
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
           ...clinic,
           ...updateClinicDto,
+          ownerId: updateClinicDto.ownerId,
           updatedById: userId,
         }, // data to update
       );

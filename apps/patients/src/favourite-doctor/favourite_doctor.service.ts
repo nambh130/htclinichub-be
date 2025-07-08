@@ -4,15 +4,14 @@ import { ClientKafka, MessagePattern, Payload } from '@nestjs/microservices';
 import { FavouriteDoctorRepository } from './favourite_doctor.repository';
 import { FavouriteDoctor } from '../models/favourite_doctor.entity';
 import { firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class FavouriteDoctorService {
     constructor(
         private readonly favouriteDoctorRepository: FavouriteDoctorRepository,
         @Inject(PATIENTS_TO_STAFF_SERVICE)
-        private readonly doctorClient: ClientKafka,
-        // @Inject(AUTH_SERVICE)
-        // private readonly authClient: ClientKafka,
+        private readonly httpService: HttpService
     ) { }
 
     async addFavouriteDoctor(
@@ -42,22 +41,23 @@ export class FavouriteDoctorService {
     }
 
     // @MessagePattern('get-favourite-doctors-list')
-   async getFavouriteDoctorsList(data: { userId: string }) {
+    async getFavouriteDoctorsList(userId: string) {
         try {
-            const favs = await this.favouriteDoctorRepository.find({ 
-                patient_id: data.userId
+            const favs = await this.favouriteDoctorRepository.find({
+                patient_id: userId,
             });
-            const doctorIds = favs.map(f => f.doctor_id);
-            console.log('Sending request with doctor IDs:', doctorIds);
-            
-            return await firstValueFrom(
-                this.doctorClient.send('get-doctors-by-ids', { ids: doctorIds })
-            );
+
+            const doctorIds = favs.map((f) => f.doctor_id);
+
+            console.log('Doctor IDs:', doctorIds);
+
+            return {
+                doctorIds,
+                total: doctorIds.length
+            };
         } catch (error) {
             console.error('Error in getFavouriteDoctorsList:', error);
             throw error;
         }
     }
-
-
 }

@@ -56,19 +56,19 @@ services:
       timeout: 5s
       retries: 10
 
-  # postgres-test:
-  #   image: postgres
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: randompassword
-  #     POSTGRES_DB: authservice
-  #   ports:
-  #     - '5432:5432'
-  #   healthcheck:
-  #     test: ['CMD', 'pg_isready', '-U', 'postgres']
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 10
+  postgres-test:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: authservice
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api-gateway:
     build:
@@ -209,8 +209,10 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    ports:
+      - '3006:3006'
     env_file:
-      - ./apps/analyze-healthcare-data/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy

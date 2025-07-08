@@ -1,30 +1,27 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
-import { ActorType, CreateDoctorAccountDto } from '@app/common';
-import { DoctorStepOneDto } from '@app/common/dto/staffs/create-doctor-profile.dto';
-import { EventPattern } from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ActorEnum } from '@app/common/enum/actor-type';
+import { ClinicService } from '../clinic/clinic.service';
 
-@Controller('staff')
+@Controller()
 export class DoctorEventController {
-  constructor(private readonly doctorService: DoctorService) {}
+  constructor(
+    private readonly doctorService: DoctorService,
+    private readonly clinicService: ClinicService
+  ) { }
 
-  @Get('doctor-account-list')
-  viewDoctorAccountList() {
-    return this.doctorService.getDoctorAccountList();
-  }
-
-  @Post('create-doctor-account')
   @EventPattern('clinic-user-created')
-  createDoctorAccount(
-    @Body()
+  async createDoctorAccount(
+    @Payload()
     payload: ClinicUserCreated,
   ) {
     if (payload.actorType == ActorEnum.DOCTOR) {
       const { email, clinicId, actorType, id: userId } = payload;
-      return this.doctorService.createDoctorAccount(
+      const user = await this.doctorService.createDoctorAccount(
         {
+          id: userId,
           email,
           clinic: clinicId,
           //clinic_id: clinicId,
@@ -35,6 +32,20 @@ export class DoctorEventController {
           actorType: actorType,
         },
       );
+      if (payload.ownerOf) {
+        const clinic = await this.clinicService.getClinicById(payload.ownerOf);
+        clinic.owner = user
+        await this.clinicService.save(clinic);
+      }
     }
+    return null;
+  }
+
+  @EventPattern('user-clinic-joined')
+  userJoinClinic(
+    @Payload() payload: { userId: string, clinicId: string }
+  ) {
+    const { userId, clinicId } = payload
+    this.doctorService.doctorJoinClinic(userId, clinicId)
   }
 }

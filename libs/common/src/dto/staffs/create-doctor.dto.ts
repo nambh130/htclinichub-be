@@ -1,6 +1,7 @@
 import { IsEmail, IsString, MinLength, Matches, IsOptional } from 'class-validator';
 
 export class CreateDoctorAccountDto {
+  id?: string;
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 

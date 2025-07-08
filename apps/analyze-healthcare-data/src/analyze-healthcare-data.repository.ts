@@ -8,7 +8,7 @@ export class AnalyzeHealthcareDataRepository extends MongoAbstractRepository<Vit
     protected readonly logger = new Logger(AnalyzeHealthcareDataRepository.name);
 
     constructor(
-        @InjectModel(Vitals.name)
+        @InjectModel(Vitals.name, 'patientService')
         vitalsModel: Model<VitalsDocument>,
     ) {
         super(vitalsModel);

@@ -30,6 +30,11 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use(cookieParser());
 
+  app.enableCors({
+    origin: ['http://localhost:8081', 'http://localhost:8000'],
+    credentials: true,
+  });
+
   // 4. Start both
   await app.startAllMicroservices();
   await app.listen(3001);

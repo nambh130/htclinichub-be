@@ -21,10 +21,22 @@ class BloodPressureDto {
   diastolic?: number;
 }
 
+class GlucoseLevelDto {
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  min?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  max?: number;
+}
+
 export class UpdateVitalDto {
-//   @IsOptional()
-//   @IsMongoId()
-//   patientId?: string;
+  //   @IsOptional()
+  //   @IsMongoId()
+  //   patientId?: string;
 
   @IsOptional()
   @IsNumber()
@@ -45,6 +57,29 @@ export class UpdateVitalDto {
   @IsOptional()
   @IsNumber()
   temperature?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  min?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  max?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  bmi?: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GlucoseLevelDto)
+  glucoseLevel?: GlucoseLevelDto;
 
   @IsOptional()
   @ValidateNested()

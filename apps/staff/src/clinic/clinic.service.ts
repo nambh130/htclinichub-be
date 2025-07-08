@@ -22,17 +22,21 @@ export class ClinicService extends BaseClinicService<Clinic> {
     );
   }
 
+  async save(clinicData: Partial<Clinic>) {
+    return await this.clinicRepo.create(new Clinic(clinicData));
+  }
+
   async addClinic(clinicData: Partial<Clinic>) {
     const clinic = new Clinic(clinicData);
     const createdClinic = await this.clinicRepo.create(clinic);
 
-    if (createdClinic.ownerId) {
-      const map = this.doctorClinicMapRepo.create({
-        doctor: { id: createdClinic.ownerId },
-        clinic: createdClinic.id,
-      });
-      await this.doctorClinicMapRepo.save(map);
-    }
+    // if (createdClinic.ownerId) {
+    //   const map = this.doctorClinicMapRepo.create({
+    //     doctor: { id: createdClinic.ownerId },
+    //     clinic: createdClinic.id,
+    //   });
+    //   await this.doctorClinicMapRepo.save(map);
+    // }
 
     return createdClinic;
   }

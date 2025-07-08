@@ -27,6 +27,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
+import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
+import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
@@ -124,14 +128,18 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 
     // Import Postgre module con
     FavouriteDoctorModule,
+    ManageMedicalRecordModule
   ],
   controllers: [PatientsController, FavouriteDoctorController],
   providers: [
     PatientsService,
     PatientRepository,
-    FavouriteDoctorService,
+   
+     FavouriteDoctorService,
     FavouriteDoctorRepository,
-    JwtModule,
+   
+    //  ManageMedicalRecordService, ManageMedicalReportRepository,
+     JwtModule,
     PatientAccountRepository,
     PatientClinicLinkRepository,
     {
@@ -142,6 +150,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
   exports: [
     PatientsService,
     PatientRepository,
+    // ManageMedicalRecordService, ManageMedicalReportRepository,
     FavouriteDoctorService,
     FavouriteDoctorRepository,
     PatientAccountRepository,

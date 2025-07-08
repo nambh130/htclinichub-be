@@ -1,39 +1,27 @@
-import { AUTH_SERVICE, INPUT_VITAL_SIGNS_SERVICE } from '@app/common';
+import { INPUT_VITAL_SIGNS_SERVICE, TokenPayload } from '@app/common';
 import { InputVitalDto, UpdateVitalDto } from '@app/common/dto/analyze-healthcare-data';
+import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class AnalyzeHealthcareDataService implements OnModuleInit {
-  constructor(
-    @Inject(INPUT_VITAL_SIGNS_SERVICE)
-    private readonly INPUT_VITAL_SIGNS_Client: ClientKafka,
-    @Inject(AUTH_SERVICE)
-    private readonly authClient: ClientKafka,
-  ) { }
-
-  async onModuleInit() {
-    this.INPUT_VITAL_SIGNS_Client.subscribeToResponseOf('input-vital-signs-data');
-    this.INPUT_VITAL_SIGNS_Client.subscribeToResponseOf('get-vital-signs-data');
-    this.INPUT_VITAL_SIGNS_Client.subscribeToResponseOf('update-vital-signs-data');
-
-    this.authClient.subscribeToResponseOf('authenticate');
-
-    await this.INPUT_VITAL_SIGNS_Client.connect();
-    await this.authClient.connect();
-  }
+export class AnalyzeHealthcareDataService {
+  constructor(@Inject(INPUT_VITAL_SIGNS_SERVICE) private readonly httpService: HttpService) { }
 
   async inputVital(
     inputVitalDto: InputVitalDto,
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
+
+      const payload = { inputVitalDto, currentUser };
+
       const result = await firstValueFrom(
-        this.INPUT_VITAL_SIGNS_Client.send('input-vital-signs-data', { inputVitalDto, userId })
+        this.httpService.post('/analyze-healthcare/input-vital-signs-data', payload)
       );
       console.log('input Vital API-GATEWAY successfully:', result);
-      return result;
+      return result.data;
     } catch (error) {
       console.error('Error creating patient:', error);
       throw error;
@@ -42,36 +30,57 @@ export class AnalyzeHealthcareDataService implements OnModuleInit {
 
   async getVitalSignsDataByPatientId(
     patientId: String,
-    userId: string,
+    currentUser: TokenPayload,
   ) {
     try {
       const result = await firstValueFrom(
-        this.INPUT_VITAL_SIGNS_Client.send('get-vital-signs-data', { patientId, userId })
+        this.httpService.get(`/analyze-healthcare/get-vital-signs-data/${patientId}`)
       );
       console.log('input Vital API-GATEWAY successfully:', result);
-      return result;
+      return result.data;
     } catch (error) {
       console.error('Error creating patient:', error);
       throw error;
     }
   }
 
-    async updateVital(
-      patientId: string,
-      updateVitalDto: UpdateVitalDto,
-      userId: string,
-    ) {
-      try {
-        const result = await firstValueFrom(
-          this.INPUT_VITAL_SIGNS_Client.send('update-vital-signs-data', { patientId, updateVitalDto, userId })
-        );
-        // return {
-        //   "Patient update successfully Patient Services": result,
-        // };
-        return result;
-      } catch (error) {
-        console.error('Error update patient:', error);
-        throw error;
-      }
+    async vitalSignsDataById(
+    id: String,
+    currentUser: TokenPayload,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/analyze-healthcare/get-vital-signs/${id}`)
+      );
+      console.log('input Vital API-GATEWAY successfully:', result);
+      return result.data;
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      throw error;
     }
+  }
+
+  async updateVital(
+    id: string,
+    updateVitalDto: UpdateVitalDto,
+    currentUser: TokenPayload,
+  ) {
+    try {
+
+      const payload = {
+        updateVitalDto,
+        currentUser,
+      };
+      const result = await firstValueFrom(
+        this.httpService.put(`/analyze-healthcare/update-vital-signs-data/:${id}`, payload)
+      );
+      // return {
+      //   "Patient update successfully Patient Services": result,
+      // };
+      return result.data;
+    } catch (error) {
+      console.error('Error update patient:', error);
+      throw error;
+    }
+  }
 }

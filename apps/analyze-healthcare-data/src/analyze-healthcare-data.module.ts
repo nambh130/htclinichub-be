@@ -7,35 +7,39 @@ import { INPUT_VITAL_SIGNS_CONSUMER_GROUP, INPUT_VITAL_SIGNS_SERVICE, LoggerModu
 import { Vitals, VitalsSchema } from '../models';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AnalyzeHealthcareDataRepository } from './analyze-healthcare-data.repository';
-
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/analyze-healthcare-data/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
-        MONGODB_URI: Joi.string().required(),
-        POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
-        POSTGRES_USER: Joi.string().required(),
-        POSTGRES_PASSWORD: Joi.string().required(),
-        POSTGRES_SYNC: Joi.boolean().default(false),
+        PATIENT_SERVICE_URI: Joi.string().required(),
       }),
     }),
-
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get('JWT_EXPIRES_IN')}s`,
+        },
+      }),
+      inject: [ConfigService],
+    }),
     LoggerModule,
 
     // Kết nối Mongo
-    MongoDatabaseModule,
-    MongoDatabaseModule.forFeature([
+    MongoDatabaseModule.forRoot({
+      envKey: 'PATIENT_SERVICE_URI',
+      connectionName: 'patientService',
+    }), MongoDatabaseModule.forFeature([
       {
         name: Vitals.name,
         schema: VitalsSchema,
       },
-    ]),
+    ], 'patientService'),
 
     ClientsModule.registerAsync([
       {
@@ -56,10 +60,10 @@ import { AnalyzeHealthcareDataRepository } from './analyze-healthcare-data.repos
         inject: [ConfigService],
       },
     ]),
-
+    AnalyzeHealthcareDataModule,
   ],
   controllers: [AnalyzeHealthcareDataController],
   providers: [AnalyzeHealthcareDataService, AnalyzeHealthcareDataRepository],
-  exports: [AnalyzeHealthcareDataService]
+  exports: [AnalyzeHealthcareDataService, AnalyzeHealthcareDataRepository]
 })
 export class AnalyzeHealthcareDataModule { }
