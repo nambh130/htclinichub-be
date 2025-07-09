@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ClinicService } from './clinic.service';
 import { ClinicController } from './clinic.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -36,7 +36,7 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
         inject: [ConfigService],
       },
     ]),
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [ClinicController],
   providers: [ClinicService],

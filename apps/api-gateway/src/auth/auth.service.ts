@@ -1,8 +1,11 @@
 import {
+  Get,
   HttpException,
   Inject,
   Injectable,
   OnModuleInit,
+  Param,
+  Query,
   Req,
   Res,
 } from '@nestjs/common';
@@ -14,6 +17,8 @@ import { AUTH_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { Request, Response } from 'express';
+import { AxiosResponse } from 'axios';
+import AuthResponse from '@app/common/dto/auth/login-response.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -75,12 +80,13 @@ export class AuthService implements OnModuleInit {
 
   // ------------------- LOGIN, LOGOUT, REFRESHTOKEN ------------------- 
 
-  async clinicUserLogin(req: Request, res: Response): Promise<any> {
+  async clinicUserLogin(req: Request)
+  : Promise<AxiosResponse<AuthResponse & { refreshToken: string }>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
     const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
 
-    const response = await firstValueFrom(
+    return await firstValueFrom(
       this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, req.body, {
         withCredentials: true,
         headers: {
@@ -95,12 +101,6 @@ export class AuthService implements OnModuleInit {
         })
       )
     );
-    const setCookie = response.headers['set-cookie'];
-    if (setCookie) {
-      res.setHeader('Set-Cookie', setCookie);
-    }
-
-    return res.status(response.status).send(response.data);
   }
 
   async adminLogin(req: Request, res: Response): Promise<any> {
@@ -238,7 +238,7 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
   // ------------------- INVITATIONS ------------------- 
-  async createInvitation(
+  async createInvitationOwner(
     invitationDto: CreateInvitationDto,
     req: Request,
   ): Promise<any> {
@@ -247,7 +247,38 @@ export class AuthService implements OnModuleInit {
     const response = await firstValueFrom(
       this.http
         .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/invitation`,
+          `${this.configService.get('AUTH_SERVICE_URL')}/invitation/clinic`,
+          invitationDto,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true, // optional but doesn't hurt
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+
+  async createInvitationAdmin(
+    invitationDto: CreateInvitationDto,
+    req: Request,
+  ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+
+    const response = await firstValueFrom(
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/invitation/admin`,
           invitationDto,
           {
             headers: {
@@ -292,6 +323,55 @@ export class AuthService implements OnModuleInit {
     );
     return response.data;
   }
+
+  async getInvitationByClinic(
+    @Query() query: Record<string, any>,
+    @Req() req: Request,
+  ): Promise<any> {
+    const url = new URL(
+      `/invitation/clinic`,
+      this.configService.get('AUTH_SERVICE_URL'),
+    );
+
+    Object.entries(query).forEach(([key, value]) =>
+      url.searchParams.append(key, value as string),
+    );
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get(url.toString(), {
+          headers: {
+            Cookie: req.headers.cookie || '', // Forward incoming cookies
+          },
+          withCredentials: true, // still recommended
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      const e = error.response;
+      throw new HttpException(e.data, e.status);
+    }
+  }
+
+  async revokeInvitation(query: Record<string, string>, req: Request): Promise<any> {
+    console.log('body: ', req.body);
+    const response = await firstValueFrom(
+      this.http.patch(`${this.configService.get("AUTH_SERVICE_URL")}/invitation/${query.id}/revoke`, req.body, {
+        headers: {
+          Cookie: req.headers.cookie || '', // Forward incoming cookies
+        },
+        withCredentials: true,
+        timeout: 1000 * 20,
+      }).pipe(
+        catchError(error => {
+          const e = error.response;
+          throw new HttpException(e?.data || 'Error', e?.status || 500);
+        })
+      )
+    );
+    return response.data;
+  }
+
   async invitationCheck(req: Request): Promise<any> {
     console.log('body: ', req.body);
     const response = await firstValueFrom(
@@ -309,7 +389,7 @@ export class AuthService implements OnModuleInit {
   }
   async invitationAccept(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
     const response = await firstValueFrom(
       this.http
@@ -329,18 +409,37 @@ export class AuthService implements OnModuleInit {
           }),
         ),
     );
-    return response.data;
+    return res.status(response.status).send(response.data);
   }
-  //async login(dto: LoginDto): Promise<{ user: UserDocument; token: string }> {
-  //  return safeKafkaCall<{ user: UserDocument; token: string }>(
-  //    this.authClient.send('login', dto),
-  //  );
-  //}
+  //-------------------- ROLES --------------------
+  //
+  async getRolesForClinic(
+    @Query() query: Record<string, any>,
+    @Req() req: Request,
+  ): Promise<any> {
+    const url = new URL(
+      `/roles/clinic`,
+      this.configService.get('AUTH_SERVICE_URL'),
+    );
 
-  //async createUser(userDto: UserDto): Promise<{ user: any }> {
-  //  console.log('Sending create-user message:', userDto);
-  //  return safeKafkaCall<{ user: UserDocument }>(
-  //    this.authClient.send('create-user', userDto),
-  //  );
-  //}
+    Object.entries(query).forEach(([key, value]) =>
+      url.searchParams.append(key, value as string),
+    );
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get(url.toString(), {
+          headers: {
+            Cookie: req.headers.cookie || '', // Forward incoming cookies
+          },
+          withCredentials: true, // still recommended
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      const e = error.response;
+      throw new HttpException(e.data, e.status);
+    }
+  }
+
 }
