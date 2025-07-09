@@ -227,4 +227,19 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('/get-detail-medical-record/:mRid')
+  @UseGuards(JwtAuthGuard)
+  async getDetailMedicalRecordsBymRId(
+    @Param('mRid') mRid: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(mRid, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }

@@ -15,6 +15,7 @@ import { HttpModule } from '@nestjs/axios';
 import { httpClientConfig, HttpModules } from '../api/http.client';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 import { StaffModule } from '../staff/staff.module';
+import { ClinicModule } from '../clinics/clinic.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { StaffModule } from '../staff/staff.module';
     ]),
     AuthModule,
     StaffModule,
+    ClinicModule,
   ],
   controllers: [PatientsController],
   providers: [PatientService, FavouriteDoctorService, ManageMedicalRecordService, ManageMedicalRecordService],

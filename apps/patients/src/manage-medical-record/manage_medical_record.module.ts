@@ -6,16 +6,19 @@ import { ManageMedicalReportRepository } from './manage_medical_record.repositor
 import { ManageMedicalRecord, ManageMedicalRecordSchema } from '../models/manage_medical_record.schema';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PatientsModule } from '../patients.module';
+import { PatientRepository } from '../patients.repository';
+import { Patient, PatientSchema } from '../models';
 
 @Module({
     imports: [
         LoggerModule,
-
         MongoDatabaseModule.forFeature([
             {
                 name: ManageMedicalRecord.name,
                 schema: ManageMedicalRecordSchema,
             },
+            { name: Patient.name, schema: PatientSchema },
         ], 'patientService'), // ✅ Dùng connectionName giống Patient
 
         ClientsModule.registerAsync([
@@ -44,7 +47,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ],
 
     controllers: [ManageMedicalRecordController],
-    providers: [ManageMedicalRecordService, ManageMedicalReportRepository],
+    providers: [ManageMedicalRecordService, ManageMedicalReportRepository,PatientRepository],
     exports: [ManageMedicalRecordService, ManageMedicalReportRepository],
 })
 export class ManageMedicalRecordModule { }

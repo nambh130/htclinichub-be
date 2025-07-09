@@ -145,6 +145,7 @@ export class ManageDoctorScheduleService extends BaseService {
     workShift.doctor_clinic_link_id = doctorClinicLink;
     workShift.startTime = new Date(dto.startTime);
     workShift.duration = dto.duration;
+    workShift.space = dto.space || 0;
     workShift.createdById = currentUser.userId;
     workShift.createdByType = currentUser.actorType;
     return await this.manageDoctorScheduleRepository.create(workShift);
@@ -206,8 +207,8 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException(`Doctor with id ${doctorId} not found`);
     }
 
-    const start = dayjs(date).startOf('day').toDate();
-    const end = dayjs(date).endOf('day').toDate();
+    const start = dayjs.tz(date, 'Asia/Ho_Chi_Minh').startOf('day').toDate();
+    const end = dayjs.tz(date, 'Asia/Ho_Chi_Minh').endOf('day').toDate();
 
     const { data: shifts } = await this.manageDoctorScheduleRepository.findAll({
       where: {

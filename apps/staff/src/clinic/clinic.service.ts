@@ -40,4 +40,8 @@ export class ClinicService extends BaseClinicService<Clinic> {
 
     return createdClinic;
   }
+
+  // async getClinicById(clinicId: string): Promise<Clinic | null> {
+  //   return this.clinicRepo.findOne({ where: { id: clinicId } });
+  // }
 }

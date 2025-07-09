@@ -13,6 +13,8 @@ export interface Doctor {
 
 export interface Clinic {
     id: string;
+    name: string;
+    location: string;
 }
 
 export interface MedicalRecord {

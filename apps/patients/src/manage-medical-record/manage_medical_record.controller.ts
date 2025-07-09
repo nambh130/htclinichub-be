@@ -11,7 +11,21 @@ export class ManageMedicalRecordController {
     @Param('userId') userId: string,
   ) {
     try {
-      const result = await this.manageMedicalRecordService.getMedicalRecordsByUserId(userId);
+      const result = await this.manageMedicalRecordService.getGroupedMedicalRecordsByUserId(userId);
+    
+      return result;
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-detail-medical-record/:mRid')
+  async getDetailMedicalRecordsBymRId(
+    @Param('mRid') mRid: string,
+  ) {
+    try {
+      const result = await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(mRid);
     
       return result;
     } catch (error) {
