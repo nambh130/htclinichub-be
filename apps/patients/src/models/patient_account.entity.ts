@@ -1,10 +1,8 @@
+import { PostgresAbstractEntity } from '@app/common';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class PatientAccount {
-  @PrimaryGeneratedColumn()
-  patient_account_id: number;
-
+export class PatientAccount extends PostgresAbstractEntity<PatientAccount> {
   @Column({ length: 100, unique: true })
   username: string;
 
@@ -19,14 +17,4 @@ export class PatientAccount {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   updatedBy?: string;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 }

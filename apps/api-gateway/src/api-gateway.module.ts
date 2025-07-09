@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { LoggerModule } from '@app/common';
+import { CLINIC_SERVICE, LoggerModule } from '@app/common';
 import { AuthModule } from './auth/auth.module';
 import { StaffModule } from './staff/staff.module';
 import { PatientsModule } from './patients/patients.module';
@@ -29,6 +29,9 @@ import { ClinicModule } from './clinics/clinic.module';
 
         PATIENT_SERVICE_HOST: Joi.string().required(),
         PATIENT_SERVICE_PORT: Joi.number().required(),
+
+        CLINIC_SERVICE_HOST: Joi.string().required(),
+        CLINIC_SERVICE_PORT: Joi.number().required(),
       }),
     }),
 

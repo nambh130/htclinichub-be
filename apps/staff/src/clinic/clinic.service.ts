@@ -30,13 +30,13 @@ export class ClinicService extends BaseClinicService<Clinic> {
     const clinic = new Clinic(clinicData);
     const createdClinic = await this.clinicRepo.create(clinic);
 
-    // if (createdClinic.ownerId) {
-    //   const map = this.doctorClinicMapRepo.create({
-    //     doctor: { id: createdClinic.ownerId },
-    //     clinic: createdClinic.id,
-    //   });
-    //   await this.doctorClinicMapRepo.save(map);
-    // }
+    if (createdClinic.ownerId) {
+      const map = this.doctorClinicMapRepo.create({
+        doctor: { id: createdClinic.ownerId },
+        clinic: { id: createdClinic.id }, // 👈 truyền object
+      });
+      await this.doctorClinicMapRepo.save(map);
+    }
 
     return createdClinic;
   }

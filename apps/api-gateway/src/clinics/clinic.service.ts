@@ -29,7 +29,7 @@ export class ClinicService implements OnModuleInit {
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinics-by-ids');
-
+    this.clinicClient.subscribeToResponseOf('get-clinics-by-ids.reply');
     this.authClient.subscribeToResponseOf('authenticate');
 
     await this.authClient.connect();
@@ -71,7 +71,7 @@ export class ClinicService implements OnModuleInit {
   async getClinicByIds(
     ids: string[],
   ): Promise<any> {
-    console.log({ids})
+    console.log({ ids })
     return firstValueFrom(
       this.clinicClient.send('get-clinics-by-ids', { ids }),
     );
@@ -92,4 +92,5 @@ export class ClinicService implements OnModuleInit {
       this.clinicClient.send('delete-clinic', { id, userId }),
     );
   }
+
 }

@@ -20,11 +20,10 @@ export class EmployeeService extends BaseService {
     super();
   }
 
-  // async viewEmployeeAccountList(): Promise<any[]> {
-  //   const employees = await this.employeeRepository.findAll();
-
-  //   return employees;
-  // }
+  async viewEmployeeAccountList(): Promise<Employee[]> {
+    const { data } = await this.employeeRepository.findAll();
+    return data;
+  }
 
   async createEmployeeAccount(
     dto: CreateEmployeeAccountDto,

@@ -23,7 +23,7 @@ export class DoctorClinicMap {
   doctor: Doctor;
 
   // @Column({ name: 'clinic_id' })
-  // clinic: string;
+  // clinicId: string;
 
   @ManyToOne(() => Clinic, (clinic) => clinic.doctorClinicMaps, { eager: false })
   @JoinColumn({ name: 'clinic_id' })

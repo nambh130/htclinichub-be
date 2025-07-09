@@ -31,7 +31,7 @@ export class ManageDoctorScheduleController {
       const shift = await this.manageDoctorScheduleService.getDetailShiftService(shiftId);
       return shift;
     } catch (error) {
-      console.error('Error in getPatientById:', error);
+      console.error('Error in:', error);
       throw error;
     }
   }
@@ -91,4 +91,19 @@ export class ManageDoctorScheduleController {
   ) {
     return this.manageDoctorScheduleService.getShiftsInDate(date, doctorId);
   }
+
+  @Get('/doctor/shifts-by-doctor-id-and-clinic-id/:doctorId/:clinicId')
+  getShiftsByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+  ) {
+    return this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(doctorId, clinicId);
+  }
+
+  @Put('/doctor/shift/:shiftId/status/fully-booked')
+  updateShift(@Param('shiftId') shiftId: string) {
+    return this.manageDoctorScheduleService.updateShifttFull(shiftId);
+  }
+
+ 
 }

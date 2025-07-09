@@ -8,12 +8,18 @@ import { Doctor_WorkShift } from '../../models/doctor_workshift.entity';
 export class ManageDoctorScheduleRepository extends PostgresAbstractRepository<Doctor_WorkShift> {
   protected readonly logger = new Logger(ManageDoctorScheduleRepository.name);
 
-
   constructor(
     @InjectRepository(Doctor_WorkShift)
     itemsRepository: Repository<Doctor_WorkShift>,
     entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
+  }
+
+  async findByDoctorClinicLink(mappingId: string) {
+    return this.entityRepository.find({
+      where: { doctor_clinic_link_id: { id: mappingId } },
+      order: { startTime: 'ASC' },
+    });
   }
 }

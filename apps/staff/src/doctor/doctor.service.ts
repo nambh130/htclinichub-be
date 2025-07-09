@@ -141,17 +141,31 @@ export class DoctorService extends BaseService {
     }
   }
 
-  async getClinicsByDoctor(doctorId: string) {
-    const doctor = await this.doctorRepository.findOne(
-      { id: doctorId }, { clinics: true }
-    );
+ async getClinicsByDoctor(doctorId: string) {
+  const doctor = await this.doctorRepository.findOne(
+    { id: doctorId },
+    ['clinics', 'clinics.clinic', 'clinics.doctor'] // không cần 'clinics.doctor' nếu không dùng đến
+  );
 
-    if (!doctor) {
-      throw new NotFoundException('Doctor not found');
-    }
-
-    return doctor.clinics;
+  if (!doctor) {
+    throw new NotFoundException('Doctor not found');
   }
+
+  // Đảm bảo clinics tồn tại
+  const clinicLinks = doctor.clinics.map((clinicMap) => ({
+    id: clinicMap.id,              
+    clinic: {
+      id: clinicMap.clinic?.id ?? '',             
+      name: clinicMap.clinic?.name ?? '',
+      location: clinicMap.clinic?.location ?? '',
+      phone: clinicMap.clinic?.phone ?? '',
+      email: clinicMap.clinic?.email ?? '',
+      ownerId: clinicMap.clinic?.ownerId ?? '',
+    },
+  }));
+
+  return clinicLinks;
+}
 
   async doctorJoinClinic(doctorId: string, clinicId: string) {
     const doctor = await this.doctorRepository.findOne(
@@ -284,7 +298,7 @@ export class DoctorService extends BaseService {
   }
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
-        console.log('[DEBUG] doctorId truyền vào Doctor Service:', doctorId);
+    console.log('[DEBUG] doctorId truyền vào Doctor Service:', doctorId);
 
     try {
       const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
@@ -474,18 +488,18 @@ export class DoctorService extends BaseService {
     }
   }
 
-async getDoctorsByIds(data: { ids: number[] }) {
+  async getDoctorsByIds(data: { ids: number[] }) {
     console.log('This is a mock response from Doctor Service, received IDs:', data.ids);
 
     const formatData = data.ids.map(id => ({
-        name: `Doctor ${id}`,
-        email: `doctor${id}@example.com`,
+      name: `Doctor ${id}`,
+      email: `doctor${id}@example.com`,
     }));
 
     console.log('Formatted doctor mock data:', formatData);
 
     return formatData;
-}
+  }
 
 
   async addDoctorDegree(

@@ -10,8 +10,11 @@ import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class FavouriteDoctorService {
-  constructor(@Inject(PATIENT_SERVICE) private readonly httpService: HttpService) { }
+export class FavouriteDoctorService  {
+   constructor(
+    @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
+
+   ) { }
   // Patient-related methods
   async addFavouriteDoctor(
     user: TokenPayload,

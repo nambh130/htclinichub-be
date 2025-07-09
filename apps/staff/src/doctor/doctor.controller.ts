@@ -16,7 +16,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('staff/doctor')
 export class DoctorController {
-  constructor(private readonly doctorService: DoctorService) { }
+  constructor(private readonly doctorService: DoctorService) {}
 
   @Get('account-list')
   getDoctorAccountList(
@@ -51,8 +51,10 @@ export class DoctorController {
     const links = await this.doctorService.getClinicsByDoctor(doctorId);
     const transformed = links.map(item => {return {
       linkId: item.id,
-      clinic: item.clinic
+      clinic: item.clinic.id
     }});
+
+    console.log('Transformed links:', transformed);
 
     return transformed
   }

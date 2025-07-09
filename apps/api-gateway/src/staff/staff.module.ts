@@ -66,7 +66,7 @@ import { ClinicModule } from '../clinics/clinic.module';
     ClinicModule,
   ],
   controllers: [StaffController],
-  providers: [StaffService, ManageDoctorScheduleService],
-  exports: [StaffService, ManageDoctorScheduleService],
+  providers: [StaffService,ManageDoctorScheduleService],
+   exports: [StaffService]
 })
-export class StaffModule { }
+export class StaffModule {}

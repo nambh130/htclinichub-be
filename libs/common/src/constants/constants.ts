@@ -1,7 +1,8 @@
 // Service names
 export const AUTH_SERVICE = 'auth';
 export const RESERVATIONS_SERVICE = 'reservations';
-export const CLINIC_SERVICE = ' clinics';
+export const CLINIC_SERVICE = 'clinics';
+
 export const PATIENT_SERVICE = 'patients';
 export const STAFF_SERVICE = 'staffs';
 export const PATIENTS_TO_STAFF_SERVICE = 'patients-to-staff';
@@ -12,7 +13,6 @@ export const MEDIA_SERVICE = 'media';
 
 //Service ports
 export const STAFF_SERVICE_PORT = 3003;
-
 
 //Consumer group names
 export const RESERVATIONS_CONSUMER_GROUP = 'reservations-consumer';

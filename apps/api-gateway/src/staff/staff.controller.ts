@@ -85,11 +85,13 @@ export class StaffController {
       await this.staffService.getClinicIdsByDoctor({ userId: user.userId });
 
     const clinicIds = doctorClinicsLink.map((data) => data.clinic);
-    // Get clinic infos
+  console.log("Clinic Ids 1", clinicIds, doctorClinicsLink);
     const clinics: IClinic[] = await this.clinicService.getClinicByIds(clinicIds);
+    console.log("Clinics Ids", clinics);
 
     const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
       const clinicInfo = clinics.find((c) => c.id === link.clinic);
+      // console.log("Check", clinicInfo);
       const isAdmin = clinicInfo?.ownerId === user.userId;
       console.log(clinicInfo, isAdmin)
       return {
@@ -389,4 +391,22 @@ export class StaffController {
       throw error;
     }
   }
+
+  @Get('doctor/shifts/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getShiftsByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(doctorId, clinicId, user);
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+  
+  
 }

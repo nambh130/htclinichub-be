@@ -3,8 +3,22 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsService } from './patients.service';
 import { PatientsController } from './patients.controller';
-import { FavouriteDoctor, Patient, PatientSchema } from './models';
-import { MongoDatabaseModule, LoggerModule, PATIENT_SERVICE, PostgresDatabaseModule, PATIENTS_TO_STAFF_SERVICE, PATIENTS_TO_STAFF_CLIENT, PATIENTS_TO_STAFF_CONSUMER } from '@app/common';
+import {
+  FavouriteDoctor,
+  Patient,
+  PatientAccount,
+  PatientSchema,
+} from './models';
+import {
+  MongoDatabaseModule,
+  LoggerModule,
+  PATIENT_SERVICE,
+  PostgresDatabaseModule,
+  PATIENTS_TO_STAFF_SERVICE,
+  PATIENTS_TO_STAFF_CLIENT,
+  PATIENTS_TO_STAFF_CONSUMER,
+  CLINIC_SERVICE,
+} from '@app/common';
 import * as Joi from 'joi';
 import { FavouriteDoctorModule } from './favourite-doctor/favourite_doctor.module';
 import { PatientRepository } from './patients.repository';
@@ -12,14 +26,23 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
-import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
 import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
+import { PatientClinicLink } from './models/patient_clinic_link.entity';
+import { PatientAccountRepository } from './repositories/patient-account.repositoty';
+import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
+import { HttpModule, HttpService } from '@nestjs/axios';
+import { Appointment } from './models/appointment.entity';
+import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
+import { AppointmentRepository } from './repositories/appointment.repository';
 
 @Module({
   imports: [
+    HttpModule.register({
+      baseURL: 'http://clinics:3007',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -44,16 +67,22 @@ import { ManageMedicalReportRepository } from './manage-medical-record/manage_me
       envKey: 'PATIENT_SERVICE_URI',
       connectionName: 'patientService',
     }),
-    MongoDatabaseModule.forFeature([
-      {
-        name: Patient.name,
-        schema: PatientSchema,
-      },
-    ], 'patientService'),
+    MongoDatabaseModule.forFeature(
+      [
+        {
+          name: Patient.name,
+          schema: PatientSchema,
+        },
+      ],
+      'patientService',
+    ),
 
     PostgresDatabaseModule.register('PATIENT_SERVICE_DB'),
     PostgresDatabaseModule.forFeature([
       FavouriteDoctor,
+      PatientAccount,
+      PatientClinicLink,
+      Appointment,
     ]),
 
     ClientsModule.registerAsync([
@@ -89,11 +118,11 @@ import { ManageMedicalReportRepository } from './manage-medical-record/manage_me
             },
             consumer: {
               groupId: PATIENTS_TO_STAFF_CONSUMER,
-              allowAutoTopicCreation: true
+              allowAutoTopicCreation: true,
             },
             subscribe: {
-              fromBeginning: true
-            }
+              fromBeginning: true,
+            },
           },
         }),
         inject: [ConfigService],
@@ -102,18 +131,35 @@ import { ManageMedicalReportRepository } from './manage-medical-record/manage_me
 
     // Import Postgre module con
     FavouriteDoctorModule,
-    ManageMedicalRecordModule
+    ManageMedicalRecordModule,
   ],
   controllers: [PatientsController, FavouriteDoctorController],
-  providers: [PatientsService, PatientRepository,
-     FavouriteDoctorService, FavouriteDoctorRepository,
+  providers: [
+    PatientsService,
+    PatientRepository,
+
+    FavouriteDoctorService,
+    FavouriteDoctorRepository,
+
     //  ManageMedicalRecordService, ManageMedicalReportRepository,
-     JwtModule],
+    JwtModule,
+    PatientAccountRepository,
+    PatientClinicLinkRepository,
+    {
+      provide: CLINIC_SERVICE,
+      useExisting: HttpService,
+    },
+    AppointmentRepository,
+  ],
   exports: [
     PatientsService,
     PatientRepository,
     // ManageMedicalRecordService, ManageMedicalReportRepository,
-    FavouriteDoctorService, FavouriteDoctorRepository,
+    FavouriteDoctorService,
+    FavouriteDoctorRepository,
+    PatientAccountRepository,
+    PatientClinicLinkRepository,
+    AppointmentRepository,
   ],
 })
-export class PatientsModule { }
+export class PatientsModule {}

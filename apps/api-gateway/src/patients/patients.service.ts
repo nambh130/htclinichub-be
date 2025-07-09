@@ -13,12 +13,13 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class PatientService {
   constructor(
-    @Inject(PATIENT_SERVICE)private readonly httpService: HttpService) { }
+    @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
+  ) {}
 
   // Patient-related methods
   async createPatient(
     createPatientDto: CreatePatientDto,
-    currentUser: TokenPayload
+    currentUser: TokenPayload,
   ) {
     try {
       const payload = { createPatientDto, currentUser };
@@ -36,7 +37,7 @@ export class PatientService {
   async updatePatient(
     patient_account_id: string,
     updatePatientDto: UpdatePatientDto,
-    currentUser: TokenPayload
+    currentUser: TokenPayload,
   ) {
     try {
       const payload = {
@@ -45,7 +46,10 @@ export class PatientService {
       };
 
       const result = await firstValueFrom(
-        this.httpService.put(`/patient-service/update-patient/${patient_account_id}`, payload),
+        this.httpService.put(
+          `/patient-service/update-patient/${patient_account_id}`,
+          payload,
+        ),
       );
 
       return result.data;
@@ -58,22 +62,22 @@ export class PatientService {
   async deletePatient(id: string, currentUser: TokenPayload) {
     try {
       const response = await firstValueFrom(
-        this.httpService.delete(`/patient-service/delete-patient/${id}`)
+        this.httpService.delete(`/patient-service/delete-patient/${id}`),
       );
 
       return response.data;
     } catch (error) {
-      console.error('Error deleting patient:', error?.response?.data || error.message);
+      console.error(
+        'Error deleting patient:',
+        error?.response?.data || error.message,
+      );
     }
   }
 
-  async getPatientById(
-    id: string,
-    currentUser: TokenPayload,
-  ) {
+  async getPatientById(id: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-id/${id}`)
+        this.httpService.get(`/patient-service/get-patient-by-id/${id}`),
       );
       return result.data;
     } catch (error) {
@@ -82,13 +86,12 @@ export class PatientService {
     }
   }
 
-  async getPatientByFullName(
-    fullName: string,
-    currentUser: TokenPayload,
-  ) {
+  async getPatientByFullName(fullName: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-fullName/${fullName}`)
+        this.httpService.get(
+          `/patient-service/get-patient-by-fullName/${fullName}`,
+        ),
       );
       return result.data;
     } catch (error) {
@@ -103,7 +106,9 @@ export class PatientService {
   ) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-phone/${phoneNumber}`)
+        this.httpService.get(
+          `/patient-service/get-patient-by-phone/${phoneNumber}`,
+        ),
       );
       return result.data;
     } catch (error) {
@@ -112,13 +117,10 @@ export class PatientService {
     }
   }
 
-   async getPatientByCid(
-    cid: string,
-    currentUser: TokenPayload,
-  ) {
+  async getPatientByCid(cid: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-cid/${cid}`)
+        this.httpService.get(`/patient-service/get-patient-by-cid/${cid}`),
       );
       return result.data;
     } catch (error) {
@@ -127,13 +129,10 @@ export class PatientService {
     }
   }
 
-  async getPatientByHid(
-    hid: string,
-    currentUser: TokenPayload,
-  ) {
+  async getPatientByHid(hid: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-hid/${hid}`)
+        this.httpService.get(`/patient-service/get-patient-by-hid/${hid}`),
       );
       return result.data;
     } catch (error) {
@@ -142,12 +141,74 @@ export class PatientService {
     }
   }
 
-  async getAllPatients(
-    currentUser: TokenPayload,
-  ) {
+  async getAllPatients(currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get('/patient-service/get-all-patients')
+        this.httpService.get('/patient-service/get-all-patients'),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  //khanhlq
+  async assignToClinic(currentUser: TokenPayload, clinicId: string) {
+    try {
+      const payload = { userId: currentUser.userId };
+      const result = await firstValueFrom(
+        this.httpService.post(
+          `/patient-service/assign-to-clinic/${clinicId}`,
+          payload,
+        ),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientClinics(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-clinics/${id}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientAccount(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-account/${id}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  async getPatientAccounts() {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-accounts`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientByAccountId(id: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/get-patient-by-account-id/${id}`),
       );
       return result.data;
     } catch (error) {

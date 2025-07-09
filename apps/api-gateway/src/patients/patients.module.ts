@@ -11,9 +11,9 @@ import {
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
-import { HttpModule } from '@nestjs/axios';
 import { httpClientConfig, HttpModules } from '../api/http.client';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { AppointmentService } from './appointment/appointment.service';
 import { StaffModule } from '../staff/staff.module';
 import { ClinicModule } from '../clinics/clinic.module';
 
@@ -78,7 +78,18 @@ import { ClinicModule } from '../clinics/clinic.module';
     ClinicModule,
   ],
   controllers: [PatientsController],
-  providers: [PatientService, FavouriteDoctorService, ManageMedicalRecordService, ManageMedicalRecordService],
-  exports: [PatientService, FavouriteDoctorService, ManageMedicalRecordService],
+  providers: [
+    PatientService,
+    FavouriteDoctorService,
+    ManageMedicalRecordService, ManageMedicalRecordService,
+    AppointmentService,
+  ],
+  exports: [
+    PatientService,
+    FavouriteDoctorService,
+    ManageMedicalRecordService,
+    AppointmentService,
+
+  ],
 })
 export class PatientsModule { }
