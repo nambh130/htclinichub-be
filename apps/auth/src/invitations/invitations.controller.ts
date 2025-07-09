@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Inject, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { InvitationsService } from "./invitations.service";
 import { CreateInvitationDto } from "./dto/create-invitaion.dto";
 import { CurrentUser, JwtAuthGuard, TokenPayload } from "@app/common";
@@ -6,11 +6,10 @@ import { Authorizations } from "../guards/authorization.decorator";
 import { AuthorizationGuard } from "../guards/authorization.guard";
 import { ActorEnum } from "@app/common/enum/actor-type";
 import { InvitationByClinicDto } from "./dto/invitation-by-clinic.dto";
-import { Between, FindOptionsWhere, ILike, In, LessThan, MoreThan } from "typeorm";
+import { Between, FindOptionsWhere, ILike, LessThan, MoreThan } from "typeorm";
 import { EmployeeInvitation } from "./models/invitation.entity";
 import { ClinicUsersService } from "../clinic-users/clinic-users.service";
 import { GetByIdDto } from "./dto/id-query.dto";
-import { ClinicsService } from "../clinics/clinics.service";
 import { RolesService } from "../roles/roles.service";
 import { P } from "pino";
 

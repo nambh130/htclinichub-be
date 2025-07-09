@@ -262,9 +262,15 @@ export class AuthController {
   @Post('forget-password')
   async recoverPassword(@Body() dto: PasswordRecoveryDto) {
 
-    const checkUser = await this.userService.findUserByEmail(dto.email);
-    if (!checkUser) {
-      throw new BadRequestException("Email not found!");
+    try {
+      const checkUser = await this.userService.find({ email: dto.email, actorType: dto.actorType });
+    } catch (error) {
+
+      throw new BadRequestException({
+        statusCode: 400,
+        message: "Email not found",
+        ERR_CODE: "ENTITY_NOT_FOUND",
+      });
     }
 
     const selector = randomBytes(16).toString('hex'); // used to look up the token
@@ -296,7 +302,7 @@ export class AuthController {
     );
 
     if (!verifyToken) {
-      throw new BadRequestException("Invalid OTP");
+      throw new BadRequestException("Invalid token");
     }
 
     const user = await this.userService.find({ email: email, actorType: userType });

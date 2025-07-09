@@ -26,6 +26,15 @@
         "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
     },
+    "clinics": {
+      "type": "application",
+      "root": "apps/clinics",
+      "entryFile": "main",
+      "sourceRoot": "apps/clinics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
@@ -33,6 +42,20 @@
       "sourceRoot": "libs/common/src",
       "compilerOptions": {
         "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
+    "communication": {
+      "type": "application",
+      "root": "apps/communication",
+      "entryFile": "main",
+      "sourceRoot": "apps/communication/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/communication/tsconfig.app.json",
+        "assets": [
+        {
+          "include": "**/*.hbs",
+           "outDir": "./dist/apps/communication"
+        }]
       }
     },
     "media": {
@@ -60,15 +83,6 @@
       "sourceRoot": "apps/staff/src",
       "compilerOptions": {
         "tsConfigPath": "apps/staff/tsconfig.app.json"
-      }
-    },
-    "clinics": {
-      "type": "application",
-      "root": "apps/clinics",
-      "entryFile": "main",
-      "sourceRoot": "apps/clinics/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/clinics/tsconfig.app.json"
       }
     }
   },
