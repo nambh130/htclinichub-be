@@ -40,7 +40,6 @@ export class AuthService implements OnModuleInit {
   async requestOtp(
     requestLoginOtp: LoginOtpRequestDto,
   ): Promise<{ success: boolean }> {
-    console.log('Test env: ', this.configService.get('AUTH_SERVICE_URL'));
     const response = await firstValueFrom(
       this.http
         .post(
@@ -107,7 +106,6 @@ export class AuthService implements OnModuleInit {
     const forwardedFor = req.headers['x-forwarded-for'] as string;
     const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
 
-    console.log("body: ", req.body)
     const response = await firstValueFrom(
       this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/admin/login`, req.body, {
         withCredentials: true,
@@ -135,7 +133,6 @@ export class AuthService implements OnModuleInit {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
     const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
-    console.log("check: ", req.headers.cookie);
 
     const response = await firstValueFrom(
       this.http.post(
@@ -353,7 +350,6 @@ export class AuthService implements OnModuleInit {
   }
 
   async revokeInvitation(query: Record<string, string>, req: Request): Promise<any> {
-    console.log('body: ', req.body);
     const response = await firstValueFrom(
       this.http.patch(`${this.configService.get("AUTH_SERVICE_URL")}/invitation/${query.id}/revoke`, req.body, {
         headers: {
@@ -372,7 +368,6 @@ export class AuthService implements OnModuleInit {
   }
 
   async invitationCheck(req: Request): Promise<any> {
-    console.log('body: ', req.body);
     const response = await firstValueFrom(
       this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/check`, req.body, {
         withCredentials: true,
