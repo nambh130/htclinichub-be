@@ -211,7 +211,50 @@ export class PatientsService {
 
   async getPatientById(id: string) {
     if (!id) {
-      throw new NotFoundException('Invalid id');
+      throw new NotFoundException('Not found id');
+    }
+
+    try {
+      const patient = await this.patientsRepository.findOne({ patient_account_id: id });
+
+      if (!patient) {
+        throw new NotFoundException(`Patient with id ${id} not found`);
+      }
+
+      return {
+        data: {
+          id: patient._id,
+          patient_account_id: patient.patient_account_id,
+          fullName: patient.fullname,
+          relation: patient.relation,
+          dOB: patient.dOB,
+          citizen_id: patient.citizen_id,
+          health_insurance_id: patient.health_insurance_id,
+          ethnicity: patient.ethnicity,
+          marital_status: patient.marital_status,
+          address1: patient.address1,
+          address2: patient.address2 ? patient.address2 : 'Trống',
+          phone: patient.phone,
+          gender: patient.gender ? 'Nam' : 'Nữ',
+          nation: patient.nation,
+          work_address: patient.work_address,
+          medical_history: {
+            allergies: patient.medical_history.allergies,
+            personal_history: patient.medical_history.personal_history,
+            family_history: patient.medical_history.family_history,
+          },
+          bloodGroup: patient.bloodGroup,
+        },
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getPatientProfileById(id: string) {
+    if (!id) {
+      throw new NotFoundException('Not found id');
     }
 
     try {
@@ -251,6 +294,7 @@ export class PatientsService {
       throw error;
     }
   }
+  
 
   async getPatientByFullName(fullName: string) {
     if (!fullName) {
@@ -797,7 +841,7 @@ export class PatientsService {
 
       firstValueFrom(
         this.httpService.get(
-          `http://patient:3005/patient-service/get-patient-by-id/${appointment.patient_profile_id}`,
+          `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
         ),
       )
         .then((res) => {

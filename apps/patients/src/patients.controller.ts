@@ -120,6 +120,17 @@ export class PatientsController {
     }
   }
 
+  @Get('get-patientProfile-by-id/:id')
+  async getPatientProfileById(@Param('id') id: string) {
+    try {
+      const patient = await this.patientsService.getPatientProfileById(id);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
   @Get('get-patient-by-fullName/:fullName')
   async getPatientByFullName(@Param('fullName') fullName: string) {
     try {
