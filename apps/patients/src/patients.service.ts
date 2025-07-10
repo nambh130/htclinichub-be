@@ -215,7 +215,7 @@ export class PatientsService {
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({_id: id });
+      const patient = await this.patientsRepository.findOne({ _id: id });
 
       if (!patient) {
         throw new NotFoundException(`Patient with id ${id} not found`);
@@ -294,7 +294,6 @@ export class PatientsService {
       throw error;
     }
   }
-  
 
   async getPatientByFullName(fullName: string) {
     if (!fullName) {
@@ -875,6 +874,170 @@ export class PatientsService {
     const result = await this.appointmentRepository.update(appointment, {
       status: 'cancel',
     });
+    return result;
+  }
+
+  async getPendingAppointments(patientAccountId: string) {
+    const profiles = await this.getPatientByAccountId(patientAccountId);
+    if (!profiles || !profiles.length) return [];
+
+    const profileIds = profiles.map((p) => p._id.toString());
+    const appointments = await this.appointmentRepository.findMany({
+      patient_profile_id: In(profileIds),
+      status: 'pending',
+    });
+
+    const result = await Promise.all(
+      appointments.map(async (appointment) => {
+        const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
+          firstValueFrom(
+            this.httpService.get(
+              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Clinic API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Doctor API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Slot API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Profile API error:', err);
+              return null;
+            }),
+        ]);
+        return {
+          id: appointment.id,
+          reason: appointment.reason,
+          symptoms: appointment.symptoms,
+          status: appointment.status,
+          note: appointment.note,
+          createdAt: appointment.createdAt,
+          clinic: clinicRes,
+          doctor: doctorRes,
+          slot: slotRes,
+          profile: profileRes,
+        };
+      }),
+    );
+    return result;
+  }
+
+  async getDoneAppointments(patientAccountId: string) {
+    const profiles = await this.getPatientByAccountId(patientAccountId);
+    if (!profiles || !profiles.length) return [];
+
+    const profileIds = profiles.map((p) => p._id.toString());
+    const appointments = await this.appointmentRepository.findMany({
+      patient_profile_id: In(profileIds),
+      status: 'done',
+    });
+
+    const result = await Promise.all(
+      appointments.map(async (appointment) => {
+        const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
+          firstValueFrom(
+            this.httpService.get(
+              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Clinic API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Doctor API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Slot API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Profile API error:', err);
+              return null;
+            }),
+        ]);
+        return {
+          id: appointment.id,
+          reason: appointment.reason,
+          symptoms: appointment.symptoms,
+          status: appointment.status,
+          note: appointment.note,
+          createdAt: appointment.createdAt,
+          clinic: clinicRes,
+          doctor: doctorRes,
+          slot: slotRes,
+          profile: profileRes,
+        };
+      }),
+    );
     return result;
   }
 }

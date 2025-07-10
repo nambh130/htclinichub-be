@@ -338,9 +338,10 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      
-      const result =
-        await this.appointmentService.createAppointment(createAppointmentDto,user);
+      const result = await this.appointmentService.createAppointment(
+        createAppointmentDto,
+        user,
+      );
       return result;
     } catch (error) {
       console.error('Error creating appointment:', error);
@@ -352,7 +353,8 @@ export class PatientsController {
   @UseGuards(JwtAuthGuard)
   async getAppointments(@Param('id') id: string) {
     try {
-      const result = await this.appointmentService.getAppointmentsByPatientAccountId(id);
+      const result =
+        await this.appointmentService.getAppointmentsByPatientAccountId(id);
       return result;
     } catch (error) {
       console.error('Error retrieving appointments:', error);
@@ -374,7 +376,37 @@ export class PatientsController {
   @UseGuards(JwtAuthGuard)
   async updateAppointment(@Param('appoinmentId') appoinmentId: string) {
     try {
-      const result = await this.appointmentService.cancelAppointment(appoinmentId);
+      const result =
+        await this.appointmentService.cancelAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-appointments/pending/:patientAccountId')
+  @UseGuards(JwtAuthGuard)
+  async getPendingAppointments(
+    @Param('patientAccountId') patientAccountId: string,
+  ) {
+    try {
+      const result =
+        await this.appointmentService.getPendingAppointments(patientAccountId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+  @Get('get-appointments/done/:patientAccountId')
+  @UseGuards(JwtAuthGuard)
+  async getDoneAppointments(
+    @Param('patientAccountId') patientAccountId: string,
+  ) {
+    try {
+      const result =
+        await this.appointmentService.getDoneAppointments(patientAccountId);
       return result;
     } catch (error) {
       console.error('Error retrieving appointments:', error);

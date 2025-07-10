@@ -52,4 +52,30 @@ export class AppointmentService {
     );
     return result.data;
   }
+  async getPendingAppointments(patientAccountId: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(
+          `/patient-service/appointments/pending/${patientAccountId}`,
+        ),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  async getDoneAppointments(patientAccountId: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(
+          `/patient-service/appointments/done/${patientAccountId}`,
+        ),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }
