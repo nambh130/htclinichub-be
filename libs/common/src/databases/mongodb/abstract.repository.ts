@@ -6,7 +6,7 @@ export abstract class MongoAbstractRepository<
   TDocument extends MongoAbstractDocument,
 > {
   protected abstract readonly logger: Logger;
-  constructor(protected readonly model: Model<TDocument>) {}
+  constructor(protected readonly model: Model<TDocument>) { }
 
   async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
     this.logger.debug(`Creating document: ${JSON.stringify(document)}`);
@@ -60,4 +60,31 @@ export abstract class MongoAbstractRepository<
   ): Promise<TDocument | null> {
     return this.model.findOneAndDelete(filterQuery).lean<TDocument>(true);
   }
+
+async findAndSort(
+  filterQuery: FilterQuery<TDocument>,
+  options?: {
+    sort?: Record<string, 1 | -1>;
+    limit?: number;
+    skip?: number;
+  }
+): Promise<TDocument[]> {
+  const query = this.model.find(filterQuery);
+
+  if (options?.sort) {
+    query.sort(options.sort);
+  }
+
+  if (options?.limit !== undefined) {
+    query.limit(options.limit);
+  }
+
+  if (options?.skip !== undefined) {
+    query.skip(options.skip);
+  }
+
+  return query.lean<TDocument[]>(true);
+}
+
+
 }

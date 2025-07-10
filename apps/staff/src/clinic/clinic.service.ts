@@ -33,7 +33,7 @@ export class ClinicService extends BaseClinicService<Clinic> {
     if (createdClinic.ownerId) {
       const map = this.doctorClinicMapRepo.create({
         doctor: { id: createdClinic.ownerId },
-        clinic: createdClinic.id,
+        clinic: { id: createdClinic.id }, // 👈 truyền object
       });
       await this.doctorClinicMapRepo.save(map);
     }

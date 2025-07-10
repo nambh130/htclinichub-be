@@ -159,7 +159,7 @@ export class DoctorService extends BaseService {
     );
 
     const doctorClinicLink = new DoctorClinicMap({
-      clinic: clinicId,
+      // clinic: clinicId,
       doctor: doctor
     });
 
@@ -190,7 +190,7 @@ export class DoctorService extends BaseService {
 
       if (dto.clinic) {
         const clinicMap = new DoctorClinicMap();
-        clinicMap.clinic = dto.clinic;
+        // clinicMap.clinic = dto.clinic;
         clinicMap.doctor = doctor;
         doctor.clinics = [clinicMap];
       }
@@ -469,6 +469,20 @@ export class DoctorService extends BaseService {
       throw new InternalServerErrorException('Failed to retrieve degrees');
     }
   }
+
+async getDoctorsByIds(data: { ids: number[] }) {
+    console.log('This is a mock response from Doctor Service, received IDs:', data.ids);
+
+    const formatData = data.ids.map(id => ({
+        name: `Doctor ${id}`,
+        email: `doctor${id}@example.com`,
+    }));
+
+    console.log('Formatted doctor mock data:', formatData);
+
+    return formatData;
+}
+
 
   async addDoctorDegree(
     doctorId: string,

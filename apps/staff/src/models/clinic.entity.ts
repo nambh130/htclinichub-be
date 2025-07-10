@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
+import { Doctor_WorkShift } from './doctor_workshift.entity';
 
 @Entity({ name: 'clinic' })
 export class Clinic extends BaseClinic {
@@ -26,4 +27,8 @@ export class Clinic extends BaseClinic {
 
   @OneToMany(() => DoctorClinicMap, (map) => map.clinic, { cascade: true })
   doctorClinicMaps: DoctorClinicMap[];
+
+  // @OneToMany(() => Doctor_WorkShift, (workshift) => workshift.clinic)
+  // workShifts: Doctor_WorkShift[];
 }
+

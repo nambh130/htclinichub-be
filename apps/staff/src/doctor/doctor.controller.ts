@@ -12,6 +12,7 @@ import {
   DoctorProfileDto,
   UpdateProfileDto,
 } from '@app/common/dto/staffs/doctor-profile.dto';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('staff/doctor')
 export class DoctorController {
@@ -245,4 +246,10 @@ export class DoctorController {
     const { doctorId, specializeId } = payload;
     return this.doctorService.deleteDoctorSpecialize(doctorId, specializeId);
   }
+
+  @Get('get-doctors-by-ids')
+async getDoctorsByIds(@Query('ids') ids: string | string[]) {
+  const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
+  return this.doctorService.getDoctorsByIds({ ids: parsedIds });
+}
 }

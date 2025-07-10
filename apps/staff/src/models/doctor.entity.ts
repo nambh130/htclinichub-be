@@ -4,6 +4,7 @@ import { DoctorServiceLink } from './doctorServiceLinks.entity';
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
 import { StaffInfo } from './staffInfo.entity';
+import { Doctor_WorkShift } from './doctor_workshift.entity';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -30,4 +31,12 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
     cascade: true,
   })
   clinics: DoctorClinicMap[];
+
+  // @OneToMany(() => Doctor_WorkShift, (shift) => shift.doctor)
+  // shifts: Doctor_WorkShift[];
+
+  @OneToOne(() => StaffInfo, { eager: true }) // eager để tự động load
+  @JoinColumn({ name: 'staff_info_id' }) // tên cột ngoại khóa (nếu có)
+  staff_info: StaffInfo;
+
 }

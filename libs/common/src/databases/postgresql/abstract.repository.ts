@@ -5,7 +5,6 @@ import {
   FindOptionsOrder,
   Repository,
   DeepPartial,
-  FindOptionsOrderValue,
 } from 'typeorm';
 import { Logger, NotFoundException } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -17,7 +16,7 @@ export abstract class PostgresAbstractRepository<
   protected abstract readonly logger: Logger;
 
   constructor(
-    private readonly entityRepository: Repository<T>,
+    protected readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
   ) { }
 
@@ -168,7 +167,12 @@ export abstract class PostgresAbstractRepository<
       limit,
     };
   }
-
+  async findMany(where: FindOptionsWhere<T>): Promise<T[]> {
+    return this.entityRepository.find({ where });
+  }
+  async count(where: FindOptionsWhere<T>): Promise<number> {
+    return this.entityRepository.count({ where });
+  }
   /**
  * Create a query builder for advanced queries.
  * @param alias The alias to use for the entity in the query.

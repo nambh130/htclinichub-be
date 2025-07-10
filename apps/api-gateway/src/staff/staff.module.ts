@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { StaffController } from './staff.controller';
 import { AuthModule } from '../auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { httpClientConfig, HttpModules } from '../api/http.client';
-import { MEDIA_SERVICE, STAFF_SERVICE } from '@app/common';
+import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, MEDIA_SERVICE, STAFF_CONSUMER_GROUP, STAFF_SERVICE } from '@app/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MediaModule } from '../media/media.module';
+import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
 import { ClinicModule } from '../clinics/clinic.module';
 
 @Module({
@@ -23,12 +25,47 @@ import { ClinicModule } from '../clinics/clinic.module';
         'MEDIA_SERVICE_PORT',
       ),
     ]),
-
+    ClientsModule.registerAsync([
+      {
+        name: STAFF_SERVICE,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'staff',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: STAFF_CONSUMER_GROUP,
+            },
+          },
+        }),
+      },
+      {
+        name: AUTH_SERVICE,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'auth',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: AUTH_CONSUMER_GROUP,
+            },
+          },
+        }),
+      },
+    ]),
     MediaModule,
     AuthModule,
     ClinicModule,
   ],
   controllers: [StaffController],
-  providers: [StaffService],
+  providers: [StaffService,ManageDoctorScheduleService],
 })
 export class StaffModule {}

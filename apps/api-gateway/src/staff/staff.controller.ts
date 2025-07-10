@@ -6,9 +6,11 @@ import {
   Param,
   UseGuards,
   Query,
+  Put,
   Delete,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
+import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
 import {
   CreateDoctorAccountDto,
   CreateEmployeeAccountDto,
@@ -20,17 +22,22 @@ import {
   UpdateDegreeDto,
   UpdateSpecializeDto,
 } from '@app/common';
+
 import { ClinicService } from '../clinics/clinic.service';
 import { IClinic, IMappedClinicLink } from './interfaces/staff.interface';
 import {
   DoctorProfileDto,
   UpdateProfileDto,
 } from '@app/common/dto/staffs/doctor-profile.dto';
+import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
+import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 
 @Controller('staff')
 export class StaffController {
   constructor(
+
     private readonly staffService: StaffService,
+    private readonly manageDoctorScheduleService: ManageDoctorScheduleService,
     private readonly clinicService: ClinicService
   ) { }
 
@@ -294,4 +301,110 @@ export class StaffController {
   async getDoctorAccountById(@Param('id') id: string) {
     return this.staffService.getDoctorAccountById(id);
   }
+
+  // View Working Hours
+  // Set Up Working Hours
+  // Change Working Hours
+
+  @Get('/doctor/view-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async getViewWorkingShift(
+    @Param('doctorId') doctorId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService
+        .getViewWorkingShiftService(doctorId, user);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/doctor/detail-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async getDetailShiftByShiftId(
+    @Param('shiftId') shiftId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService
+        .getDetailShift(shiftId, user);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Post('/doctor/setup-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async setUpWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Body() dto: SetupWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      // console.log(currentUser);
+      const doctor = await this.manageDoctorScheduleService
+        .setUpWorkingShiftByDoctorId(dto, doctorId, currentUser);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Put('/doctor/:doctorId/change-working-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async changeWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Param('shiftId') shiftId: string,
+    @Body() dto: ChangeWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+
+      const doctor = await this.manageDoctorScheduleService
+        .changeWorkingShiftByDoctorId(dto, doctorId, shiftId, currentUser);
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/doctor/shifts-by-date/:date')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorShiftsByDate(
+    @Param('date') date: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(date, user);
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+
+  @Get('doctor/shifts/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getShiftsByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(doctorId, clinicId, user);
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+  
+  
 }

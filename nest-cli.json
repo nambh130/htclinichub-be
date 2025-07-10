@@ -52,10 +52,29 @@
       "compilerOptions": {
         "tsConfigPath": "apps/communication/tsconfig.app.json",
         "assets": [
-        {
-          "include": "**/*.hbs",
-           "outDir": "./dist/apps/communication"
-        }]
+          {
+            "include": "**/*.hbs",
+            "outDir": "./dist/apps/communication"
+          }
+        ]
+      }
+    },
+    "patients": {
+      "type": "application",
+      "root": "apps/patients",
+      "entryFile": "main",
+      "sourceRoot": "apps/patients/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/patients/tsconfig.app.json"
+      }
+    },
+    "analyze-healthcare-data": {
+      "type": "application",
+      "root": "apps/analyze-healthcare-data",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
       }
     },
     "media": {
