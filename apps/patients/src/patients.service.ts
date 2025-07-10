@@ -15,7 +15,6 @@ import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { Appointment } from './models/appointment.entity';
 import { DataSource, In } from 'typeorm';
-import { ManageDoctorScheduleRepository } from 'apps/staff/src/doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
 
 @Injectable()
 export class PatientsService {
