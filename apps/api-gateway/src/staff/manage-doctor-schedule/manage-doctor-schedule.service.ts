@@ -102,17 +102,11 @@ export class ManageDoctorScheduleService {
     }
   }
 
-  async getShiftsInDate(date: string, user: TokenPayload) {
+  async getShiftsInDate(clinicId: string, doctorId: string, date: string, user: TokenPayload) {
     try {
       const response = await firstValueFrom(
         this.httpService.get(
-          `/manage-doctor-schedule/doctor/shifts-by-date/${date}`,
-          {
-            params: {
-              doctorId: user.userId,
-            },
-          },
-        ),
+          `/manage-doctor-schedule/doctor/shifts-by-date/${clinicId}/${doctorId}/${date}`),
       );
 
       return response.data;

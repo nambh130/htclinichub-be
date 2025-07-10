@@ -26,6 +26,15 @@
         "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
     },
+    "clinics": {
+      "type": "application",
+      "root": "apps/clinics",
+      "entryFile": "main",
+      "sourceRoot": "apps/clinics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
@@ -35,6 +44,21 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "communication": {
+      "type": "application",
+      "root": "apps/communication",
+      "entryFile": "main",
+      "sourceRoot": "apps/communication/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/communication/tsconfig.app.json",
+        "assets": [
+          {
+            "include": "**/*.hbs",
+            "outDir": "./dist/apps/communication"
+          }
+        ]
+      }
+    },
     "patients": {
       "type": "application",
       "root": "apps/patients",
@@ -42,6 +66,15 @@
       "sourceRoot": "apps/patients/src",
       "compilerOptions": {
         "tsConfigPath": "apps/patients/tsconfig.app.json"
+      }
+    },
+    "analyze-healthcare-data": {
+      "type": "application",
+      "root": "apps/analyze-healthcare-data",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
       }
     },
     "media": {
@@ -69,24 +102,6 @@
       "sourceRoot": "apps/staff/src",
       "compilerOptions": {
         "tsConfigPath": "apps/staff/tsconfig.app.json"
-      }
-    },
-    "analyze-healthcare-data": {
-      "type": "application",
-      "root": "apps/analyze-healthcare-data",
-      "entryFile": "main",
-      "sourceRoot": "apps/analyze-healthcare-data/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
-      }
-    },
-    "clinics": {
-      "type": "application",
-      "root": "apps/clinics",
-      "entryFile": "main",
-      "sourceRoot": "apps/clinics/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/clinics/tsconfig.app.json"
       }
     }
   },

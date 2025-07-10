@@ -211,13 +211,13 @@ export class ManageDoctorScheduleService extends BaseService {
     );
   }
 
-  async getShiftsInDate(date: string, doctorId: string) {
+  async getShiftsInDate(date: string, doctorId: string, clinicId: string) {
     if (!doctorId || !date) {
       throw new NotFoundException('Missing doctorId or date');
     }
 
     const doctor = await this.doctorRepository.findOne({
-      id: '43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10',
+      id: doctorId,
     });
 
     if (!doctor) {
@@ -231,11 +231,13 @@ export class ManageDoctorScheduleService extends BaseService {
       where: {
         startTime: Between(start, end),
         doctor_clinic_link_id: {
-          doctor: { id: '43a9f8ee-8a4c-4a62-a49c-e2578f1b2c10' },
+          doctor: { id: doctorId },
+          clinic: { id: clinicId },
         },
       },
       relations: {
         doctor_clinic_link_id: {
+          doctor: true,
           clinic: true,
         },
       },
@@ -244,6 +246,7 @@ export class ManageDoctorScheduleService extends BaseService {
       },
     });
 
+    
     return {
       doctorId: doctor.id,
       doctorName: doctor.staff_info?.full_name ?? null,
@@ -319,7 +322,7 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Shift not found');
     }
     return await this.manageDoctorScheduleRepository.findOneAndUpdate({ id: shiftId }, { status: 'fully-booked' });
-  } 
+  }
 
-  
+
 }

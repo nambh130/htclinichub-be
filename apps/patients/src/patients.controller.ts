@@ -19,6 +19,7 @@ import { PatientCreatedEvent } from '@app/common/events/patients';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { CurrentUser, TokenPayload } from '@app/common';
 import { CreateAppointmentDto } from '@app/common/dto/appointment';
+import { log } from 'console';
 // import { DownLoadMedicalReportService } from './medical-report/download_medical_report';
 
 @Controller('patient-service')
@@ -113,6 +114,17 @@ export class PatientsController {
   async getPatientById(@Param('id') id: string) {
     try {
       const patient = await this.patientsService.getPatientById(id);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-patientProfile-by-id/:id')
+  async getPatientProfileById(@Param('id') id: string) {
+    try {
+      const patient = await this.patientsService.getPatientProfileById(id);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);
@@ -308,7 +320,8 @@ export class PatientsController {
 
   @Get('appointment/patient-account/:id')
   async getAppointmentsByPatientAccountId(@Param('id') id: string) {
-    const result = await this.patientsService.getAppointmentsWithDetailsByAccountId(id);
+    const result =
+      await this.patientsService.getAppointmentsWithDetailsByAccountId(id);
     return result;
   }
 
@@ -321,6 +334,23 @@ export class PatientsController {
   @Put('cancel-appointment/:id')
   async updateAppointment(@Param('id') id: string) {
     const result = await this.patientsService.cancelAppointment(id);
+    return result;
+  }
+  @Get('appointments/pending/:patientAccountId')
+  async getPendingAppointments(
+    @Param('patientAccountId') patientAccountId: string,
+  ) {
+    const result =
+      await this.patientsService.getPendingAppointments(patientAccountId);
+    return result;
+  }
+
+  @Get('appointments/done/:patientAccountId')
+  async getDoneAppointments(
+    @Param('patientAccountId') patientAccountId: string,
+  ) {
+    const result =
+      await this.patientsService.getDoneAppointments(patientAccountId);
     return result;
   }
 }

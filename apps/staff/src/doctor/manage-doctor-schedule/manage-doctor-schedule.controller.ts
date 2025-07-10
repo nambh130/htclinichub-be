@@ -84,12 +84,13 @@ export class ManageDoctorScheduleController {
     }
   }
 
-  @Get('/doctor/shifts-by-date/:date')
+  @Get('/doctor/shifts-by-date/:clinicId/:doctorId/:date')
   getDoctorShiftsByDate(
     @Param('date') date: string,
-    @Query('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @Param('doctorId') doctorId: string,
   ) {
-    return this.manageDoctorScheduleService.getShiftsInDate(date, doctorId);
+    return this.manageDoctorScheduleService.getShiftsInDate(date, doctorId, clinicId);
   }
 
   @Get('/doctor/shifts-by-doctor-id-and-clinic-id/:doctorId/:clinicId')
@@ -105,5 +106,5 @@ export class ManageDoctorScheduleController {
     return this.manageDoctorScheduleService.updateShifttFull(shiftId);
   }
 
- 
+
 }

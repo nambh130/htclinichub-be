@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, Query, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, Query, Patch, Param, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
@@ -94,14 +94,22 @@ export class AuthController {
     @Body() invitationDto: CreateInvitationDto,
     @Req() req: Request,
   ) {
+    const clinicData = await this.clinicService.getClinicById(invitationDto.clinic, "id");
+    console.log("data: ", clinicData)
+    if (!clinicData) {
+      throw new BadRequestException({ERR_CODE: "CLINIC_NOT_FOUND", message:"Clinic not found!"});
+    }
     const response = await this.authService.createInvitationOwner(
-      invitationDto,
+      {
+        ...invitationDto,
+        clinicName: clinicData.name
+      },
       req,
     );
     return response;
   }
 
-  @Post('invitation/clinic')
+  @Post('invitation/admin')
   async createInvitationAdmin(
     @Body() invitationDto: CreateInvitationDto,
     @Req() req: Request,

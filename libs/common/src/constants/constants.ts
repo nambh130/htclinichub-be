@@ -13,6 +13,7 @@ export const MEDIA_SERVICE = 'media';
 
 //Service ports
 export const STAFF_SERVICE_PORT = 3003;
+export const COMMUNICATION_SERVICE = 'communication';
 
 //Consumer group names
 export const RESERVATIONS_CONSUMER_GROUP = 'reservations-consumer';
@@ -21,6 +22,7 @@ export const PATIENT_CONSUMER_GROUP = 'patients-consumer';
 export const STAFF_CONSUMER_GROUP = 'staffs-consumer';
 export const MEDIA_CONSUMER_GROUP = 'media-consumer';
 export const CLINIC_CONSUMER_GROUP = 'clinic-consumer';
+export const COMMUNICATION_CONSUMER_GROUP = 'communication-consumer';
 
 //cloudinary
 export const CLOUDINARY = 'cloudinary';

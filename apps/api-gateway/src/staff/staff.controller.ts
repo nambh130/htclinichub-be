@@ -377,14 +377,16 @@ export class StaffController {
     }
   }
 
-  @Get('/doctor/shifts-by-date/:date')
+  @Get('/doctor/shifts-by-date/:clinicId/:doctorId/:date')
   @UseGuards(JwtAuthGuard)
   async getDoctorShiftsByDate(
+    @Param('clinicId') clinicId: string,
+    @Param('doctorId') doctorId: string,
     @Param('date') date: string,
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(date, user);
+      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(clinicId, doctorId, date, user);
       return shifts;
     } catch (error) {
       console.error('Error retrieving shifts:', error);

@@ -6,7 +6,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { PatientsModule } from './patients/patients.module';
-import { OtpModule } from './otp/otp.module';
 import { ClinicUsersModule } from './clinic-users/clinic-users.module';
 import { ClinicsModule } from './clinics/clinics.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -16,9 +15,12 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { ClinicEventController } from './clinics/clinic-event.controller';
+import { OtpService } from './otp/otp.service';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
+    CacheModule.register(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -62,7 +64,6 @@ import { ClinicEventController } from './clinics/clinic-event.controller';
     ]),
     LoggerModule,
     PatientsModule,
-    OtpModule,
     ClinicUsersModule,
     ClinicsModule,
     InvitationsModule,
@@ -72,6 +73,6 @@ import { ClinicEventController } from './clinics/clinic-event.controller';
   ],
   controllers: [AuthController, ClinicEventController],
   exports: [AuthService, JwtModule],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, OtpService],
 })
-export class AuthModule {}
+export class AuthModule { }
