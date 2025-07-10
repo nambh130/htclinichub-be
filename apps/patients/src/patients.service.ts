@@ -215,7 +215,7 @@ export class PatientsService {
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({ patient_account_id: id });
+      const patient = await this.patientsRepository.findOne({_id: id });
 
       if (!patient) {
         throw new NotFoundException(`Patient with id ${id} not found`);
