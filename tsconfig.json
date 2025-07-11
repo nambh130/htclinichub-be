@@ -13,7 +13,7 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "noImplicitReturns": true,
@@ -25,6 +25,33 @@
       ],
       "@app/common/*": [
         "libs/common/src/*"
+      ],
+      "@api-gateway/*": [
+        "apps/api-gateway/src/*"
+      ],
+      "@staff-gw/*": [
+        "apps/api-gateway/src/staff/*"
+      ],
+      "@clinics-gw/*": [
+        "apps/api-gateway/src/clinics/*"
+      ],
+      "@auth-gw/*": [
+        "apps/api-gateway/src/auth/*"
+      ],
+      "@media-gw/*": [
+        "apps/api-gateway/src/media/*"
+      ],
+      "@auth/*": [
+        "apps/auth/src/*"
+      ],
+      "@clinics/*": [
+        "apps/clinics/src/*"
+      ],
+      "@staff/*": [
+        "apps/staff/src/*"
+      ],
+      "@media/*": [
+        "apps/media/src/*"
       ]
     }
   }

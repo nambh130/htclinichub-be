@@ -5,6 +5,7 @@ import { Clinic } from '../models/clinic.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
+import { Doctor } from '../models/doctor.entity';
 
 @Injectable()
 export class ClinicService extends BaseClinicService<Clinic> {
@@ -16,10 +17,14 @@ export class ClinicService extends BaseClinicService<Clinic> {
     super(clinicRepo);
   }
 
-  async create(data: any) {
-    this.clinicRepo.create(
+  async create(data: { name: string; location: string }) {
+    return await this.clinicRepo.create(
       new Clinic({ name: data.name, location: data.location }),
     );
+  }
+
+  async save(clinicData: Partial<Clinic>) {
+    return await this.clinicRepo.create(new Clinic(clinicData));
   }
 
   async addClinic(clinicData: Partial<Clinic>) {
@@ -27,9 +32,10 @@ export class ClinicService extends BaseClinicService<Clinic> {
     const createdClinic = await this.clinicRepo.create(clinic);
 
     if (createdClinic.ownerId) {
+      // Create doctor-clinic mapping using the correct entity relationship approach
       const map = this.doctorClinicMapRepo.create({
-        doctor: { id: createdClinic.ownerId },
-        clinic: createdClinic.id,
+        clinicId: createdClinic.id, // Use clinicId for the string ID
+        doctor: { id: createdClinic.ownerId } as Doctor, // Reference doctor by ID
       });
       await this.doctorClinicMapRepo.save(map);
     }

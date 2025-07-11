@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { DeletePermissionDto } from './dto/delete-permission.dto';
 import { Permission } from './models/permission.entity';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
@@ -8,21 +19,19 @@ import { PermissionsService } from './permissions.service';
 
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) { }
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createPermissionDto: CreatePermissionDto
+    @Body() createPermissionDto: CreatePermissionDto,
   ): Promise<Permission> {
     return this.permissionsService.createPermission(createPermissionDto);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query() getPermissionDto: GetPermissionDto
-  ): Promise<{
+  async findAll(@Query() getPermissionDto: GetPermissionDto): Promise<{
     data: Permission[];
     total: number;
     page: number;
@@ -44,7 +53,7 @@ export class PermissionsController {
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('id') id: string,
-    @Body() updatePermissionDto: UpdatePermissionDto
+    @Body() updatePermissionDto: UpdatePermissionDto,
   ): Promise<Permission> {
     return this.permissionsService.updatePermission(id, updatePermissionDto);
   }
@@ -52,7 +61,7 @@ export class PermissionsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
-    @Param() deletePermissionDto: DeletePermissionDto
+    @Param() deletePermissionDto: DeletePermissionDto,
   ): Promise<void> {
     await this.permissionsService.deletePermission(deletePermissionDto);
   }

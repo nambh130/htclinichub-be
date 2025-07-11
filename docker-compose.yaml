@@ -121,7 +121,7 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/clinics/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
@@ -129,6 +129,7 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+
   auth:
     build:
       context: .

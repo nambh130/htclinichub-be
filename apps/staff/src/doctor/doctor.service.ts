@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { IsNull } from 'typeorm';
+import { IsNull, Like, FindOptionsWhere } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import {
@@ -21,6 +21,7 @@ import {
   UpdateDegreeDto,
   UpdateSpecializeDto,
   UpdateProfileDto,
+  deleteAudit,
 } from '@app/common';
 
 import { Doctor } from '../models/doctor.entity';
@@ -34,6 +35,7 @@ import { StaffInfoRepository } from '../repositories/staffInfo.repository';
 import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
+import { DoctorClinicRepo } from '../repositories/doctor-clinic-map.repository';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -42,6 +44,7 @@ export class DoctorService extends BaseService {
     private readonly staffInfoRepository: StaffInfoRepository,
     private readonly degreeRepository: DegreeRepository,
     private readonly specializeRepository: SpecializeRepository,
+    private readonly doctorClinicRepo: DoctorClinicRepo,
   ) {
     super();
   }
@@ -67,11 +70,35 @@ export class DoctorService extends BaseService {
           deletedById: IsNull(),
           deletedByType: IsNull(),
         },
+        relations: ['clinics', 'clinics.clinic'],
         page,
         limit,
       });
 
-      return result;
+      // Map the data to include clinic information
+      const mappedData = result.data.map((doctor) => ({
+        id: doctor.id,
+        email: doctor.email,
+        is_locked: doctor.is_locked,
+        clinics:
+          doctor.clinics?.map((clinicMap) => ({
+            id: clinicMap.clinic?.id,
+            name: clinicMap.clinic?.name,
+            location: clinicMap.clinic?.location,
+            phone: clinicMap.clinic?.phone,
+            email: clinicMap.clinic?.email,
+            ownerId: clinicMap.clinic?.ownerId,
+          })) || [],
+        createdAt: doctor.createdAt,
+        updatedAt: doctor.updatedAt,
+      }));
+
+      return {
+        data: mappedData,
+        total: result.total,
+        page,
+        limit,
+      };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -82,19 +109,42 @@ export class DoctorService extends BaseService {
     }
   }
 
-  async getDoctorById(doctorId: string): Promise<Doctor> {
+  async getDoctorById(doctorId: string): Promise<any> {
     try {
       if (!doctorId || doctorId.trim() === '') {
         throw new BadRequestException('Doctor ID is required');
       }
 
-      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      const doctor = await this.doctorRepository.findOne(
+        {
+          id: doctorId,
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
+        ['clinics', 'clinics.clinic'],
+      );
 
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
-      return doctor;
+      return {
+        id: doctor.id,
+        email: doctor.email,
+        is_locked: doctor.is_locked,
+        clinics:
+          doctor.clinics?.map((clinicMap) => ({
+            id: clinicMap.clinic?.id,
+            name: clinicMap.clinic?.name,
+            location: clinicMap.clinic?.location,
+            phone: clinicMap.clinic?.phone,
+            email: clinicMap.clinic?.email,
+            ownerId: clinicMap.clinic?.ownerId,
+          })) || [],
+        createdAt: doctor.createdAt,
+        updatedAt: doctor.updatedAt,
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -109,23 +159,106 @@ export class DoctorService extends BaseService {
   async getDoctorListWithProfile(
     page = 1,
     limit = 10,
-  ): Promise<{
-    data: Doctor[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+    search?: string,
+    searchField: 'name' | 'email' | 'phone' | 'all' = 'all',
+  ): Promise<any> {
     try {
-      return await this.doctorRepository.paginate({
-        where: {
-          deletedAt: IsNull(),
-          deletedById: IsNull(),
-          deletedByType: IsNull(),
-        },
-        relations: ['staffInfo'],
+      const baseCondition = {
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      };
+
+      let whereCondition: FindOptionsWhere<Doctor> | FindOptionsWhere<Doctor>[];
+
+      // Add search functionality with field-specific targeting
+      if (search?.trim()) {
+        const searchTerm = search.trim().toLowerCase();
+
+        if (searchField === 'email') {
+          whereCondition = {
+            ...baseCondition,
+            email: Like(`%${searchTerm}%`),
+          };
+        } else if (searchField === 'name') {
+          whereCondition = {
+            ...baseCondition,
+            staffInfo: {
+              full_name: Like(`%${searchTerm}%`),
+            },
+          };
+        } else if (searchField === 'phone') {
+          whereCondition = {
+            ...baseCondition,
+            staffInfo: {
+              phone: Like(`%${searchTerm}%`),
+            },
+          };
+        } else {
+          // Default 'all' - search across all fields
+          whereCondition = [
+            {
+              ...baseCondition,
+              email: Like(`%${searchTerm}%`),
+            },
+            {
+              ...baseCondition,
+              staffInfo: {
+                full_name: Like(`%${searchTerm}%`),
+              },
+            },
+            {
+              ...baseCondition,
+              staffInfo: {
+                phone: Like(`%${searchTerm}%`),
+              },
+            },
+          ];
+        }
+      } else {
+        whereCondition = baseCondition;
+      }
+
+      const result = await this.doctorRepository.paginate({
+        where: whereCondition as FindOptionsWhere<Doctor>,
+        relations: ['staffInfo', 'clinics', 'clinics.clinic'],
         page,
         limit,
       });
+
+      // Map the data to exclude audit fields and include only basic info
+      const mappedData = result.data.map((doctor) => ({
+        id: doctor.id,
+        email: doctor.email,
+        is_locked: doctor.is_locked,
+        clinics:
+          doctor.clinics?.map((clinicMap) => ({
+            id: clinicMap.clinic?.id,
+            name: clinicMap.clinic?.name,
+            location: clinicMap.clinic?.location,
+            phone: clinicMap.clinic?.phone,
+            email: clinicMap.clinic?.email,
+            ownerId: clinicMap.clinic?.ownerId,
+          })) || [],
+        staffInfo: doctor.staffInfo
+          ? {
+              id: doctor.staffInfo.id,
+              staff_id: doctor.staffInfo.staff_id,
+              staff_type: doctor.staffInfo.staff_type,
+              full_name: doctor.staffInfo.full_name,
+              dob: doctor.staffInfo.dob,
+              phone: doctor.staffInfo.phone,
+              gender: doctor.staffInfo.gender,
+              position: doctor.staffInfo.position,
+              profile_img_id: doctor.staffInfo.profile_img_id,
+            }
+          : null,
+      }));
+
+      return {
+        ...result,
+        data: mappedData,
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -137,6 +270,40 @@ export class DoctorService extends BaseService {
         'Failed to retrieve doctor list with profiles',
       );
     }
+  }
+
+  async getClinicsByDoctor(doctorId: string) {
+    const doctor = await this.doctorRepository.findOne(
+      {
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      },
+      { clinics: { clinic: true } },
+    );
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    return doctor.clinics;
+  }
+
+  async doctorJoinClinic(doctorId: string, clinicId: string) {
+    const doctor = await this.doctorRepository.findOne({
+      id: doctorId,
+      deletedAt: IsNull(),
+      deletedById: IsNull(),
+      deletedByType: IsNull(),
+    });
+
+    const doctorClinicLink = new DoctorClinicMap({
+      clinicId: clinicId,
+      doctor: doctor,
+    });
+
+    return this.doctorClinicRepo.saveLink(doctorClinicLink);
   }
 
   async createDoctorAccount(
@@ -155,12 +322,15 @@ export class DoctorService extends BaseService {
       }
 
       const doctor = new Doctor();
+      // In case event from other service
+      if (dto.id) doctor.id = dto.id;
+
       doctor.email = email;
       doctor.password = await bcrypt.hash(dto.password, 10);
 
       if (dto.clinic) {
         const clinicMap = new DoctorClinicMap();
-        clinicMap.clinic = dto.clinic;
+        clinicMap.clinicId = dto.clinic;
         clinicMap.doctor = doctor;
         doctor.clinics = [clinicMap];
       }
@@ -183,7 +353,12 @@ export class DoctorService extends BaseService {
 
   async lockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
     try {
-      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      const doctor = await this.doctorRepository.findOne({
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
@@ -219,7 +394,12 @@ export class DoctorService extends BaseService {
 
   async unlockDoctorAccount(doctorId: string, currentUser: TokenPayload) {
     try {
-      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      const doctor = await this.doctorRepository.findOne({
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
@@ -255,18 +435,27 @@ export class DoctorService extends BaseService {
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
     try {
-      const doctor = await this.doctorRepository.findOne({ id: doctorId }, [
-        'clinics',
-        'services',
-        'invitations',
-      ]);
+      const doctor = await this.doctorRepository.findOne(
+        {
+          id: doctorId,
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
+        ['clinics', 'clinics.clinic', 'services', 'invitations'],
+      );
 
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
       const staffInfo = await this.staffInfoRepository.findOne(
-        { staff_id: doctorId },
+        {
+          staff_id: doctorId,
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
         ['degrees', 'specializes'],
       );
 
@@ -292,13 +481,21 @@ export class DoctorService extends BaseService {
     currentUser: TokenPayload,
   ): Promise<StaffInfo> {
     try {
-      const doctor = await this.doctorRepository.findOne({ id: staffId });
+      const doctor = await this.doctorRepository.findOne({
+        id: staffId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${staffId} not found`);
       }
 
       const existingStaffInfo = await this.staffInfoRepository.findOne({
         staff_id: staffId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
       if (existingStaffInfo) {
         throw new ConflictException(
@@ -359,13 +556,21 @@ export class DoctorService extends BaseService {
     currentUser: TokenPayload,
   ): Promise<StaffInfo> {
     try {
-      const doctor = await this.doctorRepository.findOne({ id: doctorId });
+      const doctor = await this.doctorRepository.findOne({
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
       const existingStaffInfo = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingStaffInfo) {
@@ -416,6 +621,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -426,6 +634,9 @@ export class DoctorService extends BaseService {
 
       const degrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       return degrees;
@@ -448,6 +659,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -458,6 +672,9 @@ export class DoctorService extends BaseService {
 
       const existingDegrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateDegree = existingDegrees.find(
@@ -502,6 +719,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -513,6 +733,9 @@ export class DoctorService extends BaseService {
       const existingDegree = await this.degreeRepository.findOne({
         id: degreeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingDegree) {
@@ -523,6 +746,9 @@ export class DoctorService extends BaseService {
 
       const otherDegrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateDegree = otherDegrees.find(
@@ -564,10 +790,17 @@ export class DoctorService extends BaseService {
     }
   }
 
-  async deleteDoctorDegree(doctorId: string, degreeId: string): Promise<void> {
+  async deleteDoctorDegree(
+    doctorId: string,
+    degreeId: string,
+    currentUser: TokenPayload,
+  ): Promise<void> {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -580,6 +813,9 @@ export class DoctorService extends BaseService {
         {
           id: degreeId,
           staff_info: { staff_id: doctorId },
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
         },
         ['staff_info'],
       );
@@ -590,7 +826,11 @@ export class DoctorService extends BaseService {
         );
       }
 
-      await this.degreeRepository.findOneAndDelete({ id: degreeId });
+      const updateData = deleteAudit({}, currentUser);
+      await this.degreeRepository.findOneAndUpdate(
+        { id: degreeId },
+        updateData,
+      );
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -606,6 +846,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -616,6 +859,9 @@ export class DoctorService extends BaseService {
 
       const specializes = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       return specializes;
@@ -640,6 +886,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -650,6 +899,9 @@ export class DoctorService extends BaseService {
 
       const existingSpecializations = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateSpecialization = existingSpecializations.find(
@@ -695,6 +947,9 @@ export class DoctorService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -706,6 +961,9 @@ export class DoctorService extends BaseService {
       const existingSpecialize = await this.specializeRepository.findOne({
         id: specializeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingSpecialize) {
@@ -716,6 +974,9 @@ export class DoctorService extends BaseService {
 
       const otherSpecializations = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateSpecialization = otherSpecializations.find(
@@ -761,10 +1022,14 @@ export class DoctorService extends BaseService {
   async deleteDoctorSpecialize(
     doctorId: string,
     specializeId: string,
+    currentUser: TokenPayload,
   ): Promise<void> {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -776,6 +1041,9 @@ export class DoctorService extends BaseService {
       const specialize = await this.specializeRepository.findOne({
         id: specializeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!specialize) {
@@ -784,7 +1052,11 @@ export class DoctorService extends BaseService {
         );
       }
 
-      await this.specializeRepository.findOneAndDelete({ id: specializeId });
+      const updateData = deleteAudit({}, currentUser);
+      await this.specializeRepository.findOneAndUpdate(
+        { id: specializeId },
+        updateData,
+      );
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -810,6 +1082,7 @@ export class DoctorService extends BaseService {
       .getRepository(DoctorClinicMap)
       .createQueryBuilder('doctorClinicMap')
       .innerJoinAndSelect('doctorClinicMap.doctor', 'doctor')
+      .innerJoinAndSelect('doctorClinicMap.clinic', 'clinic')
       .where('doctorClinicMap.clinic = :clinicId', { clinicId })
       .getMany();
 
@@ -819,14 +1092,35 @@ export class DoctorService extends BaseService {
     const results = await Promise.all(
       doctors.map(async (doctor) => {
         const staffInfo = await this.staffInfoRepository.findOne(
-          { staff_id: doctor.id },
+          {
+            staff_id: doctor.id,
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          },
           ['degrees', 'specializes'],
         );
+
+        // Get clinic info from the mapping (since we know they're all from the same clinic)
+        const clinicMap = doctorClinicMaps.find(
+          (map) => map.doctor.id === doctor.id,
+        );
+        const clinic = clinicMap?.clinic;
 
         return {
           account: {
             id: doctor.id,
             email: doctor.email,
+            clinic: clinic
+              ? {
+                  id: clinic.id,
+                  name: clinic.name,
+                  location: clinic.location,
+                  phone: clinic.phone,
+                  email: clinic.email,
+                  ownerId: clinic.ownerId,
+                }
+              : null,
           },
           info: staffInfo || null,
         };
@@ -838,9 +1132,17 @@ export class DoctorService extends BaseService {
 
   async getDoctorAccountById(
     id: string,
-  ): Promise<{ id: string; email: string }> {
+  ): Promise<{ id: string; email: string; clinics: any[] }> {
     console.log('Fetching doctor account by ID:', id);
-    const doctor = await this.doctorRepository.findOne({ id });
+    const doctor = await this.doctorRepository.findOne(
+      {
+        id,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      },
+      ['clinics', 'clinics.clinic'],
+    );
     console.log('Doctor found:', doctor);
     if (!doctor) {
       throw new Error('Doctor not found');
@@ -849,6 +1151,126 @@ export class DoctorService extends BaseService {
     return {
       id: doctor.id,
       email: doctor.email,
+      clinics:
+        doctor.clinics?.map((clinicMap) => ({
+          id: clinicMap.clinic?.id,
+          name: clinicMap.clinic?.name,
+          location: clinicMap.clinic?.location,
+          phone: clinicMap.clinic?.phone,
+          email: clinicMap.clinic?.email,
+          ownerId: clinicMap.clinic?.ownerId,
+        })) || [],
     };
+  }
+
+  // ============================================================================
+  // DOCTOR CLINIC ASSIGNMENT
+  // ============================================================================
+
+  async assignDoctorToClinic(
+    doctorId: string,
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<{ message: string; assignment: DoctorClinicMap }> {
+    try {
+      // Validate doctor exists
+      const doctor = await this.doctorRepository.findOne({
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
+
+      // Check if assignment already exists
+      const existingAssignment = await this.doctorClinicRepo.findOne({
+        doctor: { id: doctorId },
+        clinicId: clinicId,
+      });
+
+      if (existingAssignment) {
+        throw new ConflictException(
+          `Doctor ${doctorId} is already assigned to clinic ${clinicId}`,
+        );
+      }
+
+      // Create new clinic assignment
+      const doctorClinicMap = new DoctorClinicMap({
+        doctor: doctor,
+        clinicId: clinicId,
+      });
+
+      setAudit(doctorClinicMap, currentUser);
+
+      const savedAssignment =
+        await this.doctorClinicRepo.saveLink(doctorClinicMap);
+
+      return {
+        message: `Doctor ${doctorId} successfully assigned to clinic ${clinicId}`,
+        assignment: savedAssignment,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to assign doctor to clinic',
+      );
+    }
+  }
+
+  async removeDoctorFromClinic(
+    doctorId: string,
+    clinicId: string,
+  ): Promise<{ message: string }> {
+    try {
+      // Validate doctor exists
+      const doctor = await this.doctorRepository.findOne({
+        id: doctorId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      if (!doctor) {
+        throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
+      }
+
+      // Find the assignment
+      const assignment = await this.doctorClinicRepo.findOne({
+        doctor: { id: doctorId },
+        clinicId: clinicId,
+      });
+
+      if (!assignment) {
+        throw new NotFoundException(
+          `Doctor ${doctorId} is not assigned to clinic ${clinicId}`,
+        );
+      }
+
+      // Remove the assignment
+      await this.doctorClinicRepo.deleteLink(assignment.id);
+
+      return {
+        message: `Doctor ${doctorId} successfully removed from clinic ${clinicId}`,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to remove doctor from clinic',
+      );
+    }
   }
 }

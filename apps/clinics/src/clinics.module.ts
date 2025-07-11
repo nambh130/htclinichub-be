@@ -12,19 +12,20 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
+import { ClinicEventController } from './clinic-event.controller';
 
 @Module({
   imports: [
     LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/clinics/.env',
+      envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
-        MONGODB_URI: Joi.string().required(),
+        CLINIC_SERVICE_URI: Joi.string().required(),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
+        CLINIC_SERVICE_DB: Joi.string().required(),
         POSTGRES_USER: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
         // Synchronize should only use in development, not in production
@@ -61,7 +62,7 @@ import { Clinic } from './models';
         port: configService.get('POSTGRES_PORT'),
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
-        database: configService.get('POSTGRES_DB'),
+        database: configService.get('CLINIC_SERVICE_DB'),
         autoLoadEntities: true,
         synchronize: true, // chỉ dùng cho dev
       }),
@@ -70,7 +71,7 @@ import { Clinic } from './models';
 
     // MongoDB configuration
   ],
-  controllers: [ClinicsController],
+  controllers: [ClinicsController, ClinicEventController],
   providers: [ClinicsService, ClinicRepository],
 })
 export class ClinicsModule {}

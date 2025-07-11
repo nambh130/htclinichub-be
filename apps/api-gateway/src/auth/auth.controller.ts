@@ -10,7 +10,7 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
@@ -89,15 +89,15 @@ export class AuthController {
     return response;
   }
 
-  @Post('recover-password')
+  @Post('forget-password')
   async recoverPassowrd(@Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.recoverPassword(req, res)
-    return response
+    const response = await this.authService.recoverPassword(req, res);
+    return response;
   }
 
   @Post('reset-password')
   async resetPassword(@Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.resetPassword(req, res)
-    return response
+    const response = await this.authService.resetPassword(req, res);
+    return response;
   }
 }

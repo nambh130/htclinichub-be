@@ -21,10 +21,15 @@ import {
   DoctorProfileDto,
   UpdateProfileDto,
 } from '@app/common';
+import { ClinicService } from '@clinics-gw/clinic.service';
+import { IMappedClinicLink } from '@staff-gw/interfaces/staff.interface';
 
 @Controller('staff/doctor')
 export class DoctorController {
-  constructor(private readonly doctorService: DoctorService) {}
+  constructor(
+    private readonly doctorService: DoctorService,
+    private readonly clinicService: ClinicService,
+  ) {}
 
   // ============================================================================
   // DOCTOR ACCOUNT MANAGEMENT
@@ -44,14 +49,15 @@ export class DoctorController {
   async getDoctorListWithProfile(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
   ) {
-    return await this.doctorService.getDoctorListWithProfile(+page, +limit);
-  }
-
-  @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async getDoctorById(@Param('id') doctorId: string) {
-    return await this.doctorService.getDoctorById(doctorId);
+    return await this.doctorService.getDoctorListWithProfile(
+      +page,
+      +limit,
+      search,
+      searchField,
+    );
   }
 
   @Get('doctor-by-clinic/:clinicId')
@@ -60,10 +66,41 @@ export class DoctorController {
     return this.doctorService.getDoctorByClinic(clinicId);
   }
 
+  @Get('clinics-by-doctor')
+  @UseGuards(JwtAuthGuard)
+  async getClinicByDoctor(@CurrentUser() user: TokenPayload) {
+    const doctorClinicsLink = await this.doctorService.getClinicIdsByDoctor(
+      user.userId,
+    );
+
+    const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
+      const clinicInfo = link.clinic;
+      const isAdmin = clinicInfo?.ownerId === user.userId;
+
+      return {
+        link_id: link.linkId,
+        clinic: {
+          id: clinicInfo?.id ?? '',
+          name: clinicInfo?.name ?? '',
+          location: clinicInfo?.location ?? '',
+          isAdmin,
+        },
+      };
+    });
+
+    return result;
+  }
+
   @Get('details/:id')
   @UseGuards(JwtAuthGuard)
   async getDoctorDetailsById(@Param('id') doctorId: string) {
     return await this.doctorService.getDoctorDetailsById(doctorId);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorById(@Param('id') doctorId: string) {
+    return await this.doctorService.getDoctorById(doctorId);
   }
 
   @Post('create-account')
@@ -164,8 +201,13 @@ export class DoctorController {
   deleteDoctorDegree(
     @Param('id') doctorId: string,
     @Param('degreeId') degreeId: string,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.doctorService.deleteDoctorDegree(doctorId, degreeId);
+    return this.doctorService.deleteDoctorDegree(
+      doctorId,
+      degreeId,
+      currentUser,
+    );
   }
 
   // ============================================================================
@@ -209,13 +251,45 @@ export class DoctorController {
   deleteDoctorSpecialize(
     @Param('id') doctorId: string,
     @Param('specializeId') specializeId: string,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.doctorService.deleteDoctorSpecialize(doctorId, specializeId);
+    return this.doctorService.deleteDoctorSpecialize(
+      doctorId,
+      specializeId,
+      currentUser,
+    );
   }
 
   @Get('doctor-account-byId/:id')
   @UseGuards(JwtAuthGuard)
   async getDoctorAccountById(@Param('id') id: string) {
     return this.doctorService.getDoctorAccountById(id);
+  }
+
+  // ============================================================================
+  // DOCTOR CLINIC ASSIGNMENT
+  // ============================================================================
+
+  @Post(':id/assign-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async assignDoctorToClinic(
+    @Param('id') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.doctorService.assignDoctorToClinic(
+      doctorId,
+      clinicId,
+      currentUser,
+    );
+  }
+
+  @Delete(':id/remove-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async removeDoctorFromClinic(
+    @Param('id') doctorId: string,
+    @Param('clinicId') clinicId: string,
+  ) {
+    return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
   }
 }

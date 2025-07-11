@@ -3,8 +3,14 @@ import { ClinicService } from './clinic.service';
 import { ClinicController } from './clinic.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CLINIC_CONSUMER_GROUP, CLINIC_SERVICE } from '@app/common';
-import { AuthModule } from '../auth/auth.module';
+import {
+  CLINIC_CONSUMER_GROUP,
+  CLINIC_SERVICE,
+  STAFF_SERVICE,
+} from '@app/common';
+import { AuthModule } from '@auth-gw/auth.module';
+import { HttpModules, httpClientConfig } from '../api/http.client';
+
 //docker-compose up zookeeper kafka postgres auth staff api-gateway --build --watch
 @Module({
   imports: [
@@ -27,6 +33,14 @@ import { AuthModule } from '../auth/auth.module';
         }),
         inject: [ConfigService],
       },
+    ]),
+    // HTTP clients for REST API communication
+    HttpModules.registerAsync([
+      httpClientConfig(
+        STAFF_SERVICE,
+        'STAFF_SERVICE_HOST',
+        'STAFF_SERVICE_PORT',
+      ),
     ]),
     AuthModule,
   ],

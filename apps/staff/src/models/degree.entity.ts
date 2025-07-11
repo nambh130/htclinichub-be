@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { StaffInfo } from './staffInfo.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
@@ -10,12 +10,12 @@ export class Degree extends PostgresAbstractEntity<Degree> {
   @Column()
   description: string;
 
-  @ManyToOne(() => StaffInfo, (staffInfo) => staffInfo.specializes, {
+  @ManyToOne(() => StaffInfo, (staffInfo) => staffInfo.degrees, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'staff_info_id' })
   staff_info: StaffInfo;
-  
+
   @Column({ name: 'image_id' })
   image_id: string;
 }

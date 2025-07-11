@@ -1,12 +1,5 @@
 import { BaseClinic } from '@app/common/modules/clinic/models/base-clinic.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { DoctorClinicMap } from './doctor-clinic-map.entity';
 

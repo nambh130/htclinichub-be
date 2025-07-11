@@ -1,18 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import {
-  AUTH_SERVICE,
-  CLINIC_SERVICE,
-  CreateDoctorAccountDto,
-} from '@app/common';
+import { AUTH_SERVICE, CLINIC_SERVICE, STAFF_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { STAFF_SERVICE } from '@app/common';
+import { HttpService } from '@nestjs/axios';
 import {
   AddClinicDto,
   ClinicDto,
   UpdateClinicDto,
 } from '@app/common/dto/clinic';
 import { firstValueFrom } from 'rxjs';
-import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class ClinicService implements OnModuleInit {
@@ -20,6 +15,8 @@ export class ClinicService implements OnModuleInit {
     @Inject(CLINIC_SERVICE) private readonly clinicClient: ClientKafka,
     @Inject(AUTH_SERVICE)
     private readonly authClient: ClientKafka,
+    @Inject(STAFF_SERVICE)
+    private readonly staffHttpService: HttpService,
   ) {}
 
   async onModuleInit() {
@@ -28,6 +25,7 @@ export class ClinicService implements OnModuleInit {
     this.clinicClient.subscribeToResponseOf('delete-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
+    this.clinicClient.subscribeToResponseOf('get-clinics-by-ids');
 
     this.authClient.subscribeToResponseOf('authenticate');
 
@@ -53,15 +51,28 @@ export class ClinicService implements OnModuleInit {
   async getClinics(
     userId: string,
     options?: { limit?: number; page?: number },
-  ): Promise<any> {
+  ): Promise<unknown> {
     return firstValueFrom(
       this.clinicClient.send('get-clinics', { userId, options }),
     );
   }
 
+  async getAllClinics(): Promise<unknown> {
+    return firstValueFrom(this.clinicClient.send('get-all-clinics', {}));
+  }
+
+  // Get by 1 id
   async getClinicById(id: string, userId: string): Promise<ClinicDto> {
     return firstValueFrom(
       this.clinicClient.send('get-clinic-by-id', { id, userId }),
+    );
+  }
+
+  // Get by array of ids
+  async getClinicByIds(ids: string[]): Promise<any> {
+    console.log({ ids });
+    return firstValueFrom(
+      this.clinicClient.send('get-clinics-by-ids', { ids }),
     );
   }
 
@@ -79,5 +90,14 @@ export class ClinicService implements OnModuleInit {
     return firstValueFrom(
       this.clinicClient.send('delete-clinic', { id, userId }),
     );
+  }
+
+  async getClinicStaff(
+    clinicId: string,
+    queryParams?: string,
+  ): Promise<unknown> {
+    const url = `/staff/clinic/${clinicId}/all${queryParams ? `?${queryParams}` : ''}`;
+    const response = await firstValueFrom(this.staffHttpService.get(url));
+    return response.data;
   }
 }

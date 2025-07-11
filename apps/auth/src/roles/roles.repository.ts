@@ -11,10 +11,8 @@ export class RoleRepository extends PostgresAbstractRepository<Role> {
   constructor(
     @InjectRepository(Role)
     itemsRepository: Repository<Role>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }
 }
-
-

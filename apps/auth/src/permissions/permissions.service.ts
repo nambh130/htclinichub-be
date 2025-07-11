@@ -9,9 +9,9 @@ import { GetPermissionDto } from './dto/get-permisison.dto';
 
 @Injectable()
 export class PermissionsService extends BaseService {
-  constructor(
-    private readonly permissionRepository: PermissionRepository
-  ) { super(); }
+  constructor(private readonly permissionRepository: PermissionRepository) {
+    super();
+  }
 
   async createPermission(createPermissionDto: CreatePermissionDto) {
     const newPermission = new Permission(createPermissionDto);
@@ -19,13 +19,18 @@ export class PermissionsService extends BaseService {
   }
 
   async deletePermission(deletePermissionDto: DeletePermissionDto) {
-    return await this.permissionRepository.findOneAndDelete({ id: deletePermissionDto.id });
+    return await this.permissionRepository.findOneAndDelete({
+      id: deletePermissionDto.id,
+    });
   }
 
   async updatePermission(id: string, updatePermissionDto: UpdatePermissionDto) {
-    return await this.permissionRepository.findOneAndUpdate({
-      id
-    }, updatePermissionDto);
+    return await this.permissionRepository.findOneAndUpdate(
+      {
+        id,
+      },
+      updatePermissionDto,
+    );
   }
 
   async getPermission(getPermissionDto: GetPermissionDto) {

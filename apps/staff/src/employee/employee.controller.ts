@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import {
   CreateEmployeeAccountDto,
@@ -28,8 +36,15 @@ export class EmployeeController {
   getEmployeeListWithProfile(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
   ) {
-    return this.employeeService.getEmployeeListWithProfile(+page, +limit);
+    return this.employeeService.getEmployeeListWithProfile(
+      +page,
+      +limit,
+      search,
+      searchField,
+    );
   }
 
   @Get('details/:id')
@@ -186,10 +201,15 @@ export class EmployeeController {
     payload: {
       employeeId: string;
       degreeId: string;
+      currentUser: TokenPayload;
     },
   ) {
-    const { employeeId, degreeId } = payload;
-    return this.employeeService.deleteEmployeeDegree(employeeId, degreeId);
+    const { employeeId, degreeId, currentUser } = payload;
+    return this.employeeService.deleteEmployeeDegree(
+      employeeId,
+      degreeId,
+      currentUser,
+    );
   }
 
   @Post('get-specializes')
@@ -245,12 +265,14 @@ export class EmployeeController {
     payload: {
       employeeId: string;
       specializeId: string;
+      currentUser: TokenPayload;
     },
   ) {
-    const { employeeId, specializeId } = payload;
+    const { employeeId, specializeId, currentUser } = payload;
     return this.employeeService.deleteEmployeeSpecialize(
       employeeId,
       specializeId,
+      currentUser,
     );
   }
 
@@ -291,6 +313,38 @@ export class EmployeeController {
     return this.employeeService.unlockEmployeeAccount(
       data.id,
       data.currentUser,
+    );
+  }
+
+  @Post('assign-clinic')
+  assignEmployeeToClinic(
+    @Body()
+    payload: {
+      employeeId: string;
+      clinicId: string;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { employeeId, clinicId, currentUser } = payload;
+    return this.employeeService.assignEmployeeToClinic(
+      employeeId,
+      clinicId,
+      currentUser,
+    );
+  }
+
+  @Delete('clinic')
+  removeEmployeeFromClinic(
+    @Body()
+    payload: {
+      employeeId: string;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { employeeId, currentUser } = payload;
+    return this.employeeService.removeEmployeeFromClinic(
+      employeeId,
+      currentUser,
     );
   }
 }

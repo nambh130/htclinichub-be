@@ -6,7 +6,7 @@ import {
   Repository,
   DeepPartial,
 } from 'typeorm';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { PostgresAbstractEntity } from './abstract.entity';
 
@@ -38,15 +38,10 @@ export abstract class PostgresAbstractRepository<
   async findOne(
     where: FindOptionsWhere<T>,
     relations?: string[] | FindOptionsRelations<T>,
-  ): Promise<T> {
+  ): Promise<T | null> {
     const entity = await this.entityRepository.findOne({ where, relations });
 
-    if (!entity) {
-      this.logger.warn(`Entity not found for query: ${JSON.stringify(where)}`);
-      throw new NotFoundException('Entity not found');
-    }
-
-    return entity;
+    return entity || null;
   }
 
   async paginate(
@@ -85,16 +80,8 @@ export abstract class PostgresAbstractRepository<
   async findOneAndUpdate(
     where: FindOptionsWhere<T>,
     partialEntity: QueryDeepPartialEntity<T>,
-  ): Promise<T> {
-    const updateResult = await this.entityRepository.update(
-      where,
-      partialEntity,
-    );
-
-    if (!updateResult.affected) {
-      this.logger.warn(`Entity not found for query: ${JSON.stringify(where)}`);
-      throw new NotFoundException('Entity not found');
-    }
+  ): Promise<T | null> {
+    await this.entityRepository.update(where, partialEntity);
     return this.findOne(where);
   }
 

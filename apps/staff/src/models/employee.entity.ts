@@ -11,8 +11,8 @@ export class Employee extends PostgresAbstractEntity<Employee> {
   @Column()
   password: string;
 
-  @Column()
-  clinic_id: string;
+  @Column({ nullable: true })
+  clinic_id: string | null;
 
   @Column({ default: false })
   is_locked: boolean;

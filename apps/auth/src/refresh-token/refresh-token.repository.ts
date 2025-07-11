@@ -11,11 +11,8 @@ export class RefreshTokenRepository extends PostgresAbstractRepository<RefreshTo
   constructor(
     @InjectRepository(RefreshToken)
     itemsRepository: Repository<RefreshToken>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }
 }
-
-
-

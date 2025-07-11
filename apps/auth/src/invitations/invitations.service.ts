@@ -24,12 +24,8 @@ export class InvitationsService extends BaseService {
     createInvitationDto: CreateInvitationDto,
     user: { id: string; type: ActorType },
   ) {
-    const {
-      email,
-      clinic,
-      role: roleId,
-      isOwnerInvitation,
-    } = createInvitationDto;
+    const { clinic, role: roleId, isOwnerInvitation } = createInvitationDto;
+    const email = createInvitationDto.email.toLowerCase().trim();
     const token = randomBytes(32).toString('hex');
     const hashedToken = createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms
@@ -43,7 +39,7 @@ export class InvitationsService extends BaseService {
     // Check if user exist because you can't invite employee account into multiple clinics
     // But doctor account can be invited to multiple clinics
     if (userType == ActorEnum.EMPLOYEE) {
-      var checkEmployee: any;
+      let checkEmployee: any;
       try {
         checkEmployee = await this.userRepository.findOne({
           email,
@@ -87,7 +83,7 @@ export class InvitationsService extends BaseService {
     email: string;
   }) {
     const hashedToken = createHash('sha256').update(token).digest('hex');
-    var invitation = await this.invitationRepository.findOne(
+    let invitation = await this.invitationRepository.findOne(
       { hashedToken, email },
       ['clinic', 'role'],
     );

@@ -7,6 +7,10 @@ import {
 } from 'class-validator';
 
 export class CreateDoctorAccountDto {
+  @IsString()
+  @IsOptional()
+  id?: string;
+
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 

@@ -44,14 +44,15 @@ export class EmployeeController {
   async getEmployeeListWithProfile(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
   ) {
-    return await this.employeeService.getEmployeeListWithProfile(+page, +limit);
-  }
-
-  @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  async getEmployeeById(@Param('id') employeeId: string) {
-    return await this.employeeService.getEmployeeById(employeeId);
+    return await this.employeeService.getEmployeeListWithProfile(
+      +page,
+      +limit,
+      search,
+      searchField,
+    );
   }
 
   @Get('employee-by-clinic/:clinicId')
@@ -131,6 +132,12 @@ export class EmployeeController {
     );
   }
 
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getEmployeeById(@Param('id') employeeId: string) {
+    return await this.employeeService.getEmployeeById(employeeId);
+  }
+
   // ============================================================================
   // EMPLOYEE DEGREES MANAGEMENT
   // ============================================================================
@@ -172,8 +179,13 @@ export class EmployeeController {
   deleteEmployeeDegree(
     @Param('id') employeeId: string,
     @Param('degreeId') degreeId: string,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.employeeService.deleteEmployeeDegree(employeeId, degreeId);
+    return this.employeeService.deleteEmployeeDegree(
+      employeeId,
+      degreeId,
+      currentUser,
+    );
   }
 
   // ============================================================================
@@ -221,10 +233,12 @@ export class EmployeeController {
   deleteEmployeeSpecialize(
     @Param('id') employeeId: string,
     @Param('specializeId') specializeId: string,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
     return this.employeeService.deleteEmployeeSpecialize(
       employeeId,
       specializeId,
+      currentUser,
     );
   }
 
@@ -232,5 +246,35 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard)
   async getEmployeeAccountById(@Param('id') id: string) {
     return this.employeeService.getEmployeeAccountById(id);
+  }
+
+  // ============================================================================
+  // CLINIC ASSIGNMENT
+  // ============================================================================
+
+  @Post(':id/assign-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async assignEmployeeToClinic(
+    @Param('id') employeeId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return await this.employeeService.assignEmployeeToClinic(
+      employeeId,
+      clinicId,
+      currentUser,
+    );
+  }
+
+  @Delete(':id/clinic')
+  @UseGuards(JwtAuthGuard)
+  async removeEmployeeFromClinic(
+    @Param('id') employeeId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return await this.employeeService.removeEmployeeFromClinic(
+      employeeId,
+      currentUser,
+    );
   }
 }

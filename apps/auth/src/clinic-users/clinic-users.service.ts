@@ -5,8 +5,6 @@ import { User } from './models/clinic-user.entity';
 import * as bcrypt from 'bcrypt';
 import { ClinicRepository } from '../clinics/clinics.repository';
 import { RoleRepository } from '../roles/roles.repository';
-import { ActorType } from '@app/common';
-import { UserClinicLink } from './models/user-clinics-links.entity';
 
 @Injectable()
 export class ClinicUsersService {
@@ -14,7 +12,7 @@ export class ClinicUsersService {
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly roleRepository: RoleRepository,
-  ) { }
+  ) {}
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
@@ -66,19 +64,13 @@ export class ClinicUsersService {
       ownerOf: true,
     });
   }
-  async updateUser(
-    email: string,
-    updateData: Partial<User>,
-  ): Promise<User> {
-    if (updateData.password)
-      updateData.password = await this.hashPassword(updateData.password)
-
+  async updateUser(email: string, updateData: Partial<User>): Promise<User> {
     return await this.userRepository.create(new User(updateData));
   }
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 12;
     const hash = await bcrypt.hash(password, saltRounds);
-    return hash
+    return hash;
   }
 }

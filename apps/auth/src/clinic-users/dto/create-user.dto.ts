@@ -1,7 +1,14 @@
-import { IsEmail, IsEnum, IsOptional, IsString, IsUUID, Matches, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  MinLength,
+} from 'class-validator';
 import { ActorEnum } from '../models/clinic-user.entity';
 import { ActorType } from '@app/common';
-import { Optional } from '@nestjs/common';
 
 export class CreateUserDto {
   @IsEmail()
@@ -21,5 +28,4 @@ export class CreateUserDto {
 
   @IsEnum(ActorEnum)
   actorType: ActorType;
-
 }

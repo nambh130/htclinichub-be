@@ -14,7 +14,7 @@ import {
 } from '@app/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { MediaService } from '../../media/media.service';
+import { MediaService } from '@media-gw/media.service';
 import { AxiosError } from 'axios';
 
 @Injectable()
@@ -50,11 +50,32 @@ export class EmployeeService {
     return response.data;
   }
 
-  async getEmployeeListWithProfile(page = 1, limit = 10): Promise<unknown> {
+  async getEmployeeListWithProfile(
+    page = 1,
+    limit = 10,
+    search?: string,
+    searchField?: 'name' | 'email' | 'phone' | 'all',
+  ): Promise<unknown> {
     try {
+      const params: {
+        page: number;
+        limit: number;
+        search?: string;
+        searchField?: string;
+      } = {
+        page,
+        limit,
+      };
+      if (search) {
+        params.search = search;
+      }
+      if (searchField) {
+        params.searchField = searchField;
+      }
+
       const response = await firstValueFrom(
         this.staffService.get(`/staff/employee/account-list-with-profile`, {
-          params: { page, limit },
+          params,
         }),
       );
       return response.data;
@@ -267,8 +288,9 @@ export class EmployeeService {
   async deleteEmployeeDegree(
     employeeId: string,
     degreeId: string,
+    currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { employeeId, degreeId };
+    const payload = { employeeId, degreeId, currentUser };
 
     const response = await firstValueFrom(
       this.staffService.post(`/staff/employee/delete-degree`, payload),
@@ -326,8 +348,9 @@ export class EmployeeService {
   async deleteEmployeeSpecialize(
     employeeId: string,
     specializeId: string,
+    currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { employeeId, specializeId };
+    const payload = { employeeId, specializeId, currentUser };
 
     const response = await firstValueFrom(
       this.staffService.post(`/staff/employee/delete-specialize`, payload),
@@ -340,6 +363,37 @@ export class EmployeeService {
     const response = await firstValueFrom(
       this.staffService.get(`/staff/employee/employee-account-byId/${id}`),
     );
+    return response.data;
+  }
+
+  // ============================================================================
+  // CLINIC ASSIGNMENT
+  // ============================================================================
+
+  async assignEmployeeToClinic(
+    employeeId: string,
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { employeeId, clinicId, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.post('/staff/employee/assign-clinic', payload),
+    );
+
+    return response.data;
+  }
+
+  async removeEmployeeFromClinic(
+    employeeId: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { employeeId, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.delete('/staff/employee/clinic', { data: payload }),
+    );
+
     return response.data;
   }
 

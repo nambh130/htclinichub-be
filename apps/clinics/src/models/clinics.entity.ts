@@ -1,5 +1,5 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class Clinic extends PostgresAbstractEntity<Clinic> {
@@ -18,8 +18,8 @@ export class Clinic extends PostgresAbstractEntity<Clinic> {
   @Column({ length: 255 })
   email: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  ownerId?: string;
+  @Column({ name: 'owner_id', type: 'varchar', length: 255, nullable: true })
+  ownerId: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   token?: string;

@@ -6,6 +6,7 @@ import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
 import { PinoLogger } from 'nestjs-pino';
 import { nanoid } from 'nanoid';
+import { In } from 'typeorm';
 
 @Injectable()
 export class ClinicsService {
@@ -120,6 +121,36 @@ export class ClinicsService {
     };
   }
 
+  async getAllClinics(): Promise<{ data: Clinic[] }> {
+    try {
+      const clinics = await this.clinicsRepository.find({});
+
+      this.logger.info({
+        msg: 'All clinics retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_ALL_CLINICS',
+        status: 'SUCCESS',
+        count: clinics.length,
+      });
+
+      return {
+        data: clinics.map((clinic) => JSON.parse(JSON.stringify(clinic))),
+      };
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to retrieve all clinics',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_ALL_CLINICS',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
   async getClinicById(id: string, userId: string): Promise<Clinic> {
     if (!id) {
       this.logger.warn({
@@ -180,6 +211,11 @@ export class ClinicsService {
     }
   }
 
+  async getClinicByIds(clinicIds: string[]) {
+    const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
+    return clinics;
+  }
+
   async updateClinic(
     id: string,
     updateClinicDto: UpdateClinicDto,
@@ -219,11 +255,13 @@ export class ClinicsService {
       const clinicToUpdate = new Clinic();
       clinicToUpdate.id = id;
 
+      console.log(updateClinicDto);
       const updatedClinic = await this.clinicsRepository.update(
         clinicToUpdate, // conditions to update
         {
           ...clinic,
           ...updateClinicDto,
+          ownerId: updateClinicDto.ownerId,
           updatedById: userId,
         }, // data to update
       );

@@ -4,4 +4,3 @@ export class GetByIdDto {
   @IsUUID()
   id: string;
 }
-

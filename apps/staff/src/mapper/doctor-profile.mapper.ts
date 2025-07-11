@@ -1,5 +1,6 @@
 import { Doctor } from '../models/doctor.entity';
 import { StaffInfo } from '../models/staffInfo.entity';
+import { StaffBasicInfo } from '@app/common';
 
 // doctor-profile.mapper.ts
 export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo | null) {
@@ -15,7 +16,15 @@ export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo | null) {
       deletedAt: doctor.deletedAt,
       invitations: doctor.invitations,
       services: doctor.services,
-      clinics: doctor.clinics,
+      clinics:
+        doctor.clinics?.map((clinicMap) => ({
+          id: clinicMap.clinic?.id,
+          name: clinicMap.clinic?.name,
+          location: clinicMap.clinic?.location,
+          phone: clinicMap.clinic?.phone,
+          email: clinicMap.clinic?.email,
+          ownerId: clinicMap.clinic?.ownerId,
+        })) || [],
       staffInfo: staffInfo
         ? {
             id: staffInfo.id,
@@ -36,5 +45,22 @@ export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo | null) {
           }
         : null,
     },
+  };
+}
+
+// Staff mapper function to convert StaffInfo to StaffBasicInfo
+export function toStaffBasicInfo(
+  staffInfo: StaffInfo | null,
+): StaffBasicInfo | null {
+  if (!staffInfo) return null;
+
+  return {
+    staff_id: staffInfo.staff_id,
+    full_name: staffInfo.full_name,
+    phone: staffInfo.phone,
+    dob: staffInfo.dob,
+    gender: staffInfo.gender,
+    position: staffInfo.position,
+    profile_img_id: staffInfo.profile_img_id,
   };
 }

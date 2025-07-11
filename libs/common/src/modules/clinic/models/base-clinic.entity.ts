@@ -1,4 +1,4 @@
-import { Entity, Column } from 'typeorm';
+import { Column } from 'typeorm';
 import { PostgresAbstractEntity } from '@app/common';
 
 export abstract class BaseClinic extends PostgresAbstractEntity<BaseClinic> {

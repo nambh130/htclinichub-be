@@ -11,9 +11,8 @@ export class InvitationRepository extends PostgresAbstractRepository<EmployeeInv
   constructor(
     @InjectRepository(EmployeeInvitation)
     itemsRepository: Repository<EmployeeInvitation>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }
 }
-

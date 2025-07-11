@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { IsNull } from 'typeorm';
+import { IsNull, Like, In } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import {
@@ -21,6 +21,7 @@ import {
   UpdateDegreeDto,
   UpdateSpecializeDto,
   UpdateProfileDto,
+  deleteAudit,
 } from '@app/common';
 
 import { Employee } from '../models/employee.entity';
@@ -32,6 +33,7 @@ import { EmployeeRepository } from '../repositories/employee.repository';
 import { StaffInfoRepository } from '../repositories/staffInfo.repository';
 import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
+import { ClinicRepository } from '../clinic/clinic.repository';
 
 @Injectable()
 export class EmployeeService extends BaseService {
@@ -40,6 +42,7 @@ export class EmployeeService extends BaseService {
     private readonly staffInfoRepository: StaffInfoRepository,
     private readonly degreeRepository: DegreeRepository,
     private readonly specializeRepository: SpecializeRepository,
+    private readonly clinicRepository: ClinicRepository,
   ) {
     super();
   }
@@ -69,7 +72,49 @@ export class EmployeeService extends BaseService {
         limit,
       });
 
-      return result;
+      if (!result.data.length) {
+        return { data: [], total: 0, page, limit };
+      }
+
+      // Get unique clinic IDs and fetch clinic information
+      const clinicIds = [...new Set(result.data.map((emp) => emp.clinic_id))];
+      const clinics = await this.clinicRepository.find({
+        id: In(clinicIds),
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+      const clinicMap = new Map(clinics.map((clinic) => [clinic.id, clinic]));
+
+      // Map employee data with clinic information
+      const mappedData = result.data.map((employee) => {
+        const clinic = clinicMap.get(employee.clinic_id);
+        return {
+          id: employee.id,
+          email: employee.email,
+          is_locked: employee.is_locked,
+          clinic_id: employee.clinic_id,
+          clinic: clinic
+            ? {
+                id: clinic.id,
+                name: clinic.name,
+                location: clinic.location,
+                phone: clinic.phone,
+                email: clinic.email,
+                ownerId: clinic.ownerId,
+              }
+            : null,
+          createdAt: employee.createdAt,
+          updatedAt: employee.updatedAt,
+        };
+      });
+
+      return {
+        data: mappedData,
+        total: result.total,
+        page,
+        limit,
+      };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -80,7 +125,7 @@ export class EmployeeService extends BaseService {
     }
   }
 
-  async getEmployeeById(employeeId: string): Promise<Employee> {
+  async getEmployeeById(employeeId: string): Promise<any> {
     try {
       if (!employeeId || employeeId.trim() === '') {
         throw new BadRequestException('Employee ID is required');
@@ -88,13 +133,41 @@ export class EmployeeService extends BaseService {
 
       const employee = await this.employeeRepository.findOne({
         id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!employee) {
         throw new NotFoundException(`Employee with ID ${employeeId} not found`);
       }
 
-      return employee;
+      // Fetch clinic information
+      const clinic = await this.clinicRepository.findOne({
+        id: employee.clinic_id,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      return {
+        id: employee.id,
+        email: employee.email,
+        is_locked: employee.is_locked,
+        clinic_id: employee.clinic_id,
+        clinic: clinic
+          ? {
+              id: clinic.id,
+              name: clinic.name,
+              location: clinic.location,
+              phone: clinic.phone,
+              email: clinic.email,
+              ownerId: clinic.ownerId,
+            }
+          : null,
+        createdAt: employee.createdAt,
+        updatedAt: employee.updatedAt,
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -109,23 +182,101 @@ export class EmployeeService extends BaseService {
   async getEmployeeListWithProfile(
     page = 1,
     limit = 10,
-  ): Promise<{
-    data: Employee[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+    search?: string,
+    searchField: 'name' | 'email' | 'phone' | 'all' = 'all',
+  ): Promise<any> {
     try {
-      return await this.employeeRepository.paginate({
-        where: {
-          deletedAt: IsNull(),
-          deletedById: IsNull(),
-          deletedByType: IsNull(),
-        },
-        relations: ['staffInfo'],
+      const baseCondition = {
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      };
+      const searchTerm = search?.trim().toLowerCase();
+
+      const employeeWhere =
+        searchTerm && searchField === 'email'
+          ? { ...baseCondition, email: Like(`%${searchTerm}%`) }
+          : baseCondition;
+
+      const result = await this.employeeRepository.paginate({
+        where: employeeWhere,
         page,
         limit,
       });
+      if (!result.data.length) return { data: [], total: 0, page, limit };
+
+      const employeeIds = result.data.map((emp) => emp.id);
+      const clinicIds = [...new Set(result.data.map((emp) => emp.clinic_id))];
+
+      const staffInfos = await this.staffInfoRepository.find({
+        staff_id: In(employeeIds),
+        ...baseCondition,
+      });
+      const staffMap = new Map(
+        staffInfos.map((staff) => [staff.staff_id, staff]),
+      );
+
+      const clinics = await this.clinicRepository.find({
+        id: In(clinicIds),
+        ...baseCondition,
+      });
+      const clinicMap = new Map(clinics.map((clinic) => [clinic.id, clinic]));
+
+      const shouldFilter =
+        searchTerm && ['name', 'phone', 'all'].includes(searchField);
+      const filteredEmployees = shouldFilter
+        ? result.data.filter((emp) => {
+            const staff = staffMap.get(emp.id);
+            return searchField === 'name'
+              ? staff?.full_name?.toLowerCase().includes(searchTerm)
+              : searchField === 'phone'
+                ? staff?.phone?.includes(searchTerm)
+                : emp.email.toLowerCase().includes(searchTerm) ||
+                  staff?.full_name?.toLowerCase().includes(searchTerm) ||
+                  staff?.phone?.includes(searchTerm);
+          })
+        : result.data;
+
+      const mappedData = filteredEmployees.map((emp) => {
+        const staff = staffMap.get(emp.id);
+        const clinic = clinicMap.get(emp.clinic_id);
+        return {
+          id: emp.id,
+          email: emp.email,
+          is_locked: emp.is_locked,
+          clinic_id: emp.clinic_id,
+          staffInfo: staff
+            ? {
+                id: staff.id,
+                staff_id: staff.staff_id,
+                staff_type: staff.staff_type,
+                full_name: staff.full_name,
+                dob: staff.dob,
+                phone: staff.phone,
+                gender: staff.gender,
+                position: staff.position,
+                profile_img_id: staff.profile_img_id,
+              }
+            : null,
+          clinic: clinic
+            ? {
+                id: clinic.id,
+                name: clinic.name,
+                location: clinic.location,
+                phone: clinic.phone,
+                email: clinic.email,
+                ownerId: clinic.ownerId,
+              }
+            : null,
+        };
+      });
+
+      return {
+        data: mappedData,
+        total: shouldFilter ? filteredEmployees.length : result.total,
+        page,
+        limit,
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -157,7 +308,7 @@ export class EmployeeService extends BaseService {
       const employee = new Employee();
       employee.email = email;
       employee.password = await bcrypt.hash(dto.password, 10);
-      employee.clinic_id = dto.clinic;
+      employee.clinic_id = dto.clinic_id;
 
       setAudit(employee, currentUser);
 
@@ -181,6 +332,9 @@ export class EmployeeService extends BaseService {
     try {
       const employee = await this.employeeRepository.findOne({
         id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
       if (!employee) {
         throw new NotFoundException(`Employee with ID ${employeeId} not found`);
@@ -219,6 +373,9 @@ export class EmployeeService extends BaseService {
     try {
       const employee = await this.employeeRepository.findOne({
         id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
       if (!employee) {
         throw new NotFoundException(`Employee with ID ${employeeId} not found`);
@@ -258,7 +415,12 @@ export class EmployeeService extends BaseService {
   async getStaffInfoByEmployeeId(employeeId: string): Promise<unknown> {
     try {
       const employee = await this.employeeRepository.findOne(
-        { id: employeeId },
+        {
+          id: employeeId,
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
         [],
       );
 
@@ -267,9 +429,22 @@ export class EmployeeService extends BaseService {
       }
 
       const staffInfo = await this.staffInfoRepository.findOne(
-        { staff_id: employeeId },
+        {
+          staff_id: employeeId,
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
+        },
         ['degrees', 'specializes'],
       );
+
+      // Fetch clinic information
+      const clinic = await this.clinicRepository.findOne({
+        id: employee.clinic_id,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
 
       const profile = {
         account: {
@@ -277,6 +452,16 @@ export class EmployeeService extends BaseService {
           email: employee.email,
           clinic_id: employee.clinic_id,
           is_locked: employee.is_locked,
+          clinic: clinic
+            ? {
+                id: clinic.id,
+                name: clinic.name,
+                location: clinic.location,
+                phone: clinic.phone,
+                email: clinic.email,
+                ownerId: clinic.ownerId,
+              }
+            : null,
           staffInfo: staffInfo,
         },
         staffInfo: staffInfo,
@@ -302,13 +487,21 @@ export class EmployeeService extends BaseService {
     currentUser: TokenPayload,
   ): Promise<StaffInfo> {
     try {
-      const employee = await this.employeeRepository.findOne({ id: staffId });
+      const employee = await this.employeeRepository.findOne({
+        id: staffId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!employee) {
         throw new NotFoundException(`Employee with ID ${staffId} not found`);
       }
 
       const existingStaffInfo = await this.staffInfoRepository.findOne({
         staff_id: staffId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
       if (existingStaffInfo) {
         throw new ConflictException(
@@ -362,6 +555,9 @@ export class EmployeeService extends BaseService {
     try {
       const employee = await this.employeeRepository.findOne({
         id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
       if (!employee) {
         throw new NotFoundException(`Employee with ID ${employeeId} not found`);
@@ -369,6 +565,9 @@ export class EmployeeService extends BaseService {
 
       const existingStaffInfo = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingStaffInfo) {
@@ -421,6 +620,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -431,6 +633,9 @@ export class EmployeeService extends BaseService {
 
       const degrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       return degrees;
@@ -453,6 +658,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -463,6 +671,9 @@ export class EmployeeService extends BaseService {
 
       const existingDegrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateDegree = existingDegrees.find(
@@ -507,6 +718,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -518,6 +732,9 @@ export class EmployeeService extends BaseService {
       const existingDegree = await this.degreeRepository.findOne({
         id: degreeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingDegree) {
@@ -528,6 +745,9 @@ export class EmployeeService extends BaseService {
 
       const otherDegrees = await this.degreeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateDegree = otherDegrees.find(
@@ -572,10 +792,14 @@ export class EmployeeService extends BaseService {
   async deleteEmployeeDegree(
     employeeId: string,
     degreeId: string,
+    currentUser: TokenPayload,
   ): Promise<void> {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -588,6 +812,9 @@ export class EmployeeService extends BaseService {
         {
           id: degreeId,
           staff_info: { staff_id: employeeId },
+          deletedAt: IsNull(),
+          deletedById: IsNull(),
+          deletedByType: IsNull(),
         },
         ['staff_info'],
       );
@@ -598,7 +825,11 @@ export class EmployeeService extends BaseService {
         );
       }
 
-      await this.degreeRepository.findOneAndDelete({ id: degreeId });
+      const updateData = deleteAudit({}, currentUser);
+      await this.degreeRepository.findOneAndUpdate(
+        { id: degreeId },
+        updateData,
+      );
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -614,6 +845,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -624,6 +858,9 @@ export class EmployeeService extends BaseService {
 
       const specializes = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       return specializes;
@@ -648,6 +885,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -658,6 +898,9 @@ export class EmployeeService extends BaseService {
 
       const existingSpecializations = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateSpecialization = existingSpecializations.find(
@@ -703,6 +946,9 @@ export class EmployeeService extends BaseService {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -714,6 +960,9 @@ export class EmployeeService extends BaseService {
       const existingSpecialize = await this.specializeRepository.findOne({
         id: specializeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!existingSpecialize) {
@@ -724,6 +973,9 @@ export class EmployeeService extends BaseService {
 
       const otherSpecializations = await this.specializeRepository.find({
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       const duplicateSpecialization = otherSpecializations.find(
@@ -769,10 +1021,14 @@ export class EmployeeService extends BaseService {
   async deleteEmployeeSpecialize(
     employeeId: string,
     specializeId: string,
+    currentUser: TokenPayload,
   ): Promise<void> {
     try {
       const staff = await this.staffInfoRepository.findOne({
         staff_id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!staff) {
@@ -784,6 +1040,9 @@ export class EmployeeService extends BaseService {
       const specialize = await this.specializeRepository.findOne({
         id: specializeId,
         staff_info: { id: staff.id },
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       if (!specialize) {
@@ -792,7 +1051,11 @@ export class EmployeeService extends BaseService {
         );
       }
 
-      await this.specializeRepository.findOneAndDelete({ id: specializeId });
+      const updateData = deleteAudit({}, currentUser);
+      await this.specializeRepository.findOneAndUpdate(
+        { id: specializeId },
+        updateData,
+      );
     } catch (error) {
       if (
         error instanceof BadRequestException ||
@@ -809,13 +1072,29 @@ export class EmployeeService extends BaseService {
       // Query employees by clinic_id
       const employees = await this.employeeRepository.find({
         clinic_id: clinicId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      // Fetch clinic information once since all employees belong to the same clinic
+      const clinic = await this.clinicRepository.findOne({
+        id: clinicId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
       });
 
       // Get staff info for each employee
       const results = await Promise.all(
         employees.map(async (employee) => {
           const staffInfo = await this.staffInfoRepository.findOne(
-            { staff_id: employee.id },
+            {
+              staff_id: employee.id,
+              deletedAt: IsNull(),
+              deletedById: IsNull(),
+              deletedByType: IsNull(),
+            },
             ['degrees', 'specializes'],
           );
 
@@ -824,6 +1103,16 @@ export class EmployeeService extends BaseService {
               id: employee.id,
               email: employee.email,
               clinic_id: employee.clinic_id,
+              clinic: clinic
+                ? {
+                    id: clinic.id,
+                    name: clinic.name,
+                    location: clinic.location,
+                    phone: clinic.phone,
+                    email: clinic.email,
+                    ownerId: clinic.ownerId,
+                  }
+                : null,
             },
             info: staffInfo || null,
           };
@@ -843,17 +1132,40 @@ export class EmployeeService extends BaseService {
 
   async getEmployeeAccountById(
     id: string,
-  ): Promise<{ id: string; email: string; clinic_id: string }> {
+  ): Promise<{ id: string; email: string; clinic_id: string; clinic: any }> {
     try {
-      const employee = await this.employeeRepository.findOne({ id });
+      const employee = await this.employeeRepository.findOne({
+        id,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
       if (!employee) {
         throw new NotFoundException('Employee not found');
       }
+
+      // Fetch clinic information
+      const clinic = await this.clinicRepository.findOne({
+        id: employee.clinic_id,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
 
       return {
         id: employee.id,
         email: employee.email,
         clinic_id: employee.clinic_id,
+        clinic: clinic
+          ? {
+              id: clinic.id,
+              name: clinic.name,
+              location: clinic.location,
+              phone: clinic.phone,
+              email: clinic.email,
+              ownerId: clinic.ownerId,
+            }
+          : null,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -861,6 +1173,79 @@ export class EmployeeService extends BaseService {
       }
       throw new InternalServerErrorException(
         'Failed to retrieve employee account',
+      );
+    }
+  }
+
+  async assignEmployeeToClinic(
+    employeeId: string,
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<Employee> {
+    try {
+      const employee = await this.employeeRepository.findOne({
+        id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+      }
+
+      const updateData = updateAudit({ clinic_id: clinicId }, currentUser);
+      const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
+        { id: employeeId },
+        updateData,
+      );
+
+      return updatedEmployee;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to assign employee to clinic',
+      );
+    }
+  }
+
+  async removeEmployeeFromClinic(
+    employeeId: string,
+    currentUser: TokenPayload,
+  ): Promise<Employee> {
+    try {
+      const employee = await this.employeeRepository.findOne({
+        id: employeeId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+      }
+
+      const updateData = updateAudit({ clinic_id: null }, currentUser);
+      const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
+        { id: employeeId },
+        updateData,
+      );
+
+      return updatedEmployee;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to remove employee from clinic',
       );
     }
   }

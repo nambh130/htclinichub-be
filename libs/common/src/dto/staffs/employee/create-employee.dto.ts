@@ -18,5 +18,5 @@ export class CreateEmployeeAccountDto {
   password: string;
 
   @IsString()
-  clinic: string;
+  clinic_id: string;
 }

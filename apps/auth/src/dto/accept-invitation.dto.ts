@@ -2,9 +2,8 @@ import { IsString, IsBoolean } from 'class-validator';
 
 export class AcceptInvitationDto {
   @IsString()
-  token: string
+  token: string;
 
   @IsBoolean()
-  accept: boolean
+  accept: boolean;
 }
-

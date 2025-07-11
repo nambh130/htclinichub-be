@@ -3,11 +3,12 @@ import { DoctorService } from './doctor/doctor.service';
 import { DoctorController } from './doctor/doctor.controller';
 import { EmployeeService } from './employee/employee.service';
 import { EmployeeController } from './employee/employee.controller';
-import { AuthModule } from '../auth/auth.module';
+import { AuthModule } from '@auth-gw/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { httpClientConfig, HttpModules } from '../api/http.client';
-import { MEDIA_SERVICE, STAFF_SERVICE } from '@app/common';
-import { MediaModule } from '../media/media.module';
+import { httpClientConfig, HttpModules } from '@api-gateway/api/http.client';
+import { STAFF_SERVICE } from '@app/common';
+import { MediaModule } from '@media-gw/media.module';
+import { ClinicModule } from '@clinics-gw/clinic.module';
 
 @Module({
   imports: [
@@ -18,15 +19,11 @@ import { MediaModule } from '../media/media.module';
         'STAFF_SERVICE_HOST',
         'STAFF_SERVICE_PORT',
       ),
-      httpClientConfig(
-        MEDIA_SERVICE,
-        'MEDIA_SERVICE_HOST',
-        'MEDIA_SERVICE_PORT',
-      ),
     ]),
 
     MediaModule,
     AuthModule,
+    ClinicModule,
   ],
   controllers: [DoctorController, EmployeeController],
   providers: [DoctorService, EmployeeService],
