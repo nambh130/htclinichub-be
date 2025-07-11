@@ -7,15 +7,12 @@ import { TokenPayload } from '@app/common';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    configService: ConfigService,
-  ) {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           return (
-            request?.cookies?.Authentication ||
-            request?.headers?.authentication
+            request?.cookies?.Authentication || request?.headers?.authentication
           );
         },
       ]),

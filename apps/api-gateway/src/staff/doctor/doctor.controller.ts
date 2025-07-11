@@ -9,11 +9,10 @@ import {
   Put,
   Delete,
 } from '@nestjs/common';
-import { StaffService } from './staff.service';
-import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
+import { DoctorService } from './doctor.service';
+import { ManageDoctorScheduleService } from '../manage-doctor-schedule/manage-doctor-schedule.service';
 import {
   CreateDoctorAccountDto,
-  CreateEmployeeAccountDto,
   CurrentUser,
   DoctorDegreeDto,
   DoctorSpecializeDto,
@@ -23,84 +22,75 @@ import {
   UpdateSpecializeDto,
 } from '@app/common';
 
-import { ClinicService } from '../clinics/clinic.service';
-import { IClinic, IMappedClinicLink } from './interfaces/staff.interface';
-import {
-  DoctorProfileDto,
-  UpdateProfileDto,
-} from '@app/common/dto/staffs/doctor-profile.dto';
+import { ClinicService } from '../../clinics/clinic.service';
+import { IMappedClinicLink } from '../interfaces/staff.interface';
+import { DoctorProfileDto, UpdateProfileDto } from '@app/common';
 import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
 import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 
-@Controller('staff')
-export class StaffController {
+@Controller('staff/doctor')
+export class DoctorController {
   constructor(
-
-    private readonly staffService: StaffService,
+    private readonly doctorService: DoctorService,
     private readonly manageDoctorScheduleService: ManageDoctorScheduleService,
-    private readonly clinicService: ClinicService
-  ) { }
+    private readonly clinicService: ClinicService,
+  ) {}
 
   // ============================================================================
   // DOCTOR ACCOUNT MANAGEMENT
   // ============================================================================
 
-  @Get('doctor/account-list')
+  @Get('account-list')
   @UseGuards(JwtAuthGuard)
   async getDoctorAccountList(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
   ) {
-    return this.staffService.getDoctorAccountList(+page, +limit);
+    return this.doctorService.getDoctorAccountList(+page, +limit);
   }
 
-  @Get('doctor/account-list-with-profile')
+  @Get('account-list-with-profile')
   @UseGuards(JwtAuthGuard)
   async getDoctorListWithProfile(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
   ) {
-    return await this.staffService.getDoctorListWithProfile(+page, +limit);
-  }
-
-  @Get('doctor/:id')
-  @UseGuards(JwtAuthGuard)
-  async getDoctorById(@Param('id') doctorId: string) {
-    return await this.staffService.getDoctorById(doctorId);
+    return await this.doctorService.getDoctorListWithProfile(
+      +page,
+      +limit,
+      search,
+      searchField,
+    );
   }
 
   @Get('doctor-by-clinic/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getDoctorByClinic(@Param('clinicId') clinicId: string) {
-    return this.staffService.getDoctorByClinic(clinicId);
+    return this.doctorService.getDoctorByClinic(clinicId);
   }
 
   @Get('clinics-by-doctor')
   @UseGuards(JwtAuthGuard)
   async getClinicByDoctor(
-    @CurrentUser() user: TokenPayload
-  ) {
-    // {linkId, clinicId}
-    const doctorClinicsLink =
-      await this.staffService.getClinicIdsByDoctor({ userId: user.userId });
-
-    const clinicIds = doctorClinicsLink.map((data) => data.clinic);
-  console.log("Clinic Ids 1", clinicIds, doctorClinicsLink);
-    const clinics: IClinic[] = await this.clinicService.getClinicByIds(clinicIds);
-    console.log("Clinics Ids", clinics);
+    @CurrentUser() user: TokenPayload,
+  ): Promise<IMappedClinicLink[]> {
+    const doctorClinicsLink = await this.doctorService.getClinicIdsByDoctor(
+      user.userId,
+    );
 
     const result: IMappedClinicLink[] = doctorClinicsLink.map((link) => {
-      const clinicInfo = clinics.find((c) => c.id === link.clinic);
-      // console.log("Check", clinicInfo);
+      const clinicInfo = link.clinic;
       const isAdmin = clinicInfo?.ownerId === user.userId;
-      console.log(clinicInfo, isAdmin)
+
       return {
         link_id: link.linkId,
         clinic: {
           id: clinicInfo?.id ?? '',
           name: clinicInfo?.name ?? '',
           location: clinicInfo?.location ?? '',
-          isAdmin
+          isAdmin,
         },
       };
     });
@@ -108,90 +98,96 @@ export class StaffController {
     return result;
   }
 
-  @Get('doctor-details/:id')
+  @Get('details/:id')
   @UseGuards(JwtAuthGuard)
   async getDoctorDetailsById(@Param('id') doctorId: string) {
-    return await this.staffService.getDoctorDetailsById(doctorId);
+    return await this.doctorService.getDoctorDetailsById(doctorId);
   }
 
-  @Post('doctor/create-account')
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorById(@Param('id') doctorId: string) {
+    return await this.doctorService.getDoctorById(doctorId);
+  }
+
+  @Post('create-account')
   @UseGuards(JwtAuthGuard)
   async createDoctorAccount(
     @Body() dto: CreateDoctorAccountDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createDoctorAccount(dto, currentUser);
+    return this.doctorService.createDoctorAccount(dto, currentUser);
   }
 
-  @Post('doctor/lock/:id')
+  @Post('lock/:id')
   @UseGuards(JwtAuthGuard)
   async lockDoctorAccount(
     @Param('id') id: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.lockDoctorAccount(id, currentUser);
+    return this.doctorService.lockDoctorAccount(id, currentUser);
   }
 
-  @Post('doctor/unlock/:id')
+  @Post('unlock/:id')
   @UseGuards(JwtAuthGuard)
   async unlockDoctorAccount(
     @Param('id') id: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.unlockDoctorAccount(id, currentUser);
+    return this.doctorService.unlockDoctorAccount(id, currentUser);
   }
 
   // ============================================================================
   // DOCTOR PROFILE MANAGEMENT
   // ============================================================================
 
-  @Get('doctor/:id/profile')
+  @Get(':id/profile')
   @UseGuards(JwtAuthGuard)
   async getStaffInfoByDoctorId(@Param('id') doctorId: string) {
-    return this.staffService.getStaffInfoByDoctorId(doctorId);
+    return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 
-  @Post('doctor/:id/create-profile')
+  @Post(':id/create-profile')
   @UseGuards(JwtAuthGuard)
   async createDoctorProfile(
     @Param('id') staffId: string,
     @Body() dto: DoctorProfileDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createDoctorProfile(staffId, dto, currentUser);
+    return this.doctorService.createDoctorProfile(staffId, dto, currentUser);
   }
 
-  @Post('doctor/:id/update-profile')
+  @Post(':id/update-profile')
   @UseGuards(JwtAuthGuard)
   async updateDoctorProfile(
     @Param('id') doctorId: string,
     @Body() dto: UpdateProfileDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.updateDoctorProfile(doctorId, dto, currentUser);
+    return this.doctorService.updateDoctorProfile(doctorId, dto, currentUser);
   }
 
   // ============================================================================
   // DOCTOR DEGREES MANAGEMENT
   // ============================================================================
 
-  @Get('doctor/:id/degrees')
+  @Get(':id/degrees')
   @UseGuards(JwtAuthGuard)
   getDegreesByDoctorId(@Param('id') doctorId: string) {
-    return this.staffService.getDegreesByDoctorId(doctorId);
+    return this.doctorService.getDegreesByDoctorId(doctorId);
   }
 
-  @Post('doctor/:id/add-degree')
+  @Post(':id/add-degree')
   @UseGuards(JwtAuthGuard)
   addDoctorDegree(
     @Param('id') doctorId: string,
     @Body() dto: DoctorDegreeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.addDoctorDegree(doctorId, dto, currentUser);
+    return this.doctorService.addDoctorDegree(doctorId, dto, currentUser);
   }
 
-  @Post('doctor/:id/update-degree/:degreeId')
+  @Post(':id/update-degree/:degreeId')
   @UseGuards(JwtAuthGuard)
   updateDoctorDegree(
     @Param('id') doctorId: string,
@@ -199,7 +195,7 @@ export class StaffController {
     @Body() dto: UpdateDegreeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.updateDoctorDegree(
+    return this.doctorService.updateDoctorDegree(
       doctorId,
       degreeId,
       dto,
@@ -207,36 +203,41 @@ export class StaffController {
     );
   }
 
-  @Delete('doctor/:id/delete-degree/:degreeId')
+  @Delete(':id/delete-degree/:degreeId')
   @UseGuards(JwtAuthGuard)
   deleteDoctorDegree(
     @Param('id') doctorId: string,
     @Param('degreeId') degreeId: string,
+    @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.deleteDoctorDegree(doctorId, degreeId);
+    return this.doctorService.deleteDoctorDegree(
+      doctorId,
+      degreeId,
+      currentUser,
+    );
   }
 
   // ============================================================================
   // DOCTOR SPECIALIZATIONS MANAGEMENT
   // ============================================================================
 
-  @Get('doctor/:id/specializes')
+  @Get(':id/specializes')
   @UseGuards(JwtAuthGuard)
   getSpecializesByDoctorId(@Param('id') doctorId: string) {
-    return this.staffService.getSpecializesByDoctorId(doctorId);
+    return this.doctorService.getSpecializesByDoctorId(doctorId);
   }
 
-  @Post('doctor/:id/add-specialize')
+  @Post(':id/add-specialize')
   @UseGuards(JwtAuthGuard)
   addDoctorSpecialize(
     @Param('id') doctorId: string,
     @Body() dto: DoctorSpecializeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.addDoctorSpecialize(doctorId, dto, currentUser);
+    return this.doctorService.addDoctorSpecialize(doctorId, dto, currentUser);
   }
 
-  @Post('doctor/:id/update-specialize/:specializeId')
+  @Post(':id/update-specialize/:specializeId')
   @UseGuards(JwtAuthGuard)
   updateDoctorSpecialize(
     @Param('id') doctorId: string,
@@ -244,7 +245,7 @@ export class StaffController {
     @Body() dto: UpdateSpecializeDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.updateDoctorSpecialize(
+    return this.doctorService.updateDoctorSpecialize(
       doctorId,
       specializeId,
       dto,
@@ -252,61 +253,52 @@ export class StaffController {
     );
   }
 
-  @Delete('doctor/:id/delete-specialize/:specializeId')
+  @Delete(':id/delete-specialize/:specializeId')
   @UseGuards(JwtAuthGuard)
   deleteDoctorSpecialize(
     @Param('id') doctorId: string,
     @Param('specializeId') specializeId: string,
-  ) {
-    return this.staffService.deleteDoctorSpecialize(doctorId, specializeId);
-  }
-
-  // ============================================================================
-  // EMPLOYEE MANAGEMENT
-  // ============================================================================
-
-  @Get('employee-account-list')
-  @UseGuards(JwtAuthGuard)
-  async viewEmployeeAccountList() {
-    return this.staffService.viewEmployeeAccountList();
-  }
-
-  @Post('create-employee-account')
-  @UseGuards(JwtAuthGuard)
-  async createEmployeeAccount(
-    @Body() dto: CreateEmployeeAccountDto,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    return this.staffService.createEmployeeAccount(dto, currentUser);
-  }
-
-  @Post('lock-employee-account/:id')
-  @UseGuards(JwtAuthGuard)
-  async lockEmployeeAccount(
-    @Param('id') id: string,
-    @CurrentUser() currentUser: TokenPayload,
-  ) {
-    return this.staffService.lockEmployeeAccount(id, currentUser);
-  }
-
-  @Post('unlock-employee-account/:id')
-  @UseGuards(JwtAuthGuard)
-  async unlockEmployeeAccount(
-    @Param('id') id: string,
-    @CurrentUser() currentUser: TokenPayload,
-  ) {
-    return this.staffService.unlockEmployeeAccount(id, currentUser);
+    return this.doctorService.deleteDoctorSpecialize(
+      doctorId,
+      specializeId,
+      currentUser,
+    );
   }
 
   @Get('doctor-account-byId/:id')
   @UseGuards(JwtAuthGuard)
   async getDoctorAccountById(@Param('id') id: string) {
-    return this.staffService.getDoctorAccountById(id);
+    return this.doctorService.getDoctorAccountById(id);
   }
 
-  // View Working Hours
-  // Set Up Working Hours
-  // Change Working Hours
+  // ============================================================================
+  // DOCTOR CLINIC ASSIGNMENT
+  // ============================================================================
+
+  @Post(':id/assign-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async assignDoctorToClinic(
+    @Param('id') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.doctorService.assignDoctorToClinic(
+      doctorId,
+      clinicId,
+      currentUser,
+    );
+  }
+
+  @Delete(':id/remove-clinic/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async removeDoctorFromClinic(
+    @Param('id') doctorId: string,
+    @Param('clinicId') clinicId: string,
+  ) {
+    return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
+  }
 
   @Get('/doctor/view-working-shift/:doctorId')
   @UseGuards(JwtAuthGuard)
@@ -315,8 +307,11 @@ export class StaffController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const doctor = await this.manageDoctorScheduleService
-        .getViewWorkingShiftService(doctorId, user);
+      const doctor =
+        await this.manageDoctorScheduleService.getViewWorkingShiftService(
+          doctorId,
+          user,
+        );
       return doctor;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -331,8 +326,10 @@ export class StaffController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const doctor = await this.manageDoctorScheduleService
-        .getDetailShift(shiftId, user);
+      const doctor = await this.manageDoctorScheduleService.getDetailShift(
+        shiftId,
+        user,
+      );
       return doctor;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -349,8 +346,12 @@ export class StaffController {
   ) {
     try {
       // console.log(currentUser);
-      const doctor = await this.manageDoctorScheduleService
-        .setUpWorkingShiftByDoctorId(dto, doctorId, currentUser);
+      const doctor =
+        await this.manageDoctorScheduleService.setUpWorkingShiftByDoctorId(
+          dto,
+          doctorId,
+          currentUser,
+        );
       return doctor;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -367,9 +368,13 @@ export class StaffController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-
-      const doctor = await this.manageDoctorScheduleService
-        .changeWorkingShiftByDoctorId(dto, doctorId, shiftId, currentUser);
+      const doctor =
+        await this.manageDoctorScheduleService.changeWorkingShiftByDoctorId(
+          dto,
+          doctorId,
+          shiftId,
+          currentUser,
+        );
       return doctor;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -386,7 +391,12 @@ export class StaffController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(clinicId, doctorId, date, user);
+      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(
+        clinicId,
+        doctorId,
+        date,
+        user,
+      );
       return shifts;
     } catch (error) {
       console.error('Error retrieving shifts:', error);
@@ -402,13 +412,16 @@ export class StaffController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const shifts = await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(doctorId, clinicId, user);
+      const shifts =
+        await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(
+          doctorId,
+          clinicId,
+          user,
+        );
       return shifts;
     } catch (error) {
       console.error('Error retrieving shifts:', error);
       throw error;
     }
   }
-  
-  
 }

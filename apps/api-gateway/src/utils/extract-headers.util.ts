@@ -10,4 +10,3 @@ export function extractForwardHeaders(req: Request): Record<string, string> {
 
   return headers;
 }
-

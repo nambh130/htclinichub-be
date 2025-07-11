@@ -2,7 +2,8 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  OnModuleInit, UnauthorizedException,
+  OnModuleInit,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PatientRepository } from './patients/patients.repository';
@@ -40,7 +41,7 @@ export class AuthService implements OnModuleInit {
     private readonly refreshTokenRepo: RefreshTokenRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -48,8 +49,9 @@ export class AuthService implements OnModuleInit {
 
   // ------------------------------ PATIENT ---------------------------------
   async patientLogin(phone: string) {
+    let patient;
     try {
-      var patient = await this.patientRepository.findOne({ phone }, {});
+      patient = await this.patientRepository.findOne({ phone }, {});
     } catch (error) {
       // Create a new patient account if the patient is not found
       const newPatient = new Patient({ phone });
@@ -69,7 +71,9 @@ export class AuthService implements OnModuleInit {
       this.configService.get('JWT_EXPIRES_IN') ?? 3600,
     );
     expires.setSeconds(expires.getSeconds() + jwtExpiration);
-    const token = await this.jwtService.signAsync(tokenPayload, { expiresIn: 60 * 60 * 24 });
+    const token = await this.jwtService.signAsync(tokenPayload, {
+      expiresIn: 60 * 60 * 24,
+    });
 
     return { user: patient, token };
   }
@@ -250,7 +254,9 @@ export class AuthService implements OnModuleInit {
 
   // ------------------------------ UTILITIES ---------------------------------
   async createJWT(payload: TokenPayload) {
-    const jwtExpirationMin = Number(this.configService.get<number>('JWT_EXPIRES_IN') || 15);
+    const jwtExpirationMin = Number(
+      this.configService.get<number>('JWT_EXPIRES_IN') || 15,
+    );
 
     const token = await this.jwtService.signAsync(payload, {
       expiresIn: jwtExpirationMin * 60,
@@ -259,9 +265,13 @@ export class AuthService implements OnModuleInit {
     return token;
   }
 
-  async createRefreshToken(userId: string, userAgent?: string, ip?: string): Promise<string> {
+  async createRefreshToken(
+    userId: string,
+    userAgent?: string,
+    ip?: string,
+  ): Promise<string> {
     try {
-      const expireDate = this.configService.get("REFRESH_TOKEN_EXPIRES");
+      const expireDate = this.configService.get('REFRESH_TOKEN_EXPIRES');
 
       const selector = randomBytes(16).toString('hex'); // used to look up the token
       const verifier = randomBytes(64).toString('hex'); // will be hashed and stored
@@ -269,19 +279,21 @@ export class AuthService implements OnModuleInit {
       const hashedVerifier = await argon2.hash(verifier);
 
       try {
-        this.refreshTokenRepo.create(new RefreshToken({
-          userId: userId,
-          userAgent,
-          ipAddress: ip,
-          tokenHash: hashedVerifier,
-          selector,
-          expiresAt: new Date(Date.now() + expireDate)// 7 days
-        }));
+        this.refreshTokenRepo.create(
+          new RefreshToken({
+            userId: userId,
+            userAgent,
+            ipAddress: ip,
+            tokenHash: hashedVerifier,
+            selector,
+            expiresAt: new Date(Date.now() + expireDate), // 7 days
+          }),
+        );
       } catch (error) {
-        throw new Error("Failed to create refresh token");
+        throw new Error('Failed to create refresh token');
       }
 
-      return token
+      return token;
     } catch (error) {
       throw new Error(error);
     }
@@ -291,11 +303,11 @@ export class AuthService implements OnModuleInit {
     const [selector, verifier] = token.split('.') ?? [];
 
     const record = await this.refreshTokenRepo.findOne({ selector });
-    if (!record) throw new UnauthorizedException("Token not found");
+    if (!record) throw new UnauthorizedException('Token not found');
 
     const isValid = await argon2.verify(record.tokenHash, verifier);
     if (!isValid || record.expiresAt < new Date()) {
-      throw new UnauthorizedException("Token expired or invalid!");
+      throw new UnauthorizedException('Token expired or invalid!');
     }
 
     return record;
@@ -305,7 +317,9 @@ export class AuthService implements OnModuleInit {
     const currentClinics = user.clinics.map((clinic) => clinic.id);
     const adminOf = user.ownerOf.map((clinic) => clinic.id);
     const permissions = Array.from(
-      new Set(user.roles.flatMap((role) => role.permissions.map((p) => p.name)))
+      new Set(
+        user.roles.flatMap((role) => role.permissions.map((p) => p.name)),
+      ),
     );
 
     return {

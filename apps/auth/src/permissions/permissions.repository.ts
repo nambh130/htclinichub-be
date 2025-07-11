@@ -12,9 +12,8 @@ export class PermissionRepository extends PostgresAbstractRepository<Permission>
   constructor(
     @InjectRepository(Permission)
     itemsRepository: Repository<Permission>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }
 }
-

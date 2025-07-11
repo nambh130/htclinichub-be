@@ -1,8 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Clinic } from '../../clinics/models/clinic.entity';
-import {
-  User,
-} from '../../clinic-users/models/clinic-user.entity';
+import { User } from '../../clinic-users/models/clinic-user.entity';
 import { PostgresAbstractEntity } from '@app/common';
 import { Role } from '../../roles/models/role.entity';
 export type InvitationType = 'pending' | 'accepted' | 'expired' | 'revoked';

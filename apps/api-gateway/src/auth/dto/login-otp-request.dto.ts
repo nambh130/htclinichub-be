@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Matches } from "class-validator";
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class LoginOtpRequestDto {
   @IsString()
@@ -11,4 +11,3 @@ export class LoginOtpRequestDto {
   @IsString()
   password: string;
 }
-

@@ -11,9 +11,8 @@ export class ClinicRepository extends BaseClinicRepository<Clinic> {
   constructor(
     @InjectRepository(Clinic)
     itemsRepository: Repository<Clinic>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }
 }
-

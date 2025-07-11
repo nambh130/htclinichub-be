@@ -1,9 +1,4 @@
-import {
-  Entity,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
-} from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
 import { User } from '../../clinic-users/models/clinic-user.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
@@ -19,5 +14,5 @@ export class Clinic extends PostgresAbstractEntity<Clinic> {
   owner: User;
 
   @ManyToMany(() => User, (user) => user.clinics)
-  users: User[]
+  users: User[];
 }

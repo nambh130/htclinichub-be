@@ -31,7 +31,7 @@ import { CacheModule } from '@nestjs/cache-manager';
         REFRESH_TOKEN_EXPIRES: Joi.number().required(),
         JWT_EXPIRES_IN: Joi.number().required(),
         JWT_SECRET: Joi.string().required(),
-        RESET_PWD_URL: Joi.string().required()
+        RESET_PWD_URL: Joi.string().required(),
       }),
     }),
     JwtModule.registerAsync({

@@ -16,8 +16,8 @@ export class ClinicService extends BaseClinicService<Clinic> {
     super(clinicRepo);
   }
 
-  async create(data: any) {
-    this.clinicRepo.create(
+  async create(data: { name: string; location: string }) {
+    return await this.clinicRepo.create(
       new Clinic({ name: data.name, location: data.location }),
     );
   }
@@ -31,6 +31,7 @@ export class ClinicService extends BaseClinicService<Clinic> {
     const createdClinic = await this.clinicRepo.create(clinic);
 
     if (createdClinic.ownerId) {
+      // Create doctor-clinic mapping using the correct entity relationship approach
       const map = this.doctorClinicMapRepo.create({
         doctor: { id: createdClinic.ownerId },
         clinic: { id: createdClinic.id }, // 👈 truyền object

@@ -9,8 +9,8 @@ import { ClinicService } from '../clinic/clinic.service';
 export class DoctorEventController {
   constructor(
     private readonly doctorService: DoctorService,
-    private readonly clinicService: ClinicService
-  ) { }
+    private readonly clinicService: ClinicService,
+  ) {}
 
   @EventPattern('clinic-user-created')
   async createDoctorAccount(
@@ -34,18 +34,16 @@ export class DoctorEventController {
       );
       if (payload.ownerOf) {
         const clinic = await this.clinicService.getClinicById(payload.ownerOf);
-        clinic.owner = user
-        await this.clinicService.save(clinic);
+        clinic!.owner = user;
+        await this.clinicService.save(clinic!);
       }
     }
     return null;
   }
 
   @EventPattern('user-clinic-joined')
-  userJoinClinic(
-    @Payload() payload: { userId: string, clinicId: string }
-  ) {
-    const { userId, clinicId } = payload
-    this.doctorService.doctorJoinClinic(userId, clinicId)
+  userJoinClinic(@Payload() payload: { userId: string; clinicId: string }) {
+    const { userId, clinicId } = payload;
+    this.doctorService.doctorJoinClinic(userId, clinicId);
   }
 }

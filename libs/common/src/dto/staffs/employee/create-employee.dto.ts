@@ -1,7 +1,6 @@
-import { IsEmail, IsString, MinLength, Matches, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
 
-export class CreateDoctorAccountDto {
-  id?: string;
+export class CreateEmployeeAccountDto {
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 
@@ -17,7 +16,7 @@ export class CreateDoctorAccountDto {
     message: 'Password must contain at least one number',
   })
   password: string;
-  @IsOptional()
+
   @IsString()
-  clinic?: string;
+  clinic_id: string;
 }

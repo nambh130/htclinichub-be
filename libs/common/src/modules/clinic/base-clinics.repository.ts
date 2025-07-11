@@ -4,13 +4,12 @@ import { PostgresAbstractRepository } from '@app/common';
 import { BaseClinic } from './models/base-clinic.entity';
 
 @Injectable()
-export class BaseClinicRepository<T extends BaseClinic> extends PostgresAbstractRepository<T> {
+export class BaseClinicRepository<
+  T extends BaseClinic,
+> extends PostgresAbstractRepository<T> {
   protected readonly logger = new Logger(BaseClinicRepository.name);
 
-  constructor(
-    clinicRepo: Repository<T>,
-    entityManager: EntityManager,
-  ) {
+  constructor(clinicRepo: Repository<T>, entityManager: EntityManager) {
     super(clinicRepo, entityManager);
   }
 }

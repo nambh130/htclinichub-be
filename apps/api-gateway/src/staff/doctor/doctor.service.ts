@@ -1,7 +1,6 @@
 import { Inject, Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import {
   CreateDoctorAccountDto,
-  CreateEmployeeAccountDto,
   DoctorDegreeDto,
   DoctorSpecializeDto,
   STAFF_SERVICE,
@@ -10,22 +9,19 @@ import {
   Media,
   UpdateDegreeDto,
   UpdateSpecializeDto,
+  DoctorProfileDto,
+  UpdateProfileDto,
 } from '@app/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import {
-  DoctorProfileDto,
-  UpdateProfileDto,
-} from '@app/common/dto/staffs/doctor-profile.dto';
-import { MediaService } from '../media/media.service';
-import { IDoctorClinicLink } from './interfaces/staff.interface';
+import { MediaService } from '@media-gw/media.service';
+import { IDoctorClinicLink } from '../interfaces/staff.interface';
 import { AxiosError } from 'axios';
 
 @Injectable()
-export class StaffService {
+export class DoctorService {
   constructor(
     private readonly mediaService: MediaService,
-    @Inject(STAFF_SERVICE) private readonly httpService: HttpService,
     @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
   ) {}
 
@@ -55,11 +51,32 @@ export class StaffService {
     return response.data;
   }
 
-  async getDoctorListWithProfile(page = 1, limit = 10): Promise<unknown> {
+  async getDoctorListWithProfile(
+    page = 1,
+    limit = 10,
+    search?: string,
+    searchField?: 'name' | 'email' | 'phone' | 'all',
+  ): Promise<unknown> {
     try {
+      const params: {
+        page: number;
+        limit: number;
+        search?: string;
+        searchField?: string;
+      } = {
+        page,
+        limit,
+      };
+      if (search) {
+        params.search = search;
+      }
+      if (searchField) {
+        params.searchField = searchField;
+      }
+
       const response = await firstValueFrom(
         this.staffService.get(`/staff/doctor/account-list-with-profile`, {
-          params: { page, limit },
+          params,
         }),
       );
       return response.data;
@@ -116,16 +133,16 @@ export class StaffService {
       for (const degree of staffInfo.degrees ?? []) {
         degree.image = degree.image_id
           ? ((await this.mediaService.getFileById(
-            degree.image_id,
-          )) as Media | null)
+              degree.image_id,
+            )) as Media | null)
           : null;
       }
 
       for (const specialize of staffInfo.specializes ?? []) {
         specialize.image = specialize.image_id
           ? ((await this.mediaService.getFileById(
-            specialize.image_id,
-          )) as Media | null)
+              specialize.image_id,
+            )) as Media | null)
           : null;
       }
     }
@@ -145,17 +162,17 @@ export class StaffService {
     return response.data;
   }
 
-  async getClinicIdsByDoctor(
-    dto: { userId: string },
-  ): Promise<IDoctorClinicLink[]> {
+  async getClinicIdsByDoctor(userId: string): Promise<IDoctorClinicLink[]> {
+    const url = `/staff/doctor/clinic-by-doctor/${userId}`;
+
     const response = await firstValueFrom(
-      this.httpService.get<IDoctorClinicLink[]>(`/staff/doctor/clinic-by-doctor/${dto.userId}`),
+      this.staffService.get<IDoctorClinicLink[]>(url),
     );
 
     const clinicByDoctors = response.data;
 
     if (!clinicByDoctors) {
-      throw new Error("Something has gone wrong!");
+      throw new Error('Something has gone wrong!');
     }
 
     return clinicByDoctors;
@@ -290,8 +307,9 @@ export class StaffService {
   async deleteDoctorDegree(
     doctorId: string,
     degreeId: string,
+    currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { doctorId, degreeId };
+    const payload = { doctorId, degreeId, currentUser };
 
     const response = await firstValueFrom(
       this.staffService.post(`/staff/doctor/delete-degree`, payload),
@@ -349,8 +367,9 @@ export class StaffService {
   async deleteDoctorSpecialize(
     doctorId: string,
     specializeId: string,
+    currentUser: TokenPayload,
   ): Promise<unknown> {
-    const payload = { doctorId, specializeId };
+    const payload = { doctorId, specializeId, currentUser };
 
     const response = await firstValueFrom(
       this.staffService.post(`/staff/doctor/delete-specialize`, payload),
@@ -359,67 +378,41 @@ export class StaffService {
     return response.data;
   }
 
-  // ============================================================================
-  // EMPLOYEE MANAGEMENT
-  // ============================================================================
-
-  async viewEmployeeAccountList(): Promise<unknown> {
-    const response = await firstValueFrom(
-      this.staffService.get('/staff/employee-account-list'),
-    );
-    return response.data;
-  }
-
-  async createEmployeeAccount(
-    dto: CreateEmployeeAccountDto,
-    currentUser: TokenPayload,
-  ): Promise<unknown> {
-    const payload = {
-      dto,
-      currentUser,
-    };
-
-    const response = await firstValueFrom(
-      this.staffService.post('/staff/create-employee-account', payload),
-    );
-    return response.data;
-  }
-
-  async lockEmployeeAccount(
-    id: string,
-    currentUser: TokenPayload,
-  ): Promise<unknown> {
-    const payload = {
-      id,
-      currentUser,
-    };
-
-    const response = await firstValueFrom(
-      this.staffService.post('/staff/lock-employee-account', payload),
-    );
-    return response.data;
-  }
-
-  async unlockEmployeeAccount(
-    id: string,
-    currentUser: TokenPayload,
-  ): Promise<unknown> {
-    const payload = {
-      id,
-      currentUser,
-    };
-
-    const response = await firstValueFrom(
-      this.staffService.post('/staff/unlock-employee-account', payload),
-    );
-    return response.data;
-  }
-
-  //khanh: get doctor account by id
   async getDoctorAccountById(id: string): Promise<unknown> {
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/doctor-account-byId/${id}`),
     );
+    return response.data;
+  }
+
+  // ============================================================================
+  // DOCTOR CLINIC ASSIGNMENT
+  // ============================================================================
+
+  async assignDoctorToClinic(
+    doctorId: string,
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const payload = { doctorId, clinicId, currentUser };
+
+    const response = await firstValueFrom(
+      this.staffService.post('/staff/doctor/assign-clinic', payload),
+    );
+
+    return response.data;
+  }
+
+  async removeDoctorFromClinic(
+    doctorId: string,
+    clinicId: string,
+  ): Promise<unknown> {
+    const payload = { doctorId, clinicId };
+
+    const response = await firstValueFrom(
+      this.staffService.post('/staff/doctor/remove-clinic', payload),
+    );
+
     return response.data;
   }
 }

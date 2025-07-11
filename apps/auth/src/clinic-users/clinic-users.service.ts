@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { ClinicRepository } from '../clinics/clinics.repository';
 import { RoleRepository } from '../roles/roles.repository';
 import { In } from 'typeorm';
-import { ActorEnum } from '@app/common/enum/actor-type';
 import { ActorType } from '@app/common';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class ClinicUsersService {
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly roleRepository: RoleRepository,
-  ) { }
+  ) {}
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
@@ -57,9 +56,7 @@ export class ClinicUsersService {
   }
 
   async findUserByIds(ids: string[]) {
-    return await this.userRepository.find(
-      { id: In(ids) }
-    );
+    return await this.userRepository.find({ id: In(ids) });
   }
 
   async find(query: Partial<User>) {
@@ -74,8 +71,13 @@ export class ClinicUsersService {
     });
   }
 
-  async findByEmailAndClinic(email: string, clinicId: string, actorType: ActorType) {
-    return this.userRepository.createQueryBuilder('user')
+  async findByEmailAndClinic(
+    email: string,
+    clinicId: string,
+    actorType: ActorType,
+  ) {
+    return this.userRepository
+      .createQueryBuilder('user')
       .leftJoin('user.clinics', 'clinic')
       .where('user.email = :email', { email })
       .andWhere('clinic.id = :clinicId', { clinicId })
@@ -83,16 +85,13 @@ export class ClinicUsersService {
       .getOne();
   }
 
-  async updateUser(
-    email: string,
-    updateData: Partial<User>,
-  ): Promise<User> {
+  async updateUser(email: string, updateData: Partial<User>): Promise<User> {
     return await this.userRepository.create(new User(updateData));
   }
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 12;
     const hash = await bcrypt.hash(password, saltRounds);
-    return hash
+    return hash;
   }
 }
