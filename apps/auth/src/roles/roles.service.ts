@@ -7,7 +7,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { GetRoleDto } from './dto/get-role.dto';
 import { PermissionRepository } from '../permissions/permissions.repository';
-import { In } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 
 @Injectable()
 export class RolesService extends BaseService {
@@ -70,5 +70,13 @@ export class RolesService extends BaseService {
       page,
       limit,
     };
+  }
+
+  async getAll(filter: FindOptionsWhere<Role>) {
+    return this.roleRepository.find({ ...filter });
+  }
+
+  async getById(id: string) {
+    return this.roleRepository.findOne({ id });
   }
 }

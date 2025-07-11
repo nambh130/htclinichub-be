@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PostgresAbstractRepository } from '@app/common';
 import { Doctor } from '../models/doctor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, In } from 'typeorm';
 
 @Injectable()
 export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
@@ -29,5 +29,11 @@ export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
 
   get repo(): Repository<Doctor> {
     return this.itemsRepository;
+  }
+
+  async findDoctorsByIds(ids: number[]): Promise<Doctor[]> {
+    return this.entityRepository.find({
+      where: { id: In(ids) }
+    });
   }
 }

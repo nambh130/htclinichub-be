@@ -40,6 +40,7 @@ export class DoctorController {
 
   @Get('details/:id')
   getDoctorDetails(@Param('id') doctorId: string) {
+    console.log('[DEBUG] doctorId truyền vào Doctor Controller:', doctorId);
     return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 
@@ -291,5 +292,11 @@ export class DoctorController {
   ) {
     const { doctorId, clinicId } = payload;
     return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
+  }
+
+  @Get('get-doctors-by-ids')
+  getDoctorsByIds(@Query('ids') ids: string | string[]) {
+    const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
+    return this.doctorService.getDoctorsByIds({ ids: parsedIds });
   }
 }

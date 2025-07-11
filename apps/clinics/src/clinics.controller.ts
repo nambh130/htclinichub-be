@@ -1,8 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ClinicsService } from './clinics.service';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { AddClinicDto } from '@app/common/dto/clinic';
 import { ClinicAddedEvent } from '@app/common/events/clinics';
+import { P } from 'pino';
 
 @Controller('clinics')
 export class ClinicsController {
@@ -37,6 +38,11 @@ export class ClinicsController {
   }
 
   // Get by one id
+  @Get('/clinic/:id')
+  async getClinicByIdHTTP(@Param('id') id: string) {
+    return this.clinicsService.getClinicByIdHTTP(id);
+  }
+
   @MessagePattern('get-clinic-by-id')
   async getClinicById(@Payload() payload: { id: string; userId: string }) {
     const { id, userId } = payload;
@@ -86,4 +92,10 @@ export class ClinicsController {
   handleClinicAdded(@Payload() clinicAddedEvent: ClinicAddedEvent) {
     clinicAddedEvent.toString();
   }
+  @Post('/get-clinics-by-ids')
+  async getClinicsByIds(@Body() body: { clinicIds: string[] }) {
+    const { clinicIds } = body;
+    return this.clinicsService.getClinicsByIds(clinicIds);
+  }
+
 }

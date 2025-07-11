@@ -16,10 +16,14 @@ import {
   ClinicDto,
   UpdateClinicDto,
 } from '@app/common/dto/clinic';
+import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-schedule-rule.service';
 
 @Controller('clinic')
 export class ClinicController {
-  constructor(private readonly clinicService: ClinicService) {}
+  constructor(
+    private readonly clinicService: ClinicService,
+    private readonly clinicScheduleRuleApiService: ClinicScheduleRuleApiService,
+  ) {}
 
   @Post('')
   @UseGuards(JwtAuthGuard)
@@ -97,5 +101,24 @@ export class ClinicController {
     if (searchBy) queryParams.append('searchBy', searchBy);
 
     return this.clinicService.getClinicStaff(clinicId, queryParams.toString());
+  }
+
+  @Get('get-schedule-rule/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getClinicScheduleRuleByClinicId(
+    @CurrentUser() user: TokenPayload,
+    @Param('clinicId') clinicId: string,
+  ) {
+    try {
+      const result =
+        await this.clinicScheduleRuleApiService.getClinicScheduleRuleByClinicId(
+          clinicId,
+          user.userId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error fetching clinic schedule rule:', error);
+      throw error;
+    }
   }
 }

@@ -7,11 +7,14 @@ import { Clinic } from './models';
 import { PinoLogger } from 'nestjs-pino';
 import { nanoid } from 'nanoid';
 import { In } from 'typeorm';
+import { ClinicScheduleRuleRepository } from './clinic_schedule_rule/clinic_schedule_rule.repository';
 
 @Injectable()
 export class ClinicsService {
   constructor(
     private readonly clinicsRepository: ClinicRepository,
+        private readonly ClinicScheduleRuleRepository: ClinicScheduleRuleRepository,
+
     @Inject(CLINIC_SERVICE)
     private readonly clinicsClient: ClientKafka,
     private readonly logger: PinoLogger,
@@ -211,6 +214,47 @@ export class ClinicsService {
     }
   }
 
+  async getClinicByIdHTTP(id: string): Promise<Clinic> {
+    try {
+      const clinic = await this.clinicsRepository.findOne({ id: id });
+
+      if (!clinic) {
+        this.logger.warn({
+          msg: 'Clinic not found',
+          type: 'audit-log',
+          context: 'ClinicService',
+          operation: 'GET_CLINIC_BY_ID',
+          status: 'NOT_FOUND',
+          clinicId: id,
+        });
+        throw new Error('Clinic not found');
+      }
+
+      this.logger.info({
+        msg: 'Clinic retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'SUCCESS',
+        clinicId: clinic.id,
+      });
+
+      return JSON.parse(JSON.stringify(clinic));
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to retrieve clinic',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+        clinicId: id,
+      });
+      throw error;
+    }
+  }
+
   async getClinicByIds(clinicIds: string[]) {
     const clinics = await this.clinicsRepository.find({ id: In(clinicIds) });
     return clinics;
@@ -335,6 +379,40 @@ export class ClinicsService {
         stack: error.stack,
         userId,
       });
+      throw error;
+    }
+  }
+
+  async getClinicsByIds(clinicIds: string[]) {
+    return this.clinicsRepository.findMany({
+      id: In(clinicIds),
+    });
+  }
+
+   async getClinicScheduleRuleByClinicId(clinicId: string, userId: string): Promise<Clinic> {
+    if (!clinicId) {
+      throw new Error('Invalid clinic ID');
+    }
+
+    try {
+      const clinic = await this.clinicsRepository.findOne({ id: clinicId });
+
+      if (!clinic) {
+        throw new Error('Clinic not found');
+      }
+
+      this.logger.info({
+        msg: 'Clinic retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_CLINIC_BY_ID',
+        status: 'SUCCESS',
+        clinicId: clinic.id,
+        userId,
+      });
+
+      return JSON.parse(JSON.stringify(clinic));
+    } catch (error) {
       throw error;
     }
   }

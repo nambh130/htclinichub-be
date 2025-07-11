@@ -56,20 +56,6 @@ services:
       timeout: 5s
       retries: 10
 
-  postgres-test:
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: randompassword
-      POSTGRES_DB: authservice
-    ports:
-      - '5432:5432'
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   api-gateway:
     build:
       context: .
@@ -151,7 +137,7 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/auth/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
@@ -190,6 +176,68 @@ services:
       mongo:
         condition: service_healthy
 
+  analyze-healthcare-data:
+    build:
+      context: .
+      dockerfile: ./apps/analyze-healthcare-data/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev analyze-healthcare-data"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/analyze-healthcare-data/src
+          target: /app/apps/analyze-healthcare-data/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    ports:
+      - '3006:3006'
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  patient:
+    build:
+      context: .
+      dockerfile: ./apps/patients/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev patients"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/patients/src
+          target: /app/apps/patients/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    ports:
+      - '3005:3005'
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
   media:
     build:
       context: .
@@ -216,4 +264,32 @@ services:
       kafka:
         condition: service_healthy
       mongo:
+        condition: service_healthy
+
+  communication:
+    build:
+      context: .
+      dockerfile: ./apps/communication/Dockerfile
+      target: development
+    command: sh -c "sleep 10 && pnpm run start:dev communication"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/communication/src
+          target: /app/apps/communication/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    env_file:
+      - .env
+    ports:
+      - '3004:3003'
+    depends_on:
+      kafka:
         condition: service_healthy

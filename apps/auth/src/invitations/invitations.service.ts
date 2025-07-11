@@ -1,5 +1,5 @@
-import { ActorType, BaseService } from '@app/common';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ActorType, AUTH_SERVICE, BaseService } from '@app/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InvitationRepository } from './invitation.repository';
 import { CreateInvitationDto } from './dto/create-invitaion.dto';
 import { createHash, randomBytes } from 'crypto';
@@ -9,6 +9,10 @@ import { Role } from '../roles/models/role.entity';
 import { RoleRepository } from '../roles/roles.repository';
 import { ActorEnum } from '../clinic-users/models/clinic-user.entity';
 import { ClinicUserRepository } from '../clinic-users/clinic-users.repository';
+import { FindOptionsWhere } from 'typeorm';
+import { ClientKafka } from '@nestjs/microservices';
+import { InvitationCreated } from '@app/common/events/auth/invitation-created.event';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class InvitationsService extends BaseService {
@@ -16,8 +20,15 @@ export class InvitationsService extends BaseService {
     private readonly invitationRepository: InvitationRepository,
     private readonly userRepository: ClinicUserRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly configService: ConfigService,
+    @Inject(AUTH_SERVICE)
+    private readonly kafkaClient: ClientKafka,
   ) {
     super();
+  }
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
   }
 
   async createInvitation(
@@ -26,8 +37,11 @@ export class InvitationsService extends BaseService {
   ) {
     const { clinic, role: roleId, isOwnerInvitation } = createInvitationDto;
     const email = createInvitationDto.email.toLowerCase().trim();
+
+    // Create token and the hash it
     const token = randomBytes(32).toString('hex');
     const hashedToken = createHash('sha256').update(token).digest('hex');
+
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms
     const role = await this.roleRepository.findOne({ id: roleId });
     const userType = role.roleType;
@@ -68,11 +82,30 @@ export class InvitationsService extends BaseService {
       createdByType: user.type,
     });
 
-    // Save to database
-    return {
-      token: token,
-      invitation: await this.invitationRepository.create(newInvitation),
-    };
+    const invitation = await this.invitationRepository.create(newInvitation);
+    console.log("check Invitation: ", invitation)
+    if (invitation) {
+      const roleType = invitation.role.roleType;
+      let translatedActorType: string;
+      if (roleType === ActorEnum.DOCTOR) {
+        translatedActorType = "Bác Sĩ";
+      } else {
+        translatedActorType = "Nhân Viên";
+      }
+
+      const invitationUrl = `${this.configService.get("INVITATION_URL")}?email=${encodeURIComponent(email)}&token=${token}`;
+      // Emit an event that a new patient is added
+      const invitationEvent = new InvitationCreated({
+        to: email,
+        invitationUrl,
+        roleName: translatedActorType,
+        clinicName: createInvitationDto.clinicName
+      });
+      console.log("invited: ", invitationUrl)
+      this.kafkaClient.emit('invitation-created', invitationEvent.toString());
+    }
+
+    return { success: true };
   }
 
   async getInvitationByToken({
@@ -97,6 +130,29 @@ export class InvitationsService extends BaseService {
       );
     }
     return invitation;
+  }
+
+  async getInvitation({ page, limit, where }:
+    { page: number, limit: number, where: FindOptionsWhere<EmployeeInvitation> }) {
+    const take = limit;
+    const skip = (page - 1) * take;
+
+    const [data, total] = await this.invitationRepository.findAndCount(
+      where,
+      skip,
+      take,
+      ["role"],
+      {
+        createdAt: 'DESC'
+      }
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async updateInvitationStatus(id: string, status: InvitationType) {

@@ -114,6 +114,8 @@ export class DoctorService {
   }
 
   async getDoctorDetailsById(doctorId: string): Promise<StaffDetails> {
+    console.log('[DEBUG] doctorId truyền vào:', doctorId);
+
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/details/${doctorId}`),
     );

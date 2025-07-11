@@ -26,7 +26,7 @@ export class ClinicService implements OnModuleInit {
     this.clinicClient.subscribeToResponseOf('get-clinic-by-id');
     this.clinicClient.subscribeToResponseOf('update-clinic');
     this.clinicClient.subscribeToResponseOf('get-clinics-by-ids');
-
+    this.clinicClient.subscribeToResponseOf('get-clinics-by-ids.reply');
     this.authClient.subscribeToResponseOf('authenticate');
 
     await this.authClient.connect();

@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsString,
   IsUUID,
 } from 'class-validator';
 
@@ -15,10 +16,15 @@ export class CreateInvitationDto {
   @IsNotEmpty()
   clinic: string;
 
+  @IsOptional()
+  @IsString()
+  clinicName: string
+
   @IsUUID()
   @IsOptional()
   role: string;
 
   @IsBoolean()
-  isOwnerInvitation: boolean;
+  @IsOptional()
+  isOwnerInvitation?: boolean;
 }

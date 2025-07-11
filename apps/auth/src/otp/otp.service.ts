@@ -4,16 +4,18 @@ import { Cache } from 'cache-manager';
 import { OtpPurpose, OtpTargetType } from '../constants/enums';
 import { RequestOtpInput } from '../constants/interfaces';
 import { ConfigService } from '@nestjs/config';
-import { ActorType } from '@app/common';
-import { JwtService } from '@nestjs/jwt';
+import { ActorType, AUTH_SERVICE } from '@app/common';
+import { ClientKafka } from '@nestjs/microservices';
+import { PwdRecoveryEvent } from '@app/common/events/auth/password-recovery.event';
 
 @Injectable()
 export class OtpService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
-    private readonly jwtService: JwtService,
-  ) {}
+    @Inject(AUTH_SERVICE)
+    private readonly kafkaClient: ClientKafka,
+  ) { }
 
   async sendOtp(input: RequestOtpInput) {
     const code = this.generateOtp();
@@ -31,13 +33,7 @@ export class OtpService {
         `Sending OTP ${code} to phone ${input.target} for ${input.purpose}`,
       );
       // TODO: Send SMS here
-    } else {
-      console.log(
-        `Sending OTP ${code} to email ${input.target} for ${input.purpose}`,
-      );
-      // TODO: Send Email here
     }
-
     return { success: true };
   }
 
@@ -72,11 +68,14 @@ export class OtpService {
     const check = await this.cacheManager.get<string>(key);
     if (!check) throw new Error('Failed to cache OTP');
 
-    const frontEndUrl = this.configService.get('RESET_PWD_URL');
-    console.log(
-      `Sending url: ${frontEndUrl}/?token=${token} to email ${email} for password reset`,
-    );
-    // TODO: Send Email here
+    const frontEndUrl = this.configService.get("RESET_PWD_URL");
+    console.log(`Sending url: ${frontEndUrl}/?token=${token} to email ${email} for password reset`);
+    //Send Email
+    const pwdRecoveryEvent = new PwdRecoveryEvent({
+      resetLink: `${frontEndUrl}/?token=${token}`,
+      to: email
+    })
+    this.kafkaClient.emit('password-recovery', pwdRecoveryEvent)
 
     return { success: true };
   }

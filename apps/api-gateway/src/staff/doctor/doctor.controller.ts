@@ -6,9 +6,11 @@ import {
   Param,
   UseGuards,
   Query,
+  Put,
   Delete,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
+import { ManageDoctorScheduleService } from '../manage-doctor-schedule/manage-doctor-schedule.service';
 import {
   CreateDoctorAccountDto,
   CurrentUser,
@@ -18,16 +20,19 @@ import {
   TokenPayload,
   UpdateDegreeDto,
   UpdateSpecializeDto,
-  DoctorProfileDto,
-  UpdateProfileDto,
 } from '@app/common';
-import { ClinicService } from '@clinics-gw/clinic.service';
-import { IMappedClinicLink } from '@staff-gw/interfaces/staff.interface';
+
+import { ClinicService } from '../../clinics/clinic.service';
+import { IMappedClinicLink } from '../interfaces/staff.interface';
+import { DoctorProfileDto, UpdateProfileDto } from '@app/common';
+import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
+import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 
 @Controller('staff/doctor')
 export class DoctorController {
   constructor(
     private readonly doctorService: DoctorService,
+    private readonly manageDoctorScheduleService: ManageDoctorScheduleService,
     private readonly clinicService: ClinicService,
   ) {}
 
@@ -68,7 +73,9 @@ export class DoctorController {
 
   @Get('clinics-by-doctor')
   @UseGuards(JwtAuthGuard)
-  async getClinicByDoctor(@CurrentUser() user: TokenPayload) {
+  async getClinicByDoctor(
+    @CurrentUser() user: TokenPayload,
+  ): Promise<IMappedClinicLink[]> {
     const doctorClinicsLink = await this.doctorService.getClinicIdsByDoctor(
       user.userId,
     );
@@ -291,5 +298,130 @@ export class DoctorController {
     @Param('clinicId') clinicId: string,
   ) {
     return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
+  }
+
+  @Get('/doctor/view-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async getViewWorkingShift(
+    @Param('doctorId') doctorId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor =
+        await this.manageDoctorScheduleService.getViewWorkingShiftService(
+          doctorId,
+          user,
+        );
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/doctor/detail-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async getDetailShiftByShiftId(
+    @Param('shiftId') shiftId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const doctor = await this.manageDoctorScheduleService.getDetailShift(
+        shiftId,
+        user,
+      );
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Post('/doctor/setup-working-shift/:doctorId')
+  @UseGuards(JwtAuthGuard)
+  async setUpWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Body() dto: SetupWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      // console.log(currentUser);
+      const doctor =
+        await this.manageDoctorScheduleService.setUpWorkingShiftByDoctorId(
+          dto,
+          doctorId,
+          currentUser,
+        );
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Put('/doctor/:doctorId/change-working-shift/:shiftId')
+  @UseGuards(JwtAuthGuard)
+  async changeWorkingShiftByDoctorId(
+    @Param('doctorId') doctorId: string,
+    @Param('shiftId') shiftId: string,
+    @Body() dto: ChangeWorkingShiftDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const doctor =
+        await this.manageDoctorScheduleService.changeWorkingShiftByDoctorId(
+          dto,
+          doctorId,
+          shiftId,
+          currentUser,
+        );
+      return doctor;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/doctor/shifts-by-date/:clinicId/:doctorId/:date')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorShiftsByDate(
+    @Param('clinicId') clinicId: string,
+    @Param('doctorId') doctorId: string,
+    @Param('date') date: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.manageDoctorScheduleService.getShiftsInDate(
+        clinicId,
+        doctorId,
+        date,
+        user,
+      );
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+
+  @Get('doctor/shifts/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getShiftsByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts =
+        await this.manageDoctorScheduleService.getShiftsByDoctorIdAndClinicId(
+          doctorId,
+          clinicId,
+          user,
+        );
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
   }
 }

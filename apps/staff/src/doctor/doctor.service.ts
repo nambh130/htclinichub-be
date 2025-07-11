@@ -280,14 +280,27 @@ export class DoctorService extends BaseService {
         deletedById: IsNull(),
         deletedByType: IsNull(),
       },
-      { clinics: { clinic: true } },
+      ['clinics', 'clinics.clinic', 'clinics.doctor'], // không cần 'clinics.doctor' nếu không dùng đến
     );
 
     if (!doctor) {
       throw new NotFoundException('Doctor not found');
     }
 
-    return doctor.clinics;
+    // Đảm bảo clinics tồn tại
+    const clinicLinks = doctor.clinics.map((clinicMap) => ({
+      id: clinicMap.id,
+      clinic: {
+        id: clinicMap.clinic?.id ?? '',
+        name: clinicMap.clinic?.name ?? '',
+        location: clinicMap.clinic?.location ?? '',
+        phone: clinicMap.clinic?.phone ?? '',
+        email: clinicMap.clinic?.email ?? '',
+        ownerId: clinicMap.clinic?.ownerId ?? '',
+      },
+    }));
+
+    return clinicLinks;
   }
 
   async doctorJoinClinic(doctorId: string, clinicId: string) {
@@ -330,7 +343,7 @@ export class DoctorService extends BaseService {
 
       if (dto.clinic) {
         const clinicMap = new DoctorClinicMap();
-        clinicMap.clinicId = dto.clinic;
+        // clinicMap.clinic = dto.clinic;
         clinicMap.doctor = doctor;
         doctor.clinics = [clinicMap];
       }
@@ -434,6 +447,8 @@ export class DoctorService extends BaseService {
   }
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
+    console.log('[DEBUG] doctorId truyền vào Doctor Service:', doctorId);
+
     try {
       const doctor = await this.doctorRepository.findOne(
         {
@@ -444,6 +459,8 @@ export class DoctorService extends BaseService {
         },
         ['clinics', 'clinics.clinic', 'services', 'invitations'],
       );
+
+      console.log('[DEBUG] doctor found:', doctor.email);
 
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
@@ -460,7 +477,7 @@ export class DoctorService extends BaseService {
       );
 
       const profile = toDoctorProfile(doctor, staffInfo);
-
+      console.log('[DEBUG] doctor profile:', profile);
       return profile;
     } catch (error) {
       if (
@@ -649,6 +666,22 @@ export class DoctorService extends BaseService {
       }
       throw new InternalServerErrorException('Failed to retrieve degrees');
     }
+  }
+
+  getDoctorsByIds(data: { ids: number[] }) {
+    console.log(
+      'This is a mock response from Doctor Service, received IDs:',
+      data.ids,
+    );
+
+    const formatData = data.ids.map((id) => ({
+      name: `Doctor ${id}`,
+      email: `doctor${id}@example.com`,
+    }));
+
+    console.log('Formatted doctor mock data:', formatData);
+
+    return formatData;
   }
 
   async addDoctorDegree(

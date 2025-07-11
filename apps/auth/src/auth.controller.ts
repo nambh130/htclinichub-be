@@ -42,6 +42,7 @@ import { PasswordRecoveryDto } from './dto/user-recover-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import AuthResponse from '@app/common/dto/auth/login-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -112,12 +113,26 @@ export class AuthController {
     if (invitation && invitation.status != 'pending') {
       throw new BadRequestException();
     }
+    // Check if doctor already exists
     try {
-      await this.userService.findUserByEmail(invitation?.email || '');
-    } catch {
-      return false;
+      const user = await this.userService.find({
+        email: invitation.email,
+        actorType: invitation.role.roleType,
+      });
+    } catch (error) {
+      // If not exists, the front end directs to signup
+      return {
+        exists: false,
+        clinicId: invitation.clinic.id,
+      };
     }
-    return true;
+
+    // If exists, the front end directs to join-clinic
+    return {
+      exists: true,
+      actorType: invitation.role.roleType,
+      clinicId: invitation.clinic.id,
+    };
   }
 
   @Post('invitation/signup') // Create an account by invitation
@@ -158,7 +173,7 @@ export class AuthController {
     const response = await this.authService.userLogin(dto, userAgent, ip);
     this.setAuthCookies(res, response.token, response.refreshToken);
 
-    return { user: response.user };
+    return { user: response.user, token: response.token };
   }
 
   @Post('admin/login')
@@ -186,7 +201,7 @@ export class AuthController {
   async refreshToken(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<AuthResponse> {
     const rawToken = req.cookies['refreshToken'];
     const userAgent = req.headers['user-agent'] || 'unknown';
     const ip = (
@@ -225,9 +240,10 @@ export class AuthController {
       user: {
         id: user.id,
         email: user.email,
-        roles: tokenPayload.roles,
-        currentClinics: tokenPayload.currentClinics,
-        adminOf: tokenPayload.adminOf,
+        actorType: user.actorType,
+        roles: tokenPayload.roles ?? [],
+        currentClinics: tokenPayload.currentClinics ?? [],
+        adminOf: tokenPayload.adminOf ?? [],
       },
     };
   }
@@ -262,9 +278,17 @@ export class AuthController {
   // Create token for password reset
   @Post('forget-password')
   async recoverPassword(@Body() dto: PasswordRecoveryDto) {
-    const checkUser = await this.userService.findUserByEmail(dto.email);
-    if (!checkUser) {
-      throw new BadRequestException('Email not found!');
+    try {
+      const checkUser = await this.userService.find({
+        email: dto.email,
+        actorType: dto.actorType,
+      });
+    } catch (error) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Email not found',
+        ERR_CODE: 'ENTITY_NOT_FOUND',
+      });
     }
 
     const selector = randomBytes(16).toString('hex'); // used to look up the token
@@ -308,7 +332,7 @@ export class AuthController {
     );
 
     if (!verifyToken) {
-      throw new BadRequestException('Invalid OTP');
+      throw new BadRequestException('Invalid token');
     }
 
     const user = await this.userService.find({

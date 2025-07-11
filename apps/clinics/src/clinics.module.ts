@@ -13,6 +13,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClinicRepository } from './clinic.repository';
 import { Clinic } from './models';
 import { ClinicEventController } from './clinic-event.controller';
+import { ClinicScheduleRuleRepository } from './clinic_schedule_rule/clinic_schedule_rule.repository';
+import { ClinicScheduleRuleModule } from './clinic_schedule_rule/clinic_schedule_rule.module';
+import { ClinicScheduleRule } from './models/clinic_schedule_rule.entity';
 
 @Module({
   imports: [
@@ -53,7 +56,7 @@ import { ClinicEventController } from './clinic-event.controller';
     ]),
 
     // TypeORM configuration for PostgreSQL
-    TypeOrmModule.forFeature([Clinic]),
+    TypeOrmModule.forFeature([Clinic, ClinicScheduleRule]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -70,8 +73,10 @@ import { ClinicEventController } from './clinic-event.controller';
     }),
 
     // MongoDB configuration
+    ClinicScheduleRuleModule,
   ],
   controllers: [ClinicsController, ClinicEventController],
   providers: [ClinicsService, ClinicRepository],
+  exports: [ClinicsService, ClinicRepository],
 })
 export class ClinicsModule {}
