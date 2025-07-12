@@ -20,6 +20,8 @@ import {
 import { MediaService } from '../media/media.service';
 import { IDoctorClinicLink } from './interfaces/staff.interface';
 import { AxiosError } from 'axios';
+import FormData from 'form-data';
+import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
 
 @Injectable()
 export class StaffService {
@@ -27,7 +29,7 @@ export class StaffService {
     private readonly mediaService: MediaService,
     @Inject(STAFF_SERVICE) private readonly httpService: HttpService,
     @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
-  ) {}
+  ) { }
 
   // ============================================================================
   // HELPER METHODS
@@ -69,7 +71,7 @@ export class StaffService {
         if (axiosError.response?.data) {
           throw new HttpException(
             (axiosError.response.data as Record<string, unknown>).message ||
-              'Service error',
+            'Service error',
             axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
@@ -109,8 +111,8 @@ export class StaffService {
     if (staffInfo) {
       staffInfo.profile_img = staffInfo.profile_img_id
         ? ((await this.mediaService.getFileById(
-            staffInfo.profile_img_id,
-          )) as Media | null)
+          staffInfo.profile_img_id,
+        )) as Media | null)
         : null;
 
       for (const degree of staffInfo.degrees ?? []) {
@@ -232,7 +234,7 @@ export class StaffService {
         if (axiosError.response?.data) {
           throw new HttpException(
             (axiosError.response.data as Record<string, unknown>).message ||
-              'Failed to update doctor profile',
+            'Failed to update doctor profile',
             axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
@@ -420,6 +422,72 @@ export class StaffService {
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/doctor-account-byId/${id}`),
     );
+    return response.data;
+  }
+
+  async importMedicineCsvHttp(file: Express.Multer.File, clinicId: string) {
+    const form = new FormData();
+    form.append('file', file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    });
+
+    const response = await firstValueFrom(
+      this.staffService.post(`medicine/import-csv-to-medicine-data/${clinicId}`, form, {
+        headers: form.getHeaders(),
+      }
+      ))
+    return response.data;
+  }
+
+  async createMedicine(dto: ImportMedicineDto, clinicId: string, currentUser: TokenPayload) {
+    const response = await firstValueFrom(
+      this.staffService.post(`medicine/input-data-to-medicine-data/${clinicId}`, {
+        dto,
+        currentUser,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async getMedicineClinicId(clinicId: string, currentUser: TokenPayload) {
+    const response = await firstValueFrom(
+      this.staffService.get(`medicine/medicine-data/${clinicId}`));
+    return response.data;
+  }
+
+  async searchMedicine(
+    clinicId: string,
+    currentUser: TokenPayload,
+    search?: string, // 👈 thêm optional search param
+  ) {
+    // Build URL có hoặc không có search
+    const url = search
+      ? `medicine/search-medicine/${clinicId}?search=${encodeURIComponent(search)}`
+      : `medicine/search-medicine/${clinicId}`;
+
+    const response = await firstValueFrom(
+      this.staffService.get(url),
+    );
+
+    return response.data;
+  }
+
+  async medicineInfo(clinicId: string, medicineInfo: string) {
+    const response = await firstValueFrom(
+      this.staffService.get(`medicine/medicine-info/${clinicId}/${medicineInfo}`));
+    return response.data;
+  }
+
+  async medicineUpdate(clinicId: string, medicineId: string, dto: UpdateMedicineDto, currentUser: TokenPayload) {
+    const response = await firstValueFrom(
+      this.staffService.put(`medicine/${clinicId}/update-medicine/${medicineId}`, {
+        dto,
+        currentUser,
+      }),
+    );
+
     return response.data;
   }
 }

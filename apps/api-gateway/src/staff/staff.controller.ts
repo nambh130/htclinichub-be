@@ -8,6 +8,8 @@ import {
   Query,
   Put,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
@@ -31,6 +33,8 @@ import {
 } from '@app/common/dto/staffs/doctor-profile.dto';
 import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
 import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
 
 @Controller('staff')
 export class StaffController {
@@ -85,7 +89,7 @@ export class StaffController {
       await this.staffService.getClinicIdsByDoctor({ userId: user.userId });
 
     const clinicIds = doctorClinicsLink.map((data) => data.clinic);
-  console.log("Clinic Ids 1", clinicIds, doctorClinicsLink);
+    console.log("Clinic Ids 1", clinicIds, doctorClinicsLink);
     const clinics: IClinic[] = await this.clinicService.getClinicByIds(clinicIds);
     console.log("Clinics Ids", clinics);
 
@@ -409,6 +413,101 @@ export class StaffController {
       throw error;
     }
   }
-  
-  
+
+  @Post('/clinic/import-csv-to-medicine-data/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async importMedicineData(
+    @Param('clinicId') clinicId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      const result = await this.staffService.importMedicineCsvHttp(file, clinicId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Post('/clinic/input-data-to-medicine-data/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async createMedicine(
+    @Param('clinicId') clinicId: string,
+    @Body() dto: ImportMedicineDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      console.log("dto:", dto)
+      const result = await this.staffService.createMedicine(dto, clinicId, currentUser);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  @Get('/clinic/medicine-data/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getMedicineClinicId(
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const shifts = await this.staffService.getMedicineClinicId(clinicId, currentUser);
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
+
+  @Get('/clinic/search-medicine/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async searchMedicine(
+    @Param('clinicId') clinicId: string,
+    @Query('search') search: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const medicines = await this.staffService.searchMedicine(clinicId, currentUser, search);
+      return medicines;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
+
+  @Get('/clinic/:clinicId/medicine-info/:medicineId')
+  @UseGuards(JwtAuthGuard)
+  async medicineInfo(
+    @Param('clinicId') clinicId: string,
+    @Param('medicineId') medicineId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const medicines = await this.staffService.medicineInfo(clinicId, medicineId);
+      return medicines;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
+
+  @Put('/clinic/:clinicId/update-medicine/:medicineId')
+  @UseGuards(JwtAuthGuard)
+  async medicineUpdate(
+    @Param('clinicId') clinicId: string,
+    @Param('medicineId') medicineId: string,
+    @Body() dto: UpdateMedicineDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const medicines = await this.staffService.medicineUpdate(clinicId, medicineId, dto, currentUser);
+      return medicines;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
 }

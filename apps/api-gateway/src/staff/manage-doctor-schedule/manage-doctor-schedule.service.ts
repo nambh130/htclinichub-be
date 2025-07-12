@@ -145,6 +145,4 @@ export class ManageDoctorScheduleService {
       throw error;
     }
   }
-
-  
 }
