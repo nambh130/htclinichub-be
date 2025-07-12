@@ -1,4 +1,15 @@
-import { Controller, Post, Body, Res, Req, Get, Query, Patch, Param, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  Get,
+  Query,
+  Patch,
+  Param,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
@@ -15,8 +26,8 @@ import { ActorEnum } from '@app/common/enum/actor-type';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly clinicService: ClinicService
-  ) { }
+    private readonly clinicService: ClinicService,
+  ) {}
 
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
@@ -64,7 +75,10 @@ export class AuthController {
 
     if (user.actorType === ActorEnum.EMPLOYEE) {
       const { currentClinics, adminOf, ...rest } = user;
-      const clinicData = await this.clinicService.getClinicById(currentClinics[0], user.id);
+      const clinicData = await this.clinicService.getClinicById(
+        currentClinics[0],
+        user.id,
+      );
 
       return res.status(loginData.status).send({
         token: loginData.data.token,
@@ -74,7 +88,7 @@ export class AuthController {
         currentClinic: {
           id: currentClinics[0],
           name: clinicData.name,
-        }
+        },
       });
     }
 
@@ -94,15 +108,21 @@ export class AuthController {
     @Body() invitationDto: CreateInvitationDto,
     @Req() req: Request,
   ) {
-    const clinicData = await this.clinicService.getClinicById(invitationDto.clinic, "id");
-    console.log("data: ", clinicData)
+    const clinicData = await this.clinicService.getClinicById(
+      invitationDto.clinic,
+      'id',
+    );
+    console.log('data: ', clinicData);
     if (!clinicData) {
-      throw new BadRequestException({ERR_CODE: "CLINIC_NOT_FOUND", message:"Clinic not found!"});
+      throw new BadRequestException({
+        ERR_CODE: 'CLINIC_NOT_FOUND',
+        message: 'Clinic not found!',
+      });
     }
     const response = await this.authService.createInvitationOwner(
       {
         ...invitationDto,
-        clinicName: clinicData.name
+        clinicName: clinicData.name,
       },
       req,
     );
@@ -127,44 +147,38 @@ export class AuthController {
     if (check.clinicId) {
       try {
         const { clinicId, ...rest } = check;
-        console.log(rest)
-        const clinic = await this.clinicService.getClinicById(clinicId, '')
+        console.log(rest);
+        const clinic = await this.clinicService.getClinicById(clinicId, '');
         if (clinic) {
           return {
             ...rest,
             clinic: {
               id: check.clinicId,
-              name: clinic.name
-            }
-          }
+              name: clinic.name,
+            },
+          };
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     }
     return check;
   }
 
   @Post('invitation/signup')
-  async invitationSignup(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async invitationSignup(@Req() req: Request, @Res() res: Response) {
     return await this.authService.invitationSignup(req, res);
   }
 
   @Post('invitation/join-clinic')
-  async invitationAccept(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
+  async invitationAccept(@Req() req: Request, @Res() res: Response) {
     return await this.authService.invitationAccept(req, res);
   }
 
   @Get('invitation/clinic')
   async invitationByClinic(
     @Query() query: Record<string, any>,
-    @Req() req: Request
+    @Req() req: Request,
   ) {
     return await this.authService.getInvitationByClinic(query, req);
   }
@@ -172,7 +186,7 @@ export class AuthController {
   @Patch('invitation/:id/revoke')
   async revokeInvitation(
     @Param() param: Record<string, string>,
-    @Req() req: Request
+    @Req() req: Request,
   ) {
     return await this.authService.revokeInvitation(param, req);
   }
@@ -180,7 +194,7 @@ export class AuthController {
   @Get('roles/clinic')
   async getRolesForClinic(
     @Query() query: Record<string, any>,
-    @Req() req: Request
+    @Req() req: Request,
   ) {
     return await this.authService.getRolesForClinic(query, req);
   }
@@ -199,13 +213,13 @@ export class AuthController {
 
   @Post('forget-password')
   async recoverPassowrd(@Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.recoverPassword(req, res)
-    return response
+    const response = await this.authService.recoverPassword(req, res);
+    return response;
   }
 
   @Post('reset-password')
   async resetPassword(@Req() req: Request, @Res() res: Response) {
-    const response = await this.authService.resetPassword(req, res)
-    return response
+    const response = await this.authService.resetPassword(req, res);
+    return response;
   }
 }

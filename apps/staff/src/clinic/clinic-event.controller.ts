@@ -8,8 +8,8 @@ import { DoctorService } from '../doctor/doctor.service';
 export class ClinicEventController {
   constructor(
     private readonly clinicService: ClinicService,
-    private readonly doctorService: DoctorService
-  ) { }
+    private readonly doctorService: DoctorService,
+  ) {}
 
   @Post('clinic-created')
   async create(@Body() payload: any) {
@@ -40,10 +40,10 @@ export class ClinicEventController {
   @EventPattern('clinic-owner-added')
   async handleOwnerAdded(@Payload() payload: ClinicOwnerAdded) {
     const { ownerId, clinicId } = payload;
-    console.log(ownerId)
-    const owner = await this.doctorService.getDoctorById(ownerId)
+    console.log(ownerId);
+    const owner = await this.doctorService.getDoctorById(ownerId);
     const clinic = await this.clinicService.getClinicById(clinicId);
-    clinic.owner = owner;
-    await this.clinicService.save(clinic);
+    clinic!.owner = owner;
+    await this.clinicService.save(clinic!);
   }
 }

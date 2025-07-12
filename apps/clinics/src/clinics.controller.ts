@@ -17,7 +17,7 @@ export class ClinicsController {
     },
   ) {
     const { addClinicDto, userId } = payload;
-    return this.clinicsService.addClinic(addClinicDto, userId);
+    return await this.clinicsService.addClinic(addClinicDto, userId);
   }
 
   @MessagePattern('get-clinics')
@@ -30,6 +30,11 @@ export class ClinicsController {
   ) {
     const { userId, options } = payload;
     return this.clinicsService.getClinics(userId, options);
+  }
+
+  @MessagePattern('get-all-clinics')
+  async getAllClinics() {
+    return this.clinicsService.getAllClinics();
   }
 
   // Get by one id

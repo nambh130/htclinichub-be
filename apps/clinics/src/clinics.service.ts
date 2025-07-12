@@ -124,6 +124,36 @@ export class ClinicsService {
     };
   }
 
+  async getAllClinics(): Promise<{ data: Clinic[] }> {
+    try {
+      const clinics = await this.clinicsRepository.find({});
+
+      this.logger.info({
+        msg: 'All clinics retrieved successfully',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_ALL_CLINICS',
+        status: 'SUCCESS',
+        count: clinics.length,
+      });
+
+      return {
+        data: clinics.map((clinic) => JSON.parse(JSON.stringify(clinic))),
+      };
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to retrieve all clinics',
+        type: 'audit-log',
+        context: 'ClinicService',
+        operation: 'GET_ALL_CLINICS',
+        status: 'ERROR',
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
   async getClinicById(id: string, userId: string): Promise<Clinic> {
     if (!id) {
       this.logger.warn({

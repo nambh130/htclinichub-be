@@ -20,7 +20,12 @@ import { ClinicUsersService } from './clinic-users/clinic-users.service';
 import { ClinicsService } from './clinics/clinics.service';
 import { CreateUserDto } from './clinic-users/dto/create-user.dto';
 import { UserCreatedEvent } from '@app/common/events/users/user-created.event';
-import { AUTH_SERVICE, CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
+import {
+  AUTH_SERVICE,
+  CurrentUser,
+  JwtAuthGuard,
+  TokenPayload,
+} from '@app/common';
 import { InvitationCheckDto } from './dto/invitation-check.dto';
 import { InvitationsService } from './invitations/invitations.service';
 import { InvitationSignupDto } from './dto/invitation-signup.dto';
@@ -51,7 +56,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
-  ) { }
+  ) {}
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -60,7 +65,7 @@ export class AuthController {
     return this.otpService.sendOtp({
       target: requestOtpDto.phone,
       type: OtpTargetType.PHONE,
-      purpose: OtpPurpose.PATIENT_LOGIN
+      purpose: OtpPurpose.PATIENT_LOGIN,
     });
   }
 
@@ -71,7 +76,7 @@ export class AuthController {
       verifyOtpDto.phone,
       OtpTargetType.PHONE,
       OtpPurpose.PATIENT_LOGIN,
-      verifyOtpDto.otp
+      verifyOtpDto.otp,
     );
 
     if (!isOtpValid) {
@@ -79,7 +84,7 @@ export class AuthController {
     }
 
     const response = await this.authService.patientLogin(verifyOtpDto.phone);
-    const { token, user } = response;
+    const { token, user } = response || {};
 
     // Set cookie securely
     res.cookie('Authentication', token, {
@@ -91,8 +96,8 @@ export class AuthController {
     // Respond with JSON
     return res.status(200).json({
       success: true,
-      user: { id: user.id, phone: user.phone }, // Optional: If you want the client to access it as well
-      token
+      user: { id: user?.id, phone: user?.phone }, // Optional: If you want the client to access it as well
+      token,
     });
   }
   // ------------------------------ STAFF AND DOCTOR ------------------------------
@@ -110,12 +115,15 @@ export class AuthController {
     }
     // Check if doctor already exists
     try {
-      const user = await this.userService.find({ email: invitation.email, actorType: invitation.role.roleType });
+      const user = await this.userService.find({
+        email: invitation.email,
+        actorType: invitation.role.roleType,
+      });
     } catch (error) {
       // If not exists, the front end directs to signup
       return {
         exists: false,
-        clinicId: invitation.clinic.id
+        clinicId: invitation.clinic.id,
       };
     }
 
@@ -123,7 +131,7 @@ export class AuthController {
     return {
       exists: true,
       actorType: invitation.role.roleType,
-      clinicId: invitation.clinic.id
+      clinicId: invitation.clinic.id,
     };
   }
 
@@ -190,11 +198,17 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refreshToken(@Req() req: Request,
-    @Res({ passthrough: true }) res: Response): Promise<AuthResponse> {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
     const rawToken = req.cookies['refreshToken'];
     const userAgent = req.headers['user-agent'] || 'unknown';
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').toString();
+    const ip = (
+      req.headers['x-forwarded-for'] ||
+      req.socket.remoteAddress ||
+      'unknown'
+    ).toString();
 
     if (!rawToken) throw new UnauthorizedException('Missing refresh token');
 
@@ -205,7 +219,11 @@ export class AuthController {
     await this.authService.invalidateRefreshToken(rawToken);
 
     // Step 3: Generate new refresh token
-    const newRefreshToken = await this.authService.createRefreshToken(userId, userAgent, ip);
+    const newRefreshToken = await this.authService.createRefreshToken(
+      userId,
+      userAgent,
+      ip,
+    );
 
     // Step 4: Generate new access token
     const user = await this.userService.find({ id: userId });
@@ -213,8 +231,8 @@ export class AuthController {
     const accessToken = await this.authService.createJWT(tokenPayload);
 
     // Step 5: Set new refresh token cookie
-    const expireDate = this.configService.get("REFRESH_TOKEN_EXPIRES");
-    console.log(expireDate)
+    const expireDate = this.configService.get('REFRESH_TOKEN_EXPIRES');
+    console.log(expireDate);
     this.setAuthCookies(res, accessToken, newRefreshToken);
 
     return {
@@ -231,8 +249,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Req() req: Request,
-    @Res({ passthrough: true }) res: Response) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const rawToken = req.cookies['refreshToken'];
     if (rawToken) {
       await this.authService.invalidateRefreshToken(rawToken);
@@ -261,26 +278,35 @@ export class AuthController {
   // Create token for password reset
   @Post('forget-password')
   async recoverPassword(@Body() dto: PasswordRecoveryDto) {
-
     try {
-      const checkUser = await this.userService.find({ email: dto.email, actorType: dto.actorType });
+      const checkUser = await this.userService.find({
+        email: dto.email,
+        actorType: dto.actorType,
+      });
     } catch (error) {
-
       throw new BadRequestException({
         statusCode: 400,
-        message: "Email not found",
-        ERR_CODE: "ENTITY_NOT_FOUND",
+        message: 'Email not found',
+        ERR_CODE: 'ENTITY_NOT_FOUND',
       });
     }
 
     const selector = randomBytes(16).toString('hex'); // used to look up the token
-    const token = await this.jwtService.signAsync({
-      email: dto.email,
-      userType: dto.actorType,
-      selector
-    }, { expiresIn: 60 * 10 });
+    const token = await this.jwtService.signAsync(
+      {
+        email: dto.email,
+        userType: dto.actorType,
+        selector,
+      },
+      { expiresIn: 60 * 10 },
+    );
 
-    return await this.otpService.sendPasswordToken(dto.email, dto.actorType, selector, token);
+    return await this.otpService.sendPasswordToken(
+      dto.email,
+      dto.actorType,
+      selector,
+      token,
+    );
   }
 
   // Use the token to reset the password
@@ -288,30 +314,37 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     const { token } = dto;
     const isVerify = await this.jwtService.verifyAsync(
-      token, this.configService.get("JWT_SECRET")
+      token,
+      this.configService.get('JWT_SECRET'),
     );
     if (!isVerify) {
-      throw new BadRequestException("Invalid token");
+      throw new BadRequestException('Invalid token');
     }
     const decoded = this.jwtService.decode(token);
-    if (!decoded || typeof decoded !== "object") throw new BadRequestException("Invalid token");
+    if (!decoded || typeof decoded !== 'object')
+      throw new BadRequestException('Invalid token');
 
     const { email, userType, selector } = decoded;
     const verifyToken = await this.otpService.verifyPasswordToken(
-      email, userType, selector
+      email,
+      userType,
+      selector,
     );
 
     if (!verifyToken) {
-      throw new BadRequestException("Invalid token");
+      throw new BadRequestException('Invalid token');
     }
 
-    const user = await this.userService.find({ email: email, actorType: userType });
+    const user = await this.userService.find({
+      email: email,
+      actorType: userType,
+    });
     user.password = await this.userService.hashPassword(dto.password);
     const updatedUser = this.userService.updateUser(email, user);
     if (!updatedUser) {
       throw new Error();
     }
-    return ({ message: "Change password succesfully" })
+    return { message: 'Change password succesfully' };
   }
 
   @UseGuards(JwtAuthGuard, AuthorizationGuard)
@@ -350,15 +383,18 @@ export class AuthController {
   // ------------------ Utilities ---------------------
   setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
     // Parse access token expiry in minutes, convert to ms
-    const accessTokenExpiryMin = Number(this.configService.get("JWT_EXPIRES_IN") || 15);
+    const accessTokenExpiryMin = Number(
+      this.configService.get('JWT_EXPIRES_IN') || 15,
+    );
     const accessTokenMaxAge = accessTokenExpiryMin * 60 * 1000;
 
     // Parse refresh token expiry in ms, fallback to 7 days
-    const refreshTokenExpiryMs = Number(this.configService.get("REFRESH_TOKEN_EXPIRES"))
-      || (7 * 24 * 60 * 60 * 1000);
+    const refreshTokenExpiryMs =
+      Number(this.configService.get('REFRESH_TOKEN_EXPIRES')) ||
+      7 * 24 * 60 * 60 * 1000;
 
-    console.log(typeof (accessTokenMaxAge), accessTokenMaxAge)
-    console.log(typeof (refreshTokenExpiryMs), refreshTokenExpiryMs)
+    console.log(typeof accessTokenMaxAge, accessTokenMaxAge);
+    console.log(typeof refreshTokenExpiryMs, refreshTokenExpiryMs);
     res.cookie('Authentication', accessToken, {
       httpOnly: true,
       secure: true,
@@ -374,5 +410,4 @@ export class AuthController {
       maxAge: refreshTokenExpiryMs, // ✅ milliseconds
     });
   }
-
 }

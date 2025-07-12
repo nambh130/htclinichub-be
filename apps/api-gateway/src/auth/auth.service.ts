@@ -27,7 +27,7 @@ export class AuthService implements OnModuleInit {
     private readonly authClient: ClientKafka,
     private readonly http: HttpService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     this.authClient.subscribeToResponseOf('login');
@@ -36,7 +36,7 @@ export class AuthService implements OnModuleInit {
     await this.authClient.connect();
   }
 
-  // ------------------- PATIENT ------------------- 
+  // ------------------- PATIENT -------------------
   async requestOtp(
     requestLoginOtp: LoginOtpRequestDto,
   ): Promise<{ success: boolean }> {
@@ -59,7 +59,11 @@ export class AuthService implements OnModuleInit {
 
   async verifyOtp(req: Request, res: Response): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/patient/verify-otp`, req.body)
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/patient/verify-otp`,
+          req.body,
+        )
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -76,50 +80,71 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
 
-  // ------------------- LOGIN, LOGOUT, REFRESHTOKEN ------------------- 
+  // ------------------- LOGIN, LOGOUT, REFRESHTOKEN -------------------
 
-  async clinicUserLogin(req: Request)
-  : Promise<AxiosResponse<AuthResponse & { refreshToken: string }>> {
+  async clinicUserLogin(
+    req: Request,
+  ): Promise<AxiosResponse<AuthResponse & { refreshToken: string }>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
-    const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
+    const ip = (
+      forwardedFor?.split(',')[0] ||
+      req.socket.remoteAddress ||
+      ''
+    ).trim();
 
     return await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/clinic/login`, req.body, {
-        withCredentials: true,
-        headers: {
-          'x-user-agent': userAgent,
-          'x-client-ip': ip,
-        },
-        timeout: 1000 * 20,
-      }).pipe(
-        catchError(error => {
-          const e = error.response || {};
-          throw new HttpException(e.data || 'Gateway error', e.status || 500);
-        })
-      )
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/clinic/login`,
+          req.body,
+          {
+            withCredentials: true,
+            headers: {
+              'x-user-agent': userAgent,
+              'x-client-ip': ip,
+            },
+            timeout: 1000 * 20,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response || {};
+            throw new HttpException(e.data || 'Gateway error', e.status || 500);
+          }),
+        ),
     );
   }
 
   async adminLogin(req: Request, res: Response): Promise<any> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
-    const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
+    const ip = (
+      forwardedFor?.split(',')[0] ||
+      req.socket.remoteAddress ||
+      ''
+    ).trim();
 
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/admin/login`, req.body, {
-        withCredentials: true,
-        headers: {
-          'x-user-agent': userAgent,
-          'x-client-ip': ip,
-        },
-        timeout: 1000 * 20,
-      }).pipe(
-        catchError(error => {
-          const e = error.response || {};
-          throw new HttpException(e.data || 'Gateway error', e.status || 500);
-        })
-      )
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/admin/login`,
+          req.body,
+          {
+            withCredentials: true,
+            headers: {
+              'x-user-agent': userAgent,
+              'x-client-ip': ip,
+            },
+            timeout: 1000 * 20,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response || {};
+            throw new HttpException(e.data || 'Gateway error', e.status || 500);
+          }),
+        ),
     );
     const setCookie = response.headers['set-cookie'];
     if (setCookie) {
@@ -129,30 +154,42 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
 
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
-    const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
+    const ip = (
+      forwardedFor?.split(',')[0] ||
+      req.socket.remoteAddress ||
+      ''
+    ).trim();
 
     const response = await firstValueFrom(
-      this.http.post(
-        `${this.configService.get("AUTH_SERVICE_URL")}/auth/refresh`,
-        {}, // optional body, if Auth service requires it
-        {
-          withCredentials: true,
-          headers: {
-            'cookie': req.headers.cookie || '',
-            'X-User-Agent': userAgent,
-            'X-Client-IP': ip,
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/refresh`,
+          {}, // optional body, if Auth service requires it
+          {
+            withCredentials: true,
+            headers: {
+              cookie: req.headers.cookie || '',
+              'X-User-Agent': userAgent,
+              'X-Client-IP': ip,
+            },
+            timeout: 10000,
           },
-          timeout: 10000,
-        }
-      ).pipe(
-        catchError((error) => {
-          const e = error.response || {};
-          throw new HttpException(e.data || 'Token refresh failed', e.status || 500);
-        })
-      )
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response || {};
+            throw new HttpException(
+              e.data || 'Token refresh failed',
+              e.status || 500,
+            );
+          }),
+        ),
     );
 
     const setCookies = response.headers['set-cookie'];
@@ -166,27 +203,33 @@ export class AuthService implements OnModuleInit {
   async logout(@Req() req: Request, @Res() res: Response) {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const forwardedFor = req.headers['x-forwarded-for'] as string;
-    const ip = (forwardedFor?.split(',')[0] || req.socket.remoteAddress || '').trim();
+    const ip = (
+      forwardedFor?.split(',')[0] ||
+      req.socket.remoteAddress ||
+      ''
+    ).trim();
 
     await firstValueFrom(
-      this.http.post(
-        `${this.configService.get("AUTH_SERVICE_URL")}/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            cookie: req.headers.cookie || '',
-            'X-User-Agent': userAgent,
-            'X-Client-IP': ip,
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/logout`,
+          {},
+          {
+            withCredentials: true,
+            headers: {
+              cookie: req.headers.cookie || '',
+              'X-User-Agent': userAgent,
+              'X-Client-IP': ip,
+            },
+            timeout: 10000,
           },
-          timeout: 10000,
-        }
-      ).pipe(
-        catchError((error) => {
-          const e = error.response || {};
-          throw new HttpException(e.data || 'Logout failed', e.status || 500);
-        })
-      )
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response || {};
+            throw new HttpException(e.data || 'Logout failed', e.status || 500);
+          }),
+        ),
     );
 
     res.clearCookie('Authentication', { path: '/' });
@@ -198,7 +241,11 @@ export class AuthService implements OnModuleInit {
 
   async recoverPassword(req: Request, res: Response): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/forget-password`, req.body)
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/forget-password`,
+          req.body,
+        )
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -217,7 +264,11 @@ export class AuthService implements OnModuleInit {
 
   async resetPassword(req: Request, res: Response): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/reset-password`, req.body)
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/reset-password`,
+          req.body,
+        )
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -233,7 +284,7 @@ export class AuthService implements OnModuleInit {
 
     return res.status(response.status).send(response.data);
   }
-  // ------------------- INVITATIONS ------------------- 
+  // ------------------- INVITATIONS -------------------
   async createInvitationOwner(
     invitationDto: CreateInvitationDto,
     req: Request,
@@ -349,35 +400,50 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async revokeInvitation(query: Record<string, string>, req: Request): Promise<any> {
+  async revokeInvitation(
+    query: Record<string, string>,
+    req: Request,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.http.patch(`${this.configService.get("AUTH_SERVICE_URL")}/invitation/${query.id}/revoke`, req.body, {
-        headers: {
-          Cookie: req.headers.cookie || '', // Forward incoming cookies
-        },
-        withCredentials: true,
-        timeout: 1000 * 20,
-      }).pipe(
-        catchError(error => {
-          const e = error.response;
-          throw new HttpException(e?.data || 'Error', e?.status || 500);
-        })
-      )
+      this.http
+        .patch(
+          `${this.configService.get('AUTH_SERVICE_URL')}/invitation/${query.id}/revoke`,
+          req.body,
+          {
+            headers: {
+              Cookie: req.headers.cookie || '', // Forward incoming cookies
+            },
+            withCredentials: true,
+            timeout: 1000 * 20,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(e?.data || 'Error', e?.status || 500);
+          }),
+        ),
     );
     return response.data;
   }
 
   async invitationCheck(req: Request): Promise<any> {
     const response = await firstValueFrom(
-      this.http.post(`${this.configService.get("AUTH_SERVICE_URL")}/auth/invitation/check`, req.body, {
-        withCredentials: true,
-        timeout: 1000 * 20,
-      }).pipe(
-        catchError(error => {
-          const e = error.response;
-          throw new HttpException(e?.data || 'Error', e?.status || 500);
-        })
-      )
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/check`,
+          req.body,
+          {
+            withCredentials: true,
+            timeout: 1000 * 20,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(e?.data || 'Error', e?.status || 500);
+          }),
+        ),
     );
     return response.data;
   }
@@ -435,5 +501,4 @@ export class AuthService implements OnModuleInit {
       throw new HttpException(e.data, e.status);
     }
   }
-
 }

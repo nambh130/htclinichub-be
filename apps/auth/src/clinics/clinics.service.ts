@@ -8,20 +8,19 @@ import { ClinicUserRepository } from '../clinic-users/clinic-users.repository';
 export class ClinicsService {
   constructor(
     private readonly clinicRepository: ClinicRepository,
-    private readonly clinicUserRepository: ClinicUserRepository
-  ) { }
+    private readonly clinicUserRepository: ClinicUserRepository,
+  ) {}
 
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
     const newClinic: Partial<Clinic> = { id: createClinicDto.id };
 
     if (createClinicDto.owner) {
       try {
-        const owner = await this.clinicUserRepository.findOne(
-          { id: createClinicDto.owner },
-        );
+        const owner = await this.clinicUserRepository.findOne({
+          id: createClinicDto.owner,
+        });
         newClinic.owner = owner;
-      }
-      catch (error) {
+      } catch (error) {
         throw new NotFoundException('Clinic owner not found');
       }
     }

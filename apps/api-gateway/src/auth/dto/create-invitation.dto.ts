@@ -1,9 +1,9 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator"
 
-export class CreateInvitationDto{
+export class CreateInvitationDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string
+  email: string;
 
   @IsUUID()
   @IsNotEmpty()
@@ -17,4 +17,3 @@ export class CreateInvitationDto{
   @IsNotEmpty()
   role: string
 }
-

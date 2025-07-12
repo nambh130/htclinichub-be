@@ -19,17 +19,19 @@ export class OtpService {
 
   async sendOtp(input: RequestOtpInput) {
     const code = this.generateOtp();
-    const ttlSeconds = this.configService.get("OTP_TTL_SECONDS") || 600000; // 10 minutes
+    const ttlSeconds = this.configService.get('OTP_TTL_SECONDS') || 600000; // 10 minutes
     const key = `otp:${input.purpose}:${input.type}:${input.target}`;
 
     await this.cacheManager.set<string>(key, code, ttlSeconds); // ttl is in miliseconds
 
     const check = await this.cacheManager.get<string>(key);
-    if (!check) throw new Error("Failed to cache OTP");
+    if (!check) throw new Error('Failed to cache OTP');
 
     // Send SMS or Email
     if (input.type === OtpTargetType.PHONE) {
-      console.log(`Sending OTP ${code} to phone ${input.target} for ${input.purpose}`);
+      console.log(
+        `Sending OTP ${code} to phone ${input.target} for ${input.purpose}`,
+      );
       // TODO: Send SMS here
     }
     return { success: true };
@@ -39,7 +41,7 @@ export class OtpService {
     target: string,
     type: OtpTargetType,
     purpose: OtpPurpose,
-    submittedOtp: string
+    submittedOtp: string,
   ): Promise<boolean> {
     const key = `otp:${purpose}:${type}:${target}`;
     const cachedOtp = await this.cacheManager.get<string>(key);
@@ -52,15 +54,19 @@ export class OtpService {
     return false;
   }
 
-  async sendPasswordToken(email: string, userType: ActorType, selector: string,
-    token: string) {
-    const ttlSeconds = this.configService.get("OTP_TTL_SECONDS") || 600000; // 10 minutes
+  async sendPasswordToken(
+    email: string,
+    userType: ActorType,
+    selector: string,
+    token: string,
+  ) {
+    const ttlSeconds = this.configService.get('OTP_TTL_SECONDS') || 600000; // 10 minutes
     const key = `reset:email:${email}:${userType}:${selector}`;
 
-    await this.cacheManager.set<string>(key, "true", ttlSeconds); // ttl is in miliseconds
+    await this.cacheManager.set<string>(key, 'true', ttlSeconds); // ttl is in miliseconds
 
     const check = await this.cacheManager.get<string>(key);
-    if (!check) throw new Error("Failed to cache OTP");
+    if (!check) throw new Error('Failed to cache OTP');
 
     const frontEndUrl = this.configService.get("RESET_PWD_URL");
     console.log(`Sending url: ${frontEndUrl}/?token=${token} to email ${email} for password reset`);
@@ -74,13 +80,19 @@ export class OtpService {
     return { success: true };
   }
 
-  async verifyPasswordToken(email: string, userType: ActorType, selector: string) {
-    const checkToken = await this.cacheManager.get<string>(`reset:email:${email}:${userType}:${selector}`);
-    if (checkToken !== "true") {
-      throw new BadRequestException("Invalid token");
+  async verifyPasswordToken(
+    email: string,
+    userType: ActorType,
+    selector: string,
+  ) {
+    const checkToken = await this.cacheManager.get<string>(
+      `reset:email:${email}:${userType}:${selector}`,
+    );
+    if (checkToken !== 'true') {
+      throw new BadRequestException('Invalid token');
     }
 
-    await this.cacheManager.del(`reset:email:${email}:${userType}:${selector}`)
+    await this.cacheManager.del(`reset:email:${email}:${userType}:${selector}`);
     return true;
   }
 

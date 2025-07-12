@@ -13,17 +13,17 @@ import { FindOptionsWhere, In } from 'typeorm';
 export class RolesService extends BaseService {
   constructor(
     private readonly roleRepository: RoleRepository,
-    private readonly permissionRepository: PermissionRepository
+    private readonly permissionRepository: PermissionRepository,
   ) {
     super();
   }
 
   async createRole(createRoleDto: CreateRoleDto) {
     const { permissionIds, ...rest } = createRoleDto;
-    const permissions = await this.permissionRepository.find(
-      { id: In(permissionIds) },
-    );
-    console.log("pers: ", permissions)
+    const permissions = await this.permissionRepository.find({
+      id: In(permissionIds),
+    });
+    console.log('pers: ', permissions);
 
     const role = new Role({ ...rest, permissions });
     return await this.roleRepository.create(role);
@@ -44,7 +44,7 @@ export class RolesService extends BaseService {
     }
 
     Object.assign(role, rest);
-    console.log(role)
+    console.log(role);
     return await this.roleRepository.create(role);
   }
 
@@ -61,7 +61,7 @@ export class RolesService extends BaseService {
       where,
       skip,
       take,
-      ['permissions']
+      ['permissions'],
     );
 
     return {

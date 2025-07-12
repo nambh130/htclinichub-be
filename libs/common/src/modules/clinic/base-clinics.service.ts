@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PostgresAbstractRepository } from '@app/common/databases';
-import { Clinic } from 'apps/staff/src/models/clinic.entity';
 import { BaseClinicRepository } from './base-clinics.repository';
 import { BaseClinic } from './models/base-clinic.entity';
 import { FindOptionsWhere } from 'typeorm';
@@ -13,14 +11,14 @@ export class BaseClinicService<T extends BaseClinic> {
     return this.baseClinicRepo.findAll();
   }
 
-  async getClinicById(id: string): Promise<T> {
+  async getClinicById(id: string): Promise<T | null> {
     return this.baseClinicRepo.findOne({ id } as FindOptionsWhere<T>);
   }
 
   async createClinic(data: any): Promise<T> {
-    console.log(data)
+    console.log(data);
     const clinic = Object.assign({}, data) as T;
-    console.log(clinic)
+    console.log(clinic);
     return await this.baseClinicRepo.create(clinic);
   }
 
@@ -36,4 +34,3 @@ export class BaseClinicService<T extends BaseClinic> {
   //  return this.baseClinicRepo.findAndCount({}, skip, take);
   //}
 }
-

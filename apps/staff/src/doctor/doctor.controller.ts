@@ -7,12 +7,9 @@ import {
   TokenPayload,
   UpdateDegreeDto,
   UpdateSpecializeDto,
-} from '@app/common';
-import {
   DoctorProfileDto,
   UpdateProfileDto,
-} from '@app/common/dto/staffs/doctor-profile.dto';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+} from '@app/common';
 
 @Controller('staff/doctor')
 export class DoctorController {
@@ -30,8 +27,15 @@ export class DoctorController {
   getDoctorListWithProfile(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
+    @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
   ) {
-    return this.doctorService.getDoctorListWithProfile(+page, +limit);
+    return this.doctorService.getDoctorListWithProfile(
+      +page,
+      +limit,
+      search,
+      searchField,
+    );
   }
 
   @Get('details/:id')
@@ -49,14 +53,14 @@ export class DoctorController {
   @Get('clinic-by-doctor/:doctorId')
   async getClinicsByDoctor(@Param('doctorId') doctorId: string) {
     const links = await this.doctorService.getClinicsByDoctor(doctorId);
-    const transformed = links.map(item => {return {
-      linkId: item.id,
-      clinic: item.clinic.id
-    }});
+    const transformed = links.map((item) => {
+      return {
+        linkId: item.id,
+        clinic: item.clinic,
+      };
+    });
 
-    console.log('Transformed links:', transformed);
-
-    return transformed
+    return transformed;
   }
 
   @Get('doctor-account-byId/:id')
@@ -64,6 +68,7 @@ export class DoctorController {
     return this.doctorService.getDoctorAccountById(id);
   }
 
+  // Note: Keep this route last among GET routes to avoid conflicts with more specific routes
   @Get(':id')
   getDoctorById(@Param('id') doctorId: string) {
     return this.doctorService.getDoctorById(doctorId);
@@ -189,10 +194,15 @@ export class DoctorController {
     payload: {
       doctorId: string;
       degreeId: string;
+      currentUser: TokenPayload;
     },
   ) {
-    const { doctorId, degreeId } = payload;
-    return this.doctorService.deleteDoctorDegree(doctorId, degreeId);
+    const { doctorId, degreeId, currentUser } = payload;
+    return this.doctorService.deleteDoctorDegree(
+      doctorId,
+      degreeId,
+      currentUser,
+    );
   }
 
   @Post('get-specializes')
@@ -244,15 +254,49 @@ export class DoctorController {
     payload: {
       doctorId: string;
       specializeId: string;
+      currentUser: TokenPayload;
     },
   ) {
-    const { doctorId, specializeId } = payload;
-    return this.doctorService.deleteDoctorSpecialize(doctorId, specializeId);
+    const { doctorId, specializeId, currentUser } = payload;
+    return this.doctorService.deleteDoctorSpecialize(
+      doctorId,
+      specializeId,
+      currentUser,
+    );
+  }
+
+  @Post('assign-clinic')
+  assignDoctorToClinic(
+    @Body()
+    payload: {
+      doctorId: string;
+      clinicId: string;
+      currentUser: TokenPayload;
+    },
+  ) {
+    const { doctorId, clinicId, currentUser } = payload;
+    return this.doctorService.assignDoctorToClinic(
+      doctorId,
+      clinicId,
+      currentUser,
+    );
+  }
+
+  @Post('remove-clinic')
+  removeDoctorFromClinic(
+    @Body()
+    payload: {
+      doctorId: string;
+      clinicId: string;
+    },
+  ) {
+    const { doctorId, clinicId } = payload;
+    return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
   }
 
   @Get('get-doctors-by-ids')
-async getDoctorsByIds(@Query('ids') ids: string | string[]) {
-  const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
-  return this.doctorService.getDoctorsByIds({ ids: parsedIds });
-}
+  getDoctorsByIds(@Query('ids') ids: string | string[]) {
+    const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
+    return this.doctorService.getDoctorsByIds({ ids: parsedIds });
+  }
 }

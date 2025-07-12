@@ -107,7 +107,7 @@ services:
         - action: rebuild
           path: ./package.json
     env_file:
-      - ./apps/clinics/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy

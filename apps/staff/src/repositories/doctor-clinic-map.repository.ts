@@ -17,6 +17,15 @@ export class DoctorClinicRepo {
     return await this.itemsRepository.save(link);
   }
 
+  async findOne(
+    where: FindOptionsWhere<DoctorClinicMap>,
+  ): Promise<DoctorClinicMap | null> {
+    return await this.itemsRepository.findOne({ where });
+  }
+
+  async deleteLink(id: string): Promise<void> {
+    await this.itemsRepository.delete(id);
+  }
   async findLinkByDoctorAndClinic(
     doctor_clinic_link_id: string,
   ): Promise<DoctorClinicMap | null> {
@@ -27,8 +36,5 @@ export class DoctorClinicRepo {
         clinic: true,
       },
     });
-  }
-  async findOne(where: FindOptionsWhere<DoctorClinicMap>) {
-    return await this.itemsRepository.findOne({ where });
   }
 }

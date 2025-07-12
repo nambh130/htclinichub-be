@@ -3,9 +3,13 @@ import { ClinicService } from './clinic.service';
 import { ClinicController } from './clinic.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CLINIC_CONSUMER_GROUP, CLINIC_SERVICE } from '@app/common';
-import { AuthModule } from '../auth/auth.module';
-import { httpClientConfig, HttpModules } from '../api/http.client';
+import {
+  CLINIC_CONSUMER_GROUP,
+  CLINIC_SERVICE,
+  STAFF_SERVICE,
+} from '@app/common';
+import { AuthModule } from '@auth-gw/auth.module';
+import { HttpModules, httpClientConfig } from '../api/http.client';
 import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-schedule-rule.service';
 //docker-compose up zookeeper kafka postgres auth staff api-gateway --build --watch
 @Module({
@@ -27,7 +31,7 @@ import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-sche
           options: {
             client: {
               clientId: 'clinic',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: CLINIC_CONSUMER_GROUP,
@@ -36,6 +40,14 @@ import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-sche
         }),
         inject: [ConfigService],
       },
+    ]),
+    // HTTP clients for REST API communication
+    HttpModules.registerAsync([
+      httpClientConfig(
+        STAFF_SERVICE,
+        'STAFF_SERVICE_HOST',
+        'STAFF_SERVICE_PORT',
+      ),
     ]),
     forwardRef(() => AuthModule),
   ],

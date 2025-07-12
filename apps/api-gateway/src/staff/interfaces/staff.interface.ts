@@ -1,6 +1,6 @@
 export interface IDoctorClinicLink {
   linkId: string;
-  clinic: string; // clinic ID
+  clinic: IClinic; // Full clinic object due to entity relationships
 }
 
 export interface IClinic {

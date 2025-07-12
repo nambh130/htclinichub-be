@@ -35,7 +35,6 @@ import { Clinic } from './models/clinic.entity';
 import { ClinicEventController } from './clinic/clinic-event.controller';
 import { ClinicRepository } from './clinic/clinic.repository';
 import { ClinicService } from './clinic/clinic.service';
-import { ManageDoctorScheduleModule } from './doctor/manage-doctor-schedule/manage-doctor-schedule.module';
 import { Doctor_WorkShift } from './models/doctor_workshift.entity';
 import { ManageDoctorScheduleRepository } from './doctor/manage-doctor-schedule/manage-doctor-schedule.repository';
 import { ManageDoctorScheduleController } from './doctor/manage-doctor-schedule/manage-doctor-schedule.controller';
@@ -83,21 +82,21 @@ import { MedicineModule } from './clinic/medicine/medicine.module';
     MedicineModule
   ],
   controllers: [
-    StaffController,
     DoctorController,
     EmployeeController,
+    StaffController,
     DoctorEventController,
     EmployeeEventController,
     ClinicEventController,
-    ManageDoctorScheduleController
+    ManageDoctorScheduleController,
   ],
   providers: [
-    StaffService,
     DoctorService,
     ManageDoctorScheduleService,
     DegreeRepository,
     SpecializeRepository,
     EmployeeService,
+    StaffService,
     ClinicService,
     CommonRepository,
     DoctorRepository,
@@ -105,8 +104,8 @@ import { MedicineModule } from './clinic/medicine/medicine.module';
     StaffInfoRepository,
     ManageDoctorScheduleRepository,
     ClinicRepository,
-    DoctorClinicRepo
+    DoctorClinicRepo,
   ],
-  exports: [StaffService],
+  exports: [],
 })
 export class StaffModule {}
