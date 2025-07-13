@@ -1,15 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { MedicineService } from "./medicine.service";
 import { CurrentUser, JwtAuthGuard, TokenPayload } from "@app/common";
 import { ImportMedicineDto, UpdateMedicineDto } from "@app/common/dto/staffs/medicine";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { Response } from 'express';
 
 @Controller('staff/medicine')
 export class MedicineController {
   constructor(
     private readonly medicineService: MedicineService,
-  ) {}
-@Post('/clinic/import-csv-to-medicine-data/:clinicId')
+  ) { }
+  @Post('/clinic/import-csv-to-medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async importMedicineData(
@@ -65,8 +66,8 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const medicines = await this.medicineService.searchMedicine(clinicId, currentUser, search);
-      return medicines;
+      const medicine = await this.medicineService.searchMedicine(clinicId, currentUser, search);
+      return medicine;
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
       throw error;
@@ -103,6 +104,29 @@ export class MedicineController {
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
       throw error;
+    }
+  }
+
+  @Get('/export-medicine/:clinicId') //thay vì bấm send -> chọn send & download
+  @UseGuards(JwtAuthGuard)
+  async exportMedicinesToCSV(
+    @Param('clinicId') clinicId: string,
+    @Res() res: Response,
+    @CurrentUser() currentUser: TokenPayload,
+
+  ) {
+    try {
+      const response = await this.medicineService.exportMedicineDataToCSV(clinicId, currentUser);
+      const { csv, clinicName } = response.data; 
+      const safeName = clinicName.replace(/[^a-zA-Z0-9-_]/g, '_');
+      const fileName = `${safeName}-medicine-data.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting medicine data:', error);
+      res.status(500).send('Internal Server Error');
     }
   }
 }

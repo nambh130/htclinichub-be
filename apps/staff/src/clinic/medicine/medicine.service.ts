@@ -272,4 +272,39 @@ export class MedicineService extends BaseService {
       clinicName: clinic.name,
     };
   }
+
+  async exportMedicineDataToCSV(clinicId: string) {
+    const clinic = await this.clinicRepository.findOne({ id: clinicId });
+
+    const result = await this.medicineRepository.find({
+      clinic_id: {
+        id: clinicId,
+      },
+    });
+    if (!result.length) {
+      return {
+        csv: 'No data found',
+        clinicName: clinic?.name || 'clinic',
+      };
+    }
+
+    if (!result.length) {
+      return {
+        csv: '\uFEFFNo data found',
+        clinicName: clinic?.name || 'clinic',
+      };
+    }
+
+    const header = 'id;code;name;concentration;ingredient;unit;quantity;timesPerDay;dosePerTime;schedule;status\n';
+
+    const rows = result.map(m =>
+      `${m.id};${m.code};${m.name};${m.concentration};${m.ingredient};${m.unit};${m.quantity};${m.timesPerDay};${m.dosePerTime};${m.schedule};${m.status}`
+    ).join('\n');
+
+    const bom = '\uFEFF'; // ✅ BOM để Excel hiểu UTF-8
+    return {
+      csv: bom + header + rows,
+      clinicName: clinic?.name || 'clinic',
+    };
+  }
 }

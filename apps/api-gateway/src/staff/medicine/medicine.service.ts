@@ -75,4 +75,9 @@ export class MedicineService {
 
         return response.data;
     }
+
+    async exportMedicineDataToCSV(clinicId: string, currentUser: TokenPayload) {
+        return firstValueFrom(
+            this.staffService.get(`medicine/export_medicine_csv/${clinicId}`));
+    }
 }

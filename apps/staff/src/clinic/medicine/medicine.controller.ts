@@ -103,4 +103,17 @@ export class MedicineController {
       throw error;
     }
   }
+
+   @Get('export_medicine_csv/:clinicId')
+  async handleExportCSV(
+    @Param('clinicId') clinicId: string,
+  ) {
+    try {
+      const result = await this.medicineService.exportMedicineDataToCSV(clinicId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
 }
