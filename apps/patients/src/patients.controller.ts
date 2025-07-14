@@ -326,23 +326,25 @@ export class PatientsController {
     return result;
   }
 
+  
+  @Get('appointment/doctor-clinic-link')
+  async getAppointmentByDoctorClinicLink(
+    @Query('doctor_id') doctorId: string,
+    @Query('clinic_id') clinicId: string,
+  ) {
+    return await this.patientsService.getAppointmentByDoctorClinicLink(
+      doctorId,
+      clinicId,
+    );
+  }
+
   @Get('appointment/:id')
   async getAppointment(@Param('id') id: string) {
     const result = await this.patientsService.getAppointment(id);
     return result;
   }
 
-  @Get('appointment/doctor-clinic-link')
-  async getAppointmentByDoctorClinicLink(
-    @Query('doctor_id') doctorId: string,
-    @Query('clinic_id') clinicId: string,
-  ) {
-    const result = await this.patientsService.getAppointmentByDoctorClinicLink(
-      doctorId,
-      clinicId,
-    );
-    return result;
-  }
+  
 
   @Put('cancel-appointment/:id')
   async updateAppointment(@Param('id') id: string) {

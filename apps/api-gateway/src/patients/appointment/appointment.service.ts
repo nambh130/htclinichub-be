@@ -39,16 +39,13 @@ export class AppointmentService {
     return result.data;
   }
 
-  async getAppointmentsByDoctorClinicLinkId(doctor_id: string, clinic_id: string) {
+  async getAppointmentsByDoctorClinicLinkId(
+    doctor_id: string,
+    clinic_id: string,
+  ) {
     const result = await firstValueFrom(
       this.httpService.get(
-        `/patient-service/appointment/doctor-clinic-link`,
-        {
-          params: {
-            doctor_id,
-            clinic_id,
-          },
-        },
+        `/patient-service/appointment/doctor-clinic-link?doctor_id=${doctor_id}&clinic_id=${clinic_id}`,
       ),
     );
     return result.data;

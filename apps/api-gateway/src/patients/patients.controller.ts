@@ -8,6 +8,7 @@ import {
   Delete,
   Get,
   Headers,
+  Query,
 } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import {
@@ -364,16 +365,23 @@ export class PatientsController {
 
   @Get('get-appointments-by-doctorClinicLink')
   @UseGuards(JwtAuthGuard)
-  async getAppointmentsByDoctorClinicLinkId(@Body('clinic_id') clinic_id: string, @Body('doctor_id') doctor_id: string) {
+  async getAppointmentsByDoctorClinicLinkId(
+    @Query('clinic_id') clinic_id: string,
+    @Query('doctor_id') doctor_id: string,
+  ) {
     try {
       const result =
-        await this.appointmentService.getAppointmentsByDoctorClinicLinkId(doctor_id,clinic_id);
+        await this.appointmentService.getAppointmentsByDoctorClinicLinkId(
+          doctor_id,
+          clinic_id,
+        );
       return result;
     } catch (error) {
       console.error('Error retrieving appointments:', error);
       throw error;
     }
   }
+
   @Get('get-appointment/:appoinmentId')
   @UseGuards(JwtAuthGuard)
   async getAppointment(@Param('appoinmentId') appoinmentId: string) {
