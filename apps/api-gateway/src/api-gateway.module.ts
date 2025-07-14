@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { LoggerModule } from '@app/common';
 import { AuthModule } from './auth/auth.module';
@@ -32,6 +32,7 @@ import { ClinicModule } from './clinics/clinic.module';
 
         CLINIC_SERVICE_HOST: Joi.string().required(),
         CLINIC_SERVICE_PORT: Joi.number().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
 

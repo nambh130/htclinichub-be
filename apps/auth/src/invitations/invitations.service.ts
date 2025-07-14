@@ -54,14 +54,11 @@ export class InvitationsService extends BaseService {
     // But doctor account can be invited to multiple clinics
     if (userType == ActorEnum.EMPLOYEE) {
       let checkEmployee: any;
-      try {
-        checkEmployee = await this.userRepository.findOne({
-          email,
-          actorType: userType,
-        });
-      } catch (error) {
-        checkEmployee = null;
-      }
+      checkEmployee = await this.userRepository.findOne({
+        email,
+        actorType: userType,
+      });
+
       if (checkEmployee) {
         throw new BadRequestException('Account already exists!');
       }

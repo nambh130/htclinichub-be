@@ -31,8 +31,8 @@ export class StaffInfo extends PostgresAbstractEntity<StaffInfo> {
   @Column({ nullable: true })
   profile_img_id?: string;
 
-  @OneToOne(() => Doctor, (doctor) => doctor.staff_info)
-  doctor: Doctor;
+  //@OneToOne(() => Doctor, (doctor) => doctor.staff_info)
+  //doctor: Doctor;
 
   @OneToMany(() => Specialize, (specialize) => specialize.staff_info, {
     cascade: true,

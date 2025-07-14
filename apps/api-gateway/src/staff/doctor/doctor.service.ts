@@ -17,8 +17,6 @@ import { firstValueFrom } from 'rxjs';
 import { MediaService } from '@media-gw/media.service';
 import { IDoctorClinicLink } from '../interfaces/staff.interface';
 import { AxiosError } from 'axios';
-import FormData from 'form-data';
-import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
 
 @Injectable()
 export class DoctorService {
@@ -170,6 +168,7 @@ export class DoctorService {
     const response = await firstValueFrom(
       this.staffService.get<IDoctorClinicLink[]>(url),
     );
+    //console.log('check: ', response.data);
 
     const clinicByDoctors = response.data;
 

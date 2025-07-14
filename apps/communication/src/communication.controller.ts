@@ -14,11 +14,13 @@ export class CommunicationController {
   sendInvitation(@Payload() invitationDto: InvitationCreated): any {
     console.log("communication: ", invitationDto)
     const { roleName, clinicName, invitationUrl, to } = invitationDto
-    return this.emailService.sendInvitation(to, roleName, clinicName, invitationUrl);
+    //return this.emailService.sendInvitation(to, roleName, clinicName, invitationUrl);
+    return true
   }
 
   @EventPattern('password-recovery')
   sendResetPassword(@Payload() dto: PwdRecoveryEvent) {
-    return this.emailService.sendPasswordResetEmail(dto.to, dto.resetLink);
+    //return this.emailService.sendPasswordResetEmail(dto.to, dto.resetLink);
+    return true
   }
 }
