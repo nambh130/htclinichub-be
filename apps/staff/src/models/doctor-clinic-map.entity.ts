@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, Unique, Column } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { Clinic } from './clinic.entity';
 import { PostgresAbstractEntity } from '@app/common';
