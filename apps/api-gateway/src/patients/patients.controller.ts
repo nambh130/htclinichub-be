@@ -361,6 +361,19 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('get-appointments-by-doctorClinicLink')
+  @UseGuards(JwtAuthGuard)
+  async getAppointmentsByDoctorClinicLinkId(@Body('clinic_id') clinic_id: string, @Body('doctor_id') doctor_id: string) {
+    try {
+      const result =
+        await this.appointmentService.getAppointmentsByDoctorClinicLinkId(doctor_id,clinic_id);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
   @Get('get-appointment/:appoinmentId')
   @UseGuards(JwtAuthGuard)
   async getAppointment(@Param('appoinmentId') appoinmentId: string) {
@@ -421,7 +434,11 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const patient = await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(mRid, user);
+      const patient =
+        await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(
+          mRid,
+          user,
+        );
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);

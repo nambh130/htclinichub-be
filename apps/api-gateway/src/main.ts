@@ -12,7 +12,9 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.enableCors({
-    origin: ['http://localhost:8081', 'http://localhost:8000', 'http://localhost:8080', 'http://localhost:8081'], // allow requests from these origins
+
+    //8080: doctor, 8082: admin, 8081: patient
+    origin: ['http://localhost:8081', 'http://localhost:8000', 'http://localhost:8082', 'http://localhost:8081'], // allow requests from these origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // allow cookies/auth headers
   });

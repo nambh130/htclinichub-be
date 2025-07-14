@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
@@ -328,6 +329,18 @@ export class PatientsController {
   @Get('appointment/:id')
   async getAppointment(@Param('id') id: string) {
     const result = await this.patientsService.getAppointment(id);
+    return result;
+  }
+
+  @Get('appointment/doctor-clinic-link')
+  async getAppointmentByDoctorClinicLink(
+    @Query('doctor_id') doctorId: string,
+    @Query('clinic_id') clinicId: string,
+  ) {
+    const result = await this.patientsService.getAppointmentByDoctorClinicLink(
+      doctorId,
+      clinicId,
+    );
     return result;
   }
 

@@ -57,7 +57,7 @@ export class AuthService implements OnModuleInit {
       if (patient) {
         // Emit an event that a new patient is added
         const patientSignupEvent = new PatientCreated(patient);
-        this.kafkaClient.emit('patient-created', patientSignupEvent.toString());
+        this.kafkaClient.emit('patient-created', patientSignupEvent);
       }
     }
     const tokenPayload: TokenPayload = {
