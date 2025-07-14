@@ -26,12 +26,11 @@ export class ClinicController {
   ) {}
 
   @Post('')
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async addClinic(
     @Body() addClinicDto: AddClinicDto,
-    //@CurrentUser() user: TokenPayload,
+    @CurrentUser() user: TokenPayload,
   ) {
-    const user = {userId: '123'}
     console.log(user);
     return this.clinicService.addClinic(addClinicDto, user.userId);
   }
