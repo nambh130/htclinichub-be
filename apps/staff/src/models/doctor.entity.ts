@@ -38,5 +38,4 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @OneToOne(() => StaffInfo, { eager: true }) // eager để tự động load
   @JoinColumn({ name: 'staff_info_id' }) // tên cột ngoại khóa (nếu có)
   staff_info: StaffInfo;
-
 }

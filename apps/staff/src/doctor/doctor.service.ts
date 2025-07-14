@@ -36,6 +36,7 @@ import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
 import { DoctorClinicRepo } from '../repositories/doctor-clinic-map.repository';
+import { ClinicRepository } from '../clinic/clinic.repository';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -45,6 +46,7 @@ export class DoctorService extends BaseService {
     private readonly degreeRepository: DegreeRepository,
     private readonly specializeRepository: SpecializeRepository,
     private readonly doctorClinicRepo: DoctorClinicRepo,
+    private readonly clinicRepository: ClinicRepository,
   ) {
     super();
   }
@@ -311,8 +313,15 @@ export class DoctorService extends BaseService {
       deletedByType: IsNull(),
     });
 
+    const clinic = await this.clinicRepository.findOne({
+      id: clinicId,
+      deletedAt: IsNull(),
+      deletedById: IsNull(),
+      deletedByType: IsNull(),
+    });
+
     const doctorClinicLink = new DoctorClinicMap({
-      clinicId: clinicId,
+      clinic: clinic,
       doctor: doctor,
     });
 
@@ -1218,10 +1227,17 @@ export class DoctorService extends BaseService {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
+      const clinic = await this.clinicRepository.findOne({
+        id: clinicId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
       // Check if assignment already exists
       const existingAssignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinicId: clinicId,
+        clinic: clinic,
       });
 
       if (existingAssignment) {
@@ -1231,15 +1247,15 @@ export class DoctorService extends BaseService {
       }
 
       // Create new clinic assignment
-      const doctorClinicMap = new DoctorClinicMap({
+      const doctorClinicLink = new DoctorClinicMap({
+        clinic: clinic,
         doctor: doctor,
-        clinicId: clinicId,
       });
 
-      setAudit(doctorClinicMap, currentUser);
+      setAudit(doctorClinicLink, currentUser);
 
       const savedAssignment =
-        await this.doctorClinicRepo.saveLink(doctorClinicMap);
+        await this.doctorClinicRepo.saveLink(doctorClinicLink);
 
       return {
         message: `Doctor ${doctorId} successfully assigned to clinic ${clinicId}`,
@@ -1276,10 +1292,17 @@ export class DoctorService extends BaseService {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
+      const clinic = await this.clinicRepository.findOne({
+        id: clinicId,
+        deletedAt: IsNull(),
+        deletedById: IsNull(),
+        deletedByType: IsNull(),
+      });
+
       // Find the assignment
       const assignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinicId: clinicId,
+        clinic: clinic,
       });
 
       if (!assignment) {
