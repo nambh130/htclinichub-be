@@ -363,7 +363,7 @@ export class PatientsController {
     }
   }
 
-  @Get('get-appointments-by-doctorClinicLink')
+  @Get('appointments')
   @UseGuards(JwtAuthGuard)
   async getAppointmentsByDoctorClinicLinkId(
     @Query('clinic_id') clinic_id: string,
