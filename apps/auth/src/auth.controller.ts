@@ -138,7 +138,9 @@ export class AuthController {
     if (dto.password != dto.confirmPassword) {
       throw new BadRequestException('Password does not match retype password');
     }
-    return await this.authService.invitationSignup(dto);
+    const response = await this.authService.invitationSignup(dto);
+    console.log('check 3', response)
+    return response;
   }
 
   @Post('invitation/accept') // Create an account by invitation

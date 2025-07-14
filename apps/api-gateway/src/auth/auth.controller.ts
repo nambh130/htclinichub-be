@@ -103,7 +103,7 @@ export class AuthController {
   }
 
   // ------------------------------INVITATION ------------------------------
-  @Post('invitation/clinic')
+  @Post('invitation')
   async createInvitationOwner(
     @Body() invitationDto: CreateInvitationDto,
     @Req() req: Request,
@@ -119,7 +119,7 @@ export class AuthController {
         message: 'Clinic not found!',
       });
     }
-    const response = await this.authService.createInvitationOwner(
+    const response = await this.authService.createInvitation(
       {
         ...invitationDto,
         clinicName: clinicData.name,
@@ -129,17 +129,17 @@ export class AuthController {
     return response;
   }
 
-  @Post('invitation/admin')
-  async createInvitationAdmin(
-    @Body() invitationDto: CreateInvitationDto,
-    @Req() req: Request,
-  ) {
-    const response = await this.authService.createInvitationAdmin(
-      invitationDto,
-      req,
-    );
-    return response;
-  }
+  //@Post('invitation/admin')
+  //async createInvitationAdmin(
+  //  @Body() invitationDto: CreateInvitationDto,
+  //  @Req() req: Request,
+  //) {
+  //  const response = await this.authService.createInvitationAdmin(
+  //    invitationDto,
+  //    req,
+  //  );
+  //  return response;
+  //}
 
   @Post('invitation/check')
   async invitationCheck(@Req() req: Request) {
