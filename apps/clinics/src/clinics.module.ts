@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ClinicsService } from './clinics.service';
 import { ClinicsController } from './clinics.controller';
 import {
@@ -11,11 +11,12 @@ import * as Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClinicRepository } from './clinic.repository';
-import { Clinic } from './models';
+import { Clinic, Medicine } from './models';
 import { ClinicEventController } from './clinic-event.controller';
 import { ClinicScheduleRuleRepository } from './clinic_schedule_rule/clinic_schedule_rule.repository';
 import { ClinicScheduleRuleModule } from './clinic_schedule_rule/clinic_schedule_rule.module';
 import { ClinicScheduleRule } from './models/clinic_schedule_rule.entity';
+import { MedicineModule } from './medicine/medicine.module';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { ClinicScheduleRule } from './models/clinic_schedule_rule.entity';
       envFilePath: '.env',
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
-        CLINIC_SERVICE_URI: Joi.string().required(),
+        // CLINIC_SERVICE_URI: Joi.string().required(),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
         CLINIC_SERVICE_DB: Joi.string().required(),
@@ -56,7 +57,7 @@ import { ClinicScheduleRule } from './models/clinic_schedule_rule.entity';
     ]),
 
     // TypeORM configuration for PostgreSQL
-    TypeOrmModule.forFeature([Clinic, ClinicScheduleRule]),
+    TypeOrmModule.forFeature([Clinic, ClinicScheduleRule, Medicine]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -73,10 +74,11 @@ import { ClinicScheduleRule } from './models/clinic_schedule_rule.entity';
     }),
 
     // MongoDB configuration
-    ClinicScheduleRuleModule,
+    forwardRef(() => ClinicScheduleRuleModule),
+    forwardRef(() => MedicineModule), // Sử dụng forwardRef,
   ],
   controllers: [ClinicsController, ClinicEventController],
   providers: [ClinicsService, ClinicRepository],
   exports: [ClinicsService, ClinicRepository],
 })
-export class ClinicsModule {}
+export class ClinicsModule { }

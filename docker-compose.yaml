@@ -115,6 +115,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    ports:
+    - "3007:3007"
 
   auth:
     build:

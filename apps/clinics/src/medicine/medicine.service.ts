@@ -5,10 +5,10 @@ import { BaseService } from '@app/common';
 import { MedicineRepository } from './medicine.repository';
 import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
 import { plainToInstance } from 'class-transformer';
-import { Medicine } from '../../models/medicine.entity';
 import stripBomStream from 'strip-bom-stream';
 import { ClinicRepository } from '../clinic.repository';
 import { Brackets } from 'typeorm';
+import { Medicine } from '@clinics/models';
 @Injectable()
 export class MedicineService extends BaseService {
   constructor(

@@ -6,8 +6,7 @@ import {
     OneToOne,
 } from 'typeorm';
 import { PostgresAbstractEntity } from '@app/common';
-import { DoctorClinicMap } from './doctor-clinic-map.entity';
-import { Clinic } from './clinic.entity';
+import { Clinic } from './clinics.entity';
 
 @Entity({ name: 'medicine' })
 export class Medicine extends PostgresAbstractEntity<Medicine> {

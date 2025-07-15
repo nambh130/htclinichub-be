@@ -11,6 +11,8 @@ import {
 import { AuthModule } from '@auth-gw/auth.module';
 import { HttpModules, httpClientConfig } from '../api/http.client';
 import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-schedule-rule.service';
+import { MedicineService } from './medicine/medicine.service';
+import { MedicineController } from './medicine/medicine.controller';
 //docker-compose up zookeeper kafka postgres auth staff api-gateway --build --watch
 @Module({
   imports: [
@@ -51,8 +53,8 @@ import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-sche
     ]),
     forwardRef(() => AuthModule),
   ],
-  controllers: [ClinicController],
-  providers: [ClinicService, ClinicScheduleRuleApiService],
-  exports: [ClinicService, ClinicScheduleRuleApiService],
+  controllers: [ClinicController, MedicineController],
+  providers: [ClinicService, ClinicScheduleRuleApiService, MedicineService],
+  exports: [ClinicService, ClinicScheduleRuleApiService, MedicineService],
 })
 export class ClinicModule {}

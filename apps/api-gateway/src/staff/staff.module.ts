@@ -17,8 +17,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MediaModule } from '@media-gw/media.module';
 import { ManageDoctorScheduleService } from './manage-doctor-schedule/manage-doctor-schedule.service';
 import { ClinicModule } from '@clinics-gw/clinic.module';
-import { MedicineController } from './medicine/medicine.controller';
-import { MedicineService } from './medicine/medicine.service';
 
 @Module({
   imports: [
@@ -75,8 +73,8 @@ import { MedicineService } from './medicine/medicine.service';
     AuthModule,
     ClinicModule,
   ],
-  controllers: [DoctorController, EmployeeController, MedicineController],
-  providers: [DoctorService, EmployeeService, ManageDoctorScheduleService, MedicineService],
-  exports: [DoctorService, EmployeeService, ManageDoctorScheduleService, MedicineService],
+  controllers: [DoctorController, EmployeeController],
+  providers: [DoctorService, EmployeeService, ManageDoctorScheduleService],
+  exports: [DoctorService, EmployeeService, ManageDoctorScheduleService],
 })
 export class StaffModule {}

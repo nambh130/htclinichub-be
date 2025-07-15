@@ -5,12 +5,12 @@ import { ImportMedicineDto, UpdateMedicineDto } from "@app/common/dto/staffs/med
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Response } from 'express';
 
-@Controller('staff/medicine')
+@Controller('clinic/medicine')
 export class MedicineController {
   constructor(
     private readonly medicineService: MedicineService,
   ) { }
-  @Post('/clinic/import-csv-to-medicine-data/:clinicId')
+  @Post('/import-csv-to-medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async importMedicineData(
@@ -26,7 +26,7 @@ export class MedicineController {
     }
   }
 
-  @Post('/clinic/input-data-to-medicine-data/:clinicId')
+  @Post('/input-data-to-medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   async createMedicine(
     @Param('clinicId') clinicId: string,
@@ -43,22 +43,22 @@ export class MedicineController {
     }
   }
 
-  @Get('/clinic/medicine-data/:clinicId')
+  @Get('/medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getMedicineClinicId(
     @Param('clinicId') clinicId: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const shifts = await this.medicineService.getMedicineClinicId(clinicId, currentUser);
-      return shifts;
+      const medicines = await this.medicineService.getMedicineClinicId(clinicId, currentUser);
+      return medicines;
     } catch (error) {
       console.error('Error retrieving shifts:', error);
       throw error;
     }
   }
 
-  @Get('/clinic/search-medicine/:clinicId')
+  @Get('/search-medicine/:clinicId')
   @UseGuards(JwtAuthGuard)
   async searchMedicine(
     @Param('clinicId') clinicId: string,
@@ -66,23 +66,7 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const medicine = await this.medicineService.searchMedicine(clinicId, currentUser, search);
-      return medicine;
-    } catch (error) {
-      console.error('Error retrieving medicine data:', error);
-      throw error;
-    }
-  }
-
-  @Get('/clinic/:clinicId/medicine-info/:medicineId')
-  @UseGuards(JwtAuthGuard)
-  async medicineInfo(
-    @Param('clinicId') clinicId: string,
-    @Param('medicineId') medicineId: string,
-    @CurrentUser() currentUser: TokenPayload,
-  ) {
-    try {
-      const medicines = await this.medicineService.medicineInfo(clinicId, medicineId);
+      const medicines = await this.medicineService.searchMedicine(clinicId, currentUser, search);
       return medicines;
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
@@ -90,7 +74,23 @@ export class MedicineController {
     }
   }
 
-  @Put('/clinic/:clinicId/update-medicine/:medicineId')
+  @Get('/:clinicId/medicine-info/:medicineId')
+  @UseGuards(JwtAuthGuard)
+  async medicineInfo(
+    @Param('clinicId') clinicId: string,
+    @Param('medicineId') medicineId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const medicine = await this.medicineService.medicineInfo(clinicId, medicineId);
+      return medicine;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
+
+  @Put('/:clinicId/update-medicine/:medicineId')
   @UseGuards(JwtAuthGuard)
   async medicineUpdate(
     @Param('clinicId') clinicId: string,
@@ -99,8 +99,8 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const medicines = await this.medicineService.medicineUpdate(clinicId, medicineId, dto, currentUser);
-      return medicines;
+      const medicine = await this.medicineService.medicineUpdate(clinicId, medicineId, dto, currentUser);
+      return medicine;
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
       throw error;
