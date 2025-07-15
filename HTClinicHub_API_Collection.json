@@ -12,11 +12,11 @@
   },
   "item": [
     {
-      "name": "🔐 Authentication",
+      "name": "Authentication",
       "description": "Authentication endpoints for patients, staff, and administrators",
       "item": [
         {
-          "name": "📱 Patient Authentication",
+          "name": "Patient Authentication",
           "item": [
             {
               "name": "Request OTP (Gateway)",
@@ -135,7 +135,7 @@
           ]
         },
         {
-          "name": "🏥 Staff Authentication",
+          "name": "Staff Authentication",
           "item": [
             {
               "name": "Clinic User Login (Gateway)",
@@ -293,7 +293,7 @@
           ]
         },
         {
-          "name": "🎫 Invitation System",
+          "name": "Invitation System",
           "item": [
             {
               "name": "Create Invitation (Owner - Gateway)",
@@ -626,7 +626,7 @@
           ]
         },
         {
-          "name": "🔄 Token Management",
+          "name": "Token Management",
           "item": [
             {
               "name": "Refresh Token (Gateway)",
@@ -716,7 +716,7 @@
           ]
         },
         {
-          "name": "🔑 Password Management",
+          "name": "Password Management",
           "item": [
             {
               "name": "Recover Password (Gateway)",
@@ -805,10 +805,10 @@
           ]
         },
         {
-          "name": "🏢 Roles & Permissions",
+          "name": "Roles & Permissions",
           "item": [
             {
-              "name": "📋 Role Management",
+              "name": "Role Management",
               "item": [
                 {
                   "name": "Get Roles for Clinic (Gateway)",
@@ -974,7 +974,7 @@
               ]
             },
             {
-              "name": "🔐 Permission Management",
+              "name": "Permission Management",
               "item": [
                 {
                   "name": "Create Permission (Direct Auth Service)",
@@ -1092,11 +1092,11 @@
       ]
     },
     {
-      "name": "🏥 Clinic Management",
+      "name": "Clinic Management",
       "description": "Clinic CRUD operations, staff management, and schedule rules",
       "item": [
         {
-          "name": "📋 Clinic CRUD",
+          "name": "Clinic CRUD",
           "item": [
             {
               "name": "Create Clinic",
@@ -1244,7 +1244,7 @@
           ]
         },
         {
-          "name": "👥 Staff Management",
+          "name": "Staff Management",
           "item": [
             {
               "name": "Get Clinic Staff List",
@@ -1344,7 +1344,7 @@
           ]
         },
         {
-          "name": "📅 Schedule Rules",
+          "name": "Schedule Rules",
           "item": [
             {
               "name": "Get Clinic Schedule Rules",
@@ -1368,14 +1368,14 @@
       ]
     },
     {
-      "name": "👨‍⚕️ Staff Management",
+      "name": "Staff Management",
       "description": "Doctor and employee management with profiles, degrees, and specializations",
       "item": [
         {
-          "name": "🩺 Doctor Management",
+          "name": "Doctor Management",
           "item": [
             {
-              "name": "📝 Account Management",
+              "name": "Account Management",
               "item": [
                 {
                   "name": "Get Doctor Account List",
@@ -1544,7 +1544,7 @@
               ]
             },
             {
-              "name": "👤 Profile Management",
+              "name": "Profile Management",
               "item": [
                 {
                   "name": "Create Doctor Profile",
@@ -1631,7 +1631,7 @@
               ]
             },
             {
-              "name": "🎓 Degrees Management",
+              "name": "Degrees Management",
               "item": [
                 {
                   "name": "Get Doctor Degrees",
@@ -1757,7 +1757,7 @@
               ]
             },
             {
-              "name": "🏥 Specializations",
+              "name": "Specializations",
               "item": [
                 {
                   "name": "Get Doctor Specializations",
@@ -1883,7 +1883,7 @@
               ]
             },
             {
-              "name": "📅 Schedule Management",
+              "name": "Schedule Management",
               "item": [
                 {
                   "name": "Get Doctor Working Shift",
@@ -1964,7 +1964,7 @@
               ]
             },
             {
-              "name": "🏥 Clinic Assignment",
+              "name": "Clinic Assignment",
               "item": [
                 {
                   "name": "Get Clinics by Doctor",
@@ -2034,10 +2034,10 @@
           ]
         },
         {
-          "name": "👩‍💼 Employee Management",
+          "name": "Employee Management",
           "item": [
             {
-              "name": "📝 Account Management",
+              "name": "Account Management",
               "item": [
                 {
                   "name": "Get Employee Account List",
@@ -2209,7 +2209,7 @@
               ]
             },
             {
-              "name": "👤 Profile Management",
+              "name": "Profile Management",
               "item": [
                 {
                   "name": "Create Employee Profile",
@@ -2274,7 +2274,7 @@
               ]
             },
             {
-              "name": "🎓 Degrees & Certifications",
+              "name": "Degrees & Certifications",
               "item": [
                 {
                   "name": "Get Employee Degrees",
@@ -2331,7 +2331,7 @@
               ]
             },
             {
-              "name": "🏥 Clinic Assignment",
+              "name": "Clinic Assignment",
               "item": [
                 {
                   "name": "Assign Employee to Clinic",
@@ -2385,11 +2385,11 @@
       ]
     },
     {
-      "name": "👥 Patient Management",
+      "name": "Patient Management",
       "description": "Patient CRUD operations, medical records, appointments, and favorites",
       "item": [
         {
-          "name": "📝 Patient CRUD",
+          "name": "Patient CRUD",
           "item": [
             {
               "name": "Create Patient",
@@ -2560,7 +2560,7 @@
           ]
         },
         {
-          "name": "❤️ Favourite Doctors",
+          "name": "Favourite Doctors",
           "item": [
             {
               "name": "Add Favourite Doctor",
@@ -2611,7 +2611,7 @@
           ]
         },
         {
-          "name": "📄 Medical Records",
+          "name": "Medical Records",
           "item": [
             {
               "name": "Get Medical Records by User ID",
@@ -2658,7 +2658,7 @@
           ]
         },
         {
-          "name": "📅 Appointments",
+          "name": "Appointments",
           "item": [
             {
               "name": "Create Appointment",
@@ -2787,7 +2787,7 @@
           ]
         },
         {
-          "name": "🏥 Patient-Clinic Relations",
+          "name": "Patient-Clinic Relations",
           "item": [
             {
               "name": "Assign Patient to Clinic",
@@ -2836,11 +2836,11 @@
       ]
     },
     {
-      "name": "📁 Media Management",
+      "name": "Media Management",
       "description": "File upload and management for images, PDFs, and documents",
       "item": [
         {
-          "name": "📷 Image Management",
+          "name": "Image Management",
           "item": [
             {
               "name": "Upload Single Image",
@@ -2925,7 +2925,7 @@
           ]
         },
         {
-          "name": "📄 PDF Management",
+          "name": "PDF Management",
           "item": [
             {
               "name": "Upload Single PDF",
@@ -2990,7 +2990,7 @@
           ]
         },
         {
-          "name": "📋 Document Management",
+          "name": "Document Management",
           "item": [
             {
               "name": "Upload Single Document",
@@ -3055,7 +3055,7 @@
           ]
         },
         {
-          "name": "🔄 File Operations",
+          "name": "File Operations",
           "item": [
             {
               "name": "Get File by ID",
@@ -3124,11 +3124,11 @@
       ]
     },
     {
-      "name": "📊 Healthcare Data Analysis",
+      "name": "Healthcare Data Analysis",
       "description": "Vital signs input, tracking, and health data analysis",
       "item": [
         {
-          "name": "💓 Vital Signs Management",
+          "name": "Vital Signs Management",
           "item": [
             {
               "name": "Input Vital Signs",
