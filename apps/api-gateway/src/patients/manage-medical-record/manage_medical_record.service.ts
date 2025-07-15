@@ -151,4 +151,20 @@ export class ManageMedicalRecordService {
       throw error;
     }
   }
+  async getMedicalRecordsByAppointmentId(appointmentId: string): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `/manage-medical-record/get-medical-record-by-appointmentId/${appointmentId}`,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error retrieving medical records:',
+        error?.response?.data || error,
+      );
+      throw error;
+    }
+  }
 }

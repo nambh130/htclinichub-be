@@ -895,21 +895,19 @@ export class PatientsService {
       status: 'in_progress',
     });
 
-    // Tạo medical record kèm appointment id + patient_profile_id
     const data = {
-      patient_id: appointment.patient_profile_id, // lấy từ appointment
-      appointment_id: appointment.id, // chính id appointment đang xử lý
+      patient_id: appointment.patient_profile_id,
+      appointment_id: appointment.id,
     };
-    console.log('Creating medical record with data:', data);
     const medicalRecord =
       await this.manageMedicalRecordService.createMedicalRecord(data);
+
     return {
       message: 'Appointment started and medical record created',
-      appointmentId: appointment.id,
-      medicalRecordId: medicalRecord._id.toString(),
+      appointment: result, // trả về luôn appointment sau khi update
+      medicalRecord: medicalRecord, // trả về medical record
     };
   }
-
   async doneAppointment(appoinmentId: string) {
     const appointment = await this.appointmentRepository.findOne({
       id: appoinmentId,

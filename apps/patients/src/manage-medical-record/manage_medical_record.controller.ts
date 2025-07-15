@@ -65,12 +65,31 @@ export class ManageMedicalRecordController {
         treatmentDirection: payload.treatmentDirection,
         next_appoint: payload.next_appoint,
       };
-      const result =
-        await this.manageMedicalRecordService.updateMedicalRecord(mRid, data);
+      const result = await this.manageMedicalRecordService.updateMedicalRecord(
+        mRid,
+        data,
+      );
 
       return result;
     } catch (error) {
       console.error('Error updating medical record:', error);
+      throw error;
+    }
+  }
+
+  @Get('get-medical-record-by-appointmentId/:appointmentId')
+  async getMedicalRecordsByAppointmentId(
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    try {
+      const result =
+        await this.manageMedicalRecordService.getMedicalRecordsByAppointmentId(
+          appointmentId,
+        );
+
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medical records:', error);
       throw error;
     }
   }

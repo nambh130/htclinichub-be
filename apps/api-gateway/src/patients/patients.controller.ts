@@ -550,4 +550,21 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('/get-medical-record-by-appointmentId/:appointmentId')
+  @UseGuards(JwtAuthGuard)
+  async getMedicalRecordsByAppointmentId(
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    try {
+      const result =
+        await this.manageMedicalRecordService.getMedicalRecordsByAppointmentId(
+          appointmentId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medical records:', error);
+      throw error;
+    }
+  }
 }

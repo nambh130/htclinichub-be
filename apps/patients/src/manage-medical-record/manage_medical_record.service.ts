@@ -152,4 +152,24 @@ export class ManageMedicalRecordService {
       throw new BadRequestException('Failed to update medical record');
     }
   }
+
+  async getMedicalRecordsByAppointmentId(appointmentId: string): Promise<any> {
+    try {
+      const medicalRecords = await this.manageMedicalReportRepository.findOne({
+        appointment_id: appointmentId,
+      });
+      if (!medicalRecords) {
+        throw new NotFoundException(
+          `No medical records found for appointment ID: ${appointmentId}`,
+        );
+      }
+      return medicalRecords;
+    } catch (error) {
+      console.error(
+        'Error retrieving medical records by appointment ID:',
+        error?.response?.data || error,
+      );
+      throw error;
+    }
+  }
 }
