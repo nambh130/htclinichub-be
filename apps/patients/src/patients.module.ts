@@ -29,7 +29,6 @@ import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.r
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
 import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
-import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
@@ -40,6 +39,7 @@ import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
+import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
 
 @Module({
   imports: [
@@ -75,6 +75,10 @@ import { ICDRepository } from './repositories/icd.repository';
         {
           name: Patient.name,
           schema: PatientSchema,
+        },
+        {
+          name: MedicalRecord.name,
+          schema: MedicalRecordSchema,
         },
       ],
       'patientService',

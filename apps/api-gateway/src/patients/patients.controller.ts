@@ -23,6 +23,9 @@ import { ManageMedicalRecordService } from './manage-medical-record/manage_medic
 import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentService } from './appointment/appointment.service';
 import { ICDService } from './icd/icd.service';
+import { CreateMedicalRecordDto } from '@app/common/dto/medical-record';
+import { UpdateMedicalRecordDto } from '@app/common/dto/medical-record/update-medical-record.dto';
+import { Payload } from '@nestjs/microservices';
 
 @Controller('patient')
 export class PatientsController {
@@ -270,6 +273,32 @@ export class PatientsController {
     }
   }
 
+  @Post('/medical-records')
+  @UseGuards(JwtAuthGuard)
+  async createMedicalRecord(
+    @Body() createMedicalRecordDto: CreateMedicalRecordDto,
+  ) {
+    try {
+      // Validate the DTO
+      if (
+        !createMedicalRecordDto.patient_id ||
+        !createMedicalRecordDto.appointment_id
+      ) {
+        throw new Error('patient_id and appointment_id are required');
+      }
+      const data = {
+        patient_id: createMedicalRecordDto.patient_id,
+        appointment_id: createMedicalRecordDto.appointment_id,
+      };
+      const result =
+        await this.manageMedicalRecordService.createMedicalRecord(data);
+      return result;
+    } catch (error) {
+      console.error('Error creating medical record:', error);
+      throw error;
+    }
+  }
+
   //khanhlq
   @Post('/assign-to-clinic/:clinicId')
   @UseGuards(JwtAuthGuard)
@@ -492,6 +521,32 @@ export class PatientsController {
       return result;
     } catch (error) {
       console.error('Error searching ICD:', error);
+      throw error;
+    }
+  }
+
+  @Put('/update-medical-record/:mRid')
+  @UseGuards(JwtAuthGuard)
+  async updateMedicalRecord(
+    @Param('mRid') mRid: string,
+    @Payload() payload: UpdateMedicalRecordDto,
+  ) {
+    try {
+      const data = {
+        icd: payload.icd,
+        symptoms: payload.symptoms,
+        diagnosis: payload.diagnosis,
+        treatmentDirection: payload.treatmentDirection,
+        next_appoint: payload.next_appoint,
+      };
+      const result = await this.manageMedicalRecordService.updateMedicalRecord(
+        mRid,
+        data,
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error updating medical record:', error);
       throw error;
     }
   }

@@ -116,4 +116,39 @@ export class ManageMedicalRecordService {
       throw error;
     }
   }
+
+  async createMedicalRecord(data: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`/manage-medical-record/create-medical-record`, {
+          ...data,
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error creating medical record:',
+        error?.response?.data || error,
+      );
+      throw error;
+    }
+  }
+
+  async updateMedicalRecord(mRid: string, payload: any) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.put(
+          `/manage-medical-record/update-medical-record/${mRid}`,
+          payload,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error updating medical record:',
+        error?.response?.data || error,
+      );
+      throw error;
+    }
+  }
 }

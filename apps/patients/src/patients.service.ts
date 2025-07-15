@@ -17,6 +17,7 @@ import { Appointment } from './models/appointment.entity';
 import { DataSource, In } from 'typeorm';
 import { PatientCreated } from '@app/common/events/auth/patient-created.event';
 import { ICDRepository } from './repositories/icd.repository';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 
 @Injectable()
 export class PatientsService {
@@ -29,7 +30,7 @@ export class PatientsService {
     private readonly ICDRepository: ICDRepository,
 
     private readonly httpService: HttpService,
-
+    private readonly manageMedicalRecordService: ManageMedicalRecordService,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
@@ -893,10 +894,23 @@ export class PatientsService {
     const result = await this.appointmentRepository.update(appointment, {
       status: 'in_progress',
     });
-    return result;
+
+    // Tạo medical record kèm appointment id + patient_profile_id
+    const data = {
+      patient_id: appointment.patient_profile_id, // lấy từ appointment
+      appointment_id: appointment.id, // chính id appointment đang xử lý
+    };
+    console.log('Creating medical record with data:', data);
+    const medicalRecord =
+      await this.manageMedicalRecordService.createMedicalRecord(data);
+    return {
+      message: 'Appointment started and medical record created',
+      appointmentId: appointment.id,
+      medicalRecordId: medicalRecord._id.toString(),
+    };
   }
 
-   async doneAppointment(appoinmentId: string) {
+  async doneAppointment(appoinmentId: string) {
     const appointment = await this.appointmentRepository.findOne({
       id: appoinmentId,
     });
