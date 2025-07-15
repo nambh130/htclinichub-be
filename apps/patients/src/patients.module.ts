@@ -38,6 +38,8 @@ import { Appointment } from './models/appointment.entity';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
+import { ICD } from './models/icd.entity';
+import { ICDRepository } from './repositories/icd.repository';
 
 @Module({
   imports: [
@@ -84,6 +86,7 @@ import { PatientEventController } from './patients-event.controller';
       PatientAccount,
       PatientClinicLink,
       Appointment,
+      ICD, // Assuming ICD is also a Postgres entity
     ]),
 
     ClientsModule.registerAsync([
@@ -151,6 +154,7 @@ import { PatientEventController } from './patients-event.controller';
       useExisting: HttpService,
     },
     AppointmentRepository,
+    ICDRepository,
   ],
   exports: [
     PatientsService,
@@ -161,6 +165,7 @@ import { PatientEventController } from './patients-event.controller';
     PatientAccountRepository,
     PatientClinicLinkRepository,
     AppointmentRepository,
+    ICDRepository,
   ],
 })
 export class PatientsModule {}

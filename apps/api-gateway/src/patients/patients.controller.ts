@@ -22,6 +22,7 @@ import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.serv
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentService } from './appointment/appointment.service';
+import { ICDService } from './icd/icd.service';
 
 @Controller('patient')
 export class PatientsController {
@@ -31,6 +32,7 @@ export class PatientsController {
     // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
     private readonly manageMedicalRecordService: ManageMedicalRecordService,
     private readonly appointmentService: AppointmentService,
+    private readonly ICDService: ICDService,
   ) {}
 
   // Patient routes
@@ -450,6 +452,20 @@ export class PatientsController {
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  @Get('/search-icd')
+  @UseGuards(JwtAuthGuard)
+  async searchICD(
+    @Query('keyword') keyword: string,
+    @Query('limit') limit: number,
+  ) {
+    try {
+      const result = await this.ICDService.searchICD(keyword, limit);
+      return result;
+    } catch (error) {
+      console.error('Error searching ICD:', error);
       throw error;
     }
   }
