@@ -408,6 +408,32 @@ export class PatientsController {
     }
   }
 
+  @Put('start-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async startAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result =
+        await this.appointmentService.startAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
+  @Put('done-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async doneAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result =
+        await this.appointmentService.doneAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
   @Get('get-appointments/pending/:patientAccountId')
   @UseGuards(JwtAuthGuard)
   async getPendingAppointments(

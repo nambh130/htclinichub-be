@@ -884,7 +884,29 @@ export class PatientsService {
     });
     return result;
   }
+  async startAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) throw new Error('Appointment not found');
 
+    const result = await this.appointmentRepository.update(appointment, {
+      status: 'in_progress',
+    });
+    return result;
+  }
+
+   async doneAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) throw new Error('Appointment not found');
+
+    const result = await this.appointmentRepository.update(appointment, {
+      status: 'done',
+    });
+    return result;
+  }
   async getPendingAppointments(patientAccountId: string) {
     const profiles = await this.getPatientByAccountId(patientAccountId);
     if (!profiles || !profiles.length) return [];
