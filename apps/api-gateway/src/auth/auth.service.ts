@@ -27,7 +27,7 @@ export class AuthService implements OnModuleInit {
     private readonly authClient: ClientKafka,
     private readonly http: HttpService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     this.authClient.subscribeToResponseOf('login');
@@ -451,13 +451,16 @@ export class AuthService implements OnModuleInit {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
     const response = await firstValueFrom(
       this.http
         .post(
           `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/accept`,
           req.body,
           {
-            headers: req.headers,
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
             withCredentials: true,
           },
         )
