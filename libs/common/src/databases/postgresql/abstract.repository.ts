@@ -5,8 +5,6 @@ import {
   FindOptionsOrder,
   Repository,
   DeepPartial,
-  In,
-  FindOptionsOrderValue,
 } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -20,7 +18,7 @@ export abstract class PostgresAbstractRepository<
   constructor(
     protected readonly entityRepository: Repository<T>,
     private readonly entityManager: EntityManager,
-  ) { }
+  ) {}
 
   //async findAll(): Promise<T[]> {
   //  return this.entityRepository.find();
@@ -96,14 +94,14 @@ export abstract class PostgresAbstractRepository<
     skip?: number,
     take?: number,
     relations?: string[],
-    order?: FindOptionsOrder<T>
+    order?: FindOptionsOrder<T>,
   ): Promise<[T[], number]> {
     return this.entityRepository.findAndCount({
       where,
       skip,
       take,
       relations,
-      order
+      order,
     });
   }
   // Find many by condition
@@ -164,9 +162,9 @@ export abstract class PostgresAbstractRepository<
   }
 
   /**
- * Create a query builder for advanced queries.
- * @param alias The alias to use for the entity in the query.
- */
+   * Create a query builder for advanced queries.
+   * @param alias The alias to use for the entity in the query.
+   */
   createQueryBuilder(alias: string) {
     return this.entityRepository.createQueryBuilder(alias);
   }
