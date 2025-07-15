@@ -36,6 +36,7 @@ import { DegreeRepository } from '../repositories/degree.repository';
 import { SpecializeRepository } from '../repositories/specialize.repository';
 import { toDoctorProfile } from '../mapper/doctor-profile.mapper';
 import { DoctorClinicRepo } from '../repositories/doctor-clinic-map.repository';
+import { ClinicRepository } from '../clinic/clinic.repository';
 
 @Injectable()
 export class DoctorService extends BaseService {
@@ -45,6 +46,7 @@ export class DoctorService extends BaseService {
     private readonly degreeRepository: DegreeRepository,
     private readonly specializeRepository: SpecializeRepository,
     private readonly doctorClinicRepo: DoctorClinicRepo,
+    private readonly clinicRepo: ClinicRepository,
   ) {
     super();
   }
@@ -242,16 +244,16 @@ export class DoctorService extends BaseService {
           })) || [],
         staffInfo: doctor.staffInfo
           ? {
-              id: doctor.staffInfo.id,
-              staff_id: doctor.staffInfo.staff_id,
-              staff_type: doctor.staffInfo.staff_type,
-              full_name: doctor.staffInfo.full_name,
-              dob: doctor.staffInfo.dob,
-              phone: doctor.staffInfo.phone,
-              gender: doctor.staffInfo.gender,
-              position: doctor.staffInfo.position,
-              profile_img_id: doctor.staffInfo.profile_img_id,
-            }
+            id: doctor.staffInfo.id,
+            staff_id: doctor.staffInfo.staff_id,
+            staff_type: doctor.staffInfo.staff_type,
+            full_name: doctor.staffInfo.full_name,
+            dob: doctor.staffInfo.dob,
+            phone: doctor.staffInfo.phone,
+            gender: doctor.staffInfo.gender,
+            position: doctor.staffInfo.position,
+            profile_img_id: doctor.staffInfo.profile_img_id,
+          }
           : null,
       }));
 
@@ -282,6 +284,7 @@ export class DoctorService extends BaseService {
       },
       ['clinics', 'clinics.clinic', 'clinics.doctor'], // không cần 'clinics.doctor' nếu không dùng đến
     );
+      console.log(doctor)
 
     if (!doctor) {
       throw new NotFoundException('Doctor not found');
@@ -299,6 +302,7 @@ export class DoctorService extends BaseService {
         ownerId: clinicMap.clinic?.ownerId ?? '',
       },
     }));
+    console.log(clinicLinks)
 
     return clinicLinks;
   }
@@ -311,12 +315,14 @@ export class DoctorService extends BaseService {
       deletedByType: IsNull(),
     });
 
+    const clinic = await this.clinicRepo.findOne({ id: clinicId });
+
     const doctorClinicLink = new DoctorClinicMap({
-      clinicId: clinicId,
+      clinic: clinic,
       doctor: doctor,
     });
 
-    return this.doctorClinicRepo.saveLink(doctorClinicLink);
+    return this.doctorClinicRepo.save(doctorClinicLink);
   }
 
   async createDoctorAccount(
@@ -1146,13 +1152,13 @@ export class DoctorService extends BaseService {
             email: doctor.email,
             clinic: clinic
               ? {
-                  id: clinic.id,
-                  name: clinic.name,
-                  location: clinic.location,
-                  phone: clinic.phone,
-                  email: clinic.email,
-                  ownerId: clinic.ownerId,
-                }
+                id: clinic.id,
+                name: clinic.name,
+                location: clinic.location,
+                phone: clinic.phone,
+                email: clinic.email,
+                ownerId: clinic.ownerId,
+              }
               : null,
           },
           info: staffInfo || null,
@@ -1214,6 +1220,8 @@ export class DoctorService extends BaseService {
         deletedByType: IsNull(),
       });
 
+      const clinic = await this.clinicRepo.findOne({id: clinicId});
+
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
@@ -1221,7 +1229,7 @@ export class DoctorService extends BaseService {
       // Check if assignment already exists
       const existingAssignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinicId: clinicId,
+        clinic
       });
 
       if (existingAssignment) {
@@ -1233,13 +1241,13 @@ export class DoctorService extends BaseService {
       // Create new clinic assignment
       const doctorClinicMap = new DoctorClinicMap({
         doctor: doctor,
-        clinicId: clinicId,
+        clinic
       });
 
       setAudit(doctorClinicMap, currentUser);
 
       const savedAssignment =
-        await this.doctorClinicRepo.saveLink(doctorClinicMap);
+        await this.doctorClinicRepo.save(doctorClinicMap);
 
       return {
         message: `Doctor ${doctorId} successfully assigned to clinic ${clinicId}`,
@@ -1272,6 +1280,8 @@ export class DoctorService extends BaseService {
         deletedByType: IsNull(),
       });
 
+      const clinic = await this.clinicRepo.findOne({id: clinicId});
+
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
@@ -1279,7 +1289,7 @@ export class DoctorService extends BaseService {
       // Find the assignment
       const assignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinicId: clinicId,
+        clinic,
       });
 
       if (!assignment) {

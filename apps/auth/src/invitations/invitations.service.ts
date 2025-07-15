@@ -1,5 +1,5 @@
 import { ActorType, AUTH_SERVICE, BaseService } from '@app/common';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { InvitationRepository } from './invitation.repository';
 import { CreateInvitationDto } from './dto/create-invitaion.dto';
 import { createHash, randomBytes } from 'crypto';
@@ -13,6 +13,7 @@ import { FindOptionsWhere } from 'typeorm';
 import { ClientKafka } from '@nestjs/microservices';
 import { InvitationCreated } from '@app/common/events/auth/invitation-created.event';
 import { ConfigService } from '@nestjs/config';
+import { ClinicUsersService } from '@auth/clinic-users/clinic-users.service';
 
 @Injectable()
 export class InvitationsService extends BaseService {
@@ -21,6 +22,7 @@ export class InvitationsService extends BaseService {
     private readonly userRepository: ClinicUserRepository,
     private readonly roleRepository: RoleRepository,
     private readonly configService: ConfigService,
+    private readonly userService: ClinicUsersService,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
   ) {
@@ -31,11 +33,68 @@ export class InvitationsService extends BaseService {
     await this.kafkaClient.connect();
   }
 
+  async createInvitationWithValidation(
+    createInvitationDto: CreateInvitationDto,
+    user: { id: string; type: ActorType; adminOf?: string[] },
+  ) {
+    const { clinic, email, role } = createInvitationDto;
+    createInvitationDto.email = email.toLowerCase().trim();
+
+    // 1. Authorization check
+    if (user.type === ActorEnum.DOCTOR && !user.adminOf?.includes(clinic)) {
+      throw new ForbiddenException('You are not authorized to do this action');
+    }
+
+    // 2. Doctor cannot invite clinic owner
+    if (user.type == ActorEnum.DOCTOR)
+      createInvitationDto.isOwnerInvitation = false;
+
+    // 3. Role existence and validation
+    const fetchedRole = await this.roleRepository.findOne({ id: role });
+    if(!fetchedRole) throw new BadRequestException("Role not found");
+
+    // 4. If Doctor: Check if already exists in this clinic
+    if (fetchedRole.roleType === ActorEnum.DOCTOR) {
+      const checkUser = await this.userService.findByEmailAndClinic(
+        createInvitationDto.email,
+        clinic,
+        ActorEnum.DOCTOR,
+      );
+      if (checkUser) {
+        throw new BadRequestException({
+          ERR_CODE: 'DOC_EXISTS',
+          message: 'Doctor account already exists in this clinic!',
+        });
+      }
+    }
+
+    // 5. If Employee: Ensure not already registered system-wide
+    if (fetchedRole.roleType === ActorEnum.EMPLOYEE) {
+      const checkUser = await this.userService.find({
+        email: createInvitationDto.email,
+        actorType: ActorEnum.EMPLOYEE,
+      });
+      if (checkUser) {
+        throw new BadRequestException({
+          ERR_CODE: 'EMPLOYEE_EXISTS',
+          message: 'Employee account already exists!',
+        });
+      }
+    }
+
+    // 6. Pass validated DTO to core invitation creation logic
+    return this.createInvitation(createInvitationDto, {
+      id: user.id,
+      type: user.type,
+    }, fetchedRole);
+  }
+
   async createInvitation(
     createInvitationDto: CreateInvitationDto,
     user: { id: string; type: ActorType },
+    role: Role
   ) {
-    const { clinic, role: roleId, isOwnerInvitation } = createInvitationDto;
+    const { clinic, isOwnerInvitation } = createInvitationDto;
     const email = createInvitationDto.email.toLowerCase().trim();
 
     // Create token and the hash it
@@ -43,29 +102,12 @@ export class InvitationsService extends BaseService {
     const hashedToken = createHash('sha256').update(token).digest('hex');
 
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days in ms
-    const role = await this.roleRepository.findOne({ id: roleId });
     const userType = role.roleType;
 
     if (user.type != ActorEnum.ADMIN && role.roleType == ActorEnum.ADMIN) {
       throw new BadRequestException();
     }
 
-    // Check if user exist because you can't invite employee account into multiple clinics
-    // But doctor account can be invited to multiple clinics
-    if (userType == ActorEnum.EMPLOYEE) {
-      let checkEmployee: any;
-      try {
-        checkEmployee = await this.userRepository.findOne({
-          email,
-          actorType: userType,
-        });
-      } catch (error) {
-        checkEmployee = null;
-      }
-      if (checkEmployee) {
-        throw new BadRequestException('Account already exists!');
-      }
-    }
     if (isOwnerInvitation && userType != ActorEnum.DOCTOR) {
       throw new BadRequestException('Only doctor account can be owner!');
     }
@@ -83,7 +125,6 @@ export class InvitationsService extends BaseService {
     });
 
     const invitation = await this.invitationRepository.create(newInvitation);
-    console.log("check Invitation: ", invitation)
     if (invitation) {
       const roleType = invitation.role.roleType;
       let translatedActorType: string;
@@ -120,7 +161,9 @@ export class InvitationsService extends BaseService {
       { hashedToken, email },
       ['clinic', 'role'],
     );
-    if (
+    if (!invitation) {
+      throw new BadRequestException("Invitation not found")
+    } else if (
       invitation.status == 'pending' &&
       new Date(invitation.expires_at) < new Date()
     ) {

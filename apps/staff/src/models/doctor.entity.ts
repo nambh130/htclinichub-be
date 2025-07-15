@@ -35,8 +35,8 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   // @OneToMany(() => Doctor_WorkShift, (shift) => shift.doctor)
   // shifts: Doctor_WorkShift[];
 
-  @OneToOne(() => StaffInfo, { eager: true }) // eager để tự động load
-  @JoinColumn({ name: 'staff_info_id' }) // tên cột ngoại khóa (nếu có)
-  staff_info: StaffInfo;
+  //@OneToOne(() => StaffInfo, { eager: true }) // eager để tự động load
+  //@JoinColumn({ name: 'staff_info_id' }) // tên cột ngoại khóa (nếu có)
+  //staff_info: StaffInfo;
 
 }

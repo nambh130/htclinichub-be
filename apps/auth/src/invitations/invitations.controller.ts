@@ -15,88 +15,46 @@ import { CreateInvitationDto } from './dto/create-invitaion.dto';
 import { CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
 import { Authorizations } from '../guards/authorization.decorator';
 import { AuthorizationGuard } from '../guards/authorization.guard';
-import { ActorEnum } from '@app/common/enum/actor-type';
 import { InvitationByClinicDto } from './dto/invitation-by-clinic.dto';
 import { Between, FindOptionsWhere, ILike, LessThan, MoreThan } from 'typeorm';
 import { EmployeeInvitation } from './models/invitation.entity';
 import { ClinicUsersService } from '../clinic-users/clinic-users.service';
 import { GetByIdDto } from './dto/id-query.dto';
-import { RolesService } from '../roles/roles.service';
 
 @Controller('invitation')
 export class InvitationsController {
   constructor(
     private readonly invitationService: InvitationsService,
     private readonly userService: ClinicUsersService,
-    private readonly roleService: RolesService,
-  ) {}
+  ) { }
 
-  @Post('clinic')
+  @Post()
   @UseGuards(JwtAuthGuard, AuthorizationGuard)
   //@Authorizations({ permissions: ["doctor:create:permission"] })
-  @Authorizations({ roles: ['doctor'] })
+  @Authorizations({ roles: ['doctor', 'admin'] })
   async createInvitationClinic(
     @Body() createInvitationDto: CreateInvitationDto,
     @CurrentUser() user: TokenPayload,
   ) {
-    const { clinic, email, role } = createInvitationDto;
-
-    createInvitationDto.isOwnerInvitation = false;
-    if (!user.adminOf?.includes(clinic)) {
-      throw new ForbiddenException('You are not authorized to do this action');
-    }
-
-    try {
-      // Check if doctor has alreay in this clinic or not
-      const fetchedRole = await this.roleService.getById(role);
-      if (fetchedRole.roleType == ActorEnum.DOCTOR) {
-        const checkUser = await this.userService.findByEmailAndClinic(
-          email,
-          clinic,
-          ActorEnum.DOCTOR,
-        );
-        if (checkUser)
-          throw new BadRequestException({
-            ERR_CODE: 'DOC_EXISTS',
-            message: 'Doctor account already exist in this clinic!',
-          });
-      }
-
-      // Check if employee account has already exist in the system
-      if (fetchedRole.roleType == ActorEnum.EMPLOYEE) {
-        const checkUser = await this.userService.find({
-          email,
-          actorType: ActorEnum.EMPLOYEE,
-        });
-        if (checkUser)
-          throw new BadRequestException({
-            ERR_CODE: 'EMPLOYEE_EXISTS',
-            message: 'Employee account already exist!',
-          });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-
-    return await this.invitationService.createInvitation(createInvitationDto, {
+    return await this.invitationService.createInvitationWithValidation(createInvitationDto, {
       id: user.userId,
       type: user.actorType,
     });
   }
 
-  @Post('admin')
-  @UseGuards(JwtAuthGuard, AuthorizationGuard)
-  @Authorizations({ roles: ['admin'] })
-  //@Authorizations({ permissions: ["admin:create:permission"] })
-  async createInvitationAdmin(
-    @Body() createInvitationDto: CreateInvitationDto,
-    @CurrentUser() user: TokenPayload,
-  ) {
-    return await this.invitationService.createInvitation(createInvitationDto, {
-      id: user.userId,
-      type: user.actorType,
-    });
-  }
+  //@Post('admin')
+  //@UseGuards(JwtAuthGuard, AuthorizationGuard)
+  //@Authorizations({ roles: ['admin'] })
+  ////@Authorizations({ permissions: ["admin:create:permission"] })
+  //async createInvitationAdmin(
+  //  @Body() createInvitationDto: CreateInvitationDto,
+  //  @CurrentUser() user: TokenPayload,
+  //) {
+  //  return await this.invitationService.createInvitationWithValidation(createInvitationDto, {
+  //    id: user.userId,
+  //    type: user.actorType,
+  //  });
+  //}
 
   @Get()
   async getInvitationById(

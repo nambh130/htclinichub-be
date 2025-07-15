@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator"
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator"
 
 export class CreateInvitationDto {
   @IsEmail()
@@ -16,4 +16,8 @@ export class CreateInvitationDto {
   @IsUUID()
   @IsNotEmpty()
   role: string
+
+  @IsBoolean()
+  @IsOptional()
+  isOwnerInvitation?: boolean;
 }

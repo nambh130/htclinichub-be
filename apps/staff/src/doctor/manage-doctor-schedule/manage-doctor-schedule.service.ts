@@ -58,7 +58,7 @@ export class ManageDoctorScheduleService extends BaseService {
 
       return {
         doctorId: doctor.id,
-        doctorName: doctor.staff_info?.full_name || null,
+        doctorName: doctor.staffInfo?.full_name || null,
         totalShift: shifts.length,
         shifts: shifts.map((shift) => ({
           shiftId: shift.id,
@@ -84,9 +84,9 @@ export class ManageDoctorScheduleService extends BaseService {
         [
           'doctor_clinic_link_id',
           'doctor_clinic_link_id.doctor',
-          'doctor_clinic_link_id.doctor.staff_info',
-          'doctor_clinic_link_id.doctor.staff_info.specializes',
-          'doctor_clinic_link_id.doctor.staff_info.degrees',
+          'doctor_clinic_link_id.doctor.staffInfo',
+          'doctor_clinic_link_id.doctor.staffInfo.specializes',
+          'doctor_clinic_link_id.doctor.staffInfo.degrees',
           'doctor_clinic_link_id.clinic',
         ],
       );
@@ -94,7 +94,7 @@ export class ManageDoctorScheduleService extends BaseService {
       if (!shift) throw new Error('Shift not found');
 
       const doctor = shift.doctor_clinic_link_id?.doctor;
-      const info = doctor?.staff_info;
+      const info = doctor?.staffInfo;
       const clinic = shift.doctor_clinic_link_id?.clinic;
 
       return {
@@ -249,7 +249,7 @@ export class ManageDoctorScheduleService extends BaseService {
     
     return {
       doctorId: doctor.id,
-      doctorName: doctor.staff_info?.full_name ?? null,
+      doctorName: doctor.staffInfo?.full_name ?? null,
       date: dayjs(date).format('DD/MM/YYYY'),
       totalShift: shifts.length,
       shifts: shifts.map((shift) => ({
@@ -323,6 +323,4 @@ export class ManageDoctorScheduleService extends BaseService {
     }
     return await this.manageDoctorScheduleRepository.findOneAndUpdate({ id: shiftId }, { status: 'fully-booked' });
   }
-
-
 }

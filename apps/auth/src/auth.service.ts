@@ -49,17 +49,15 @@ export class AuthService implements OnModuleInit {
 
   // ------------------------------ PATIENT ---------------------------------
   async patientLogin(phone: string) {
-    let patient;
-    try {
-      patient = await this.patientRepository.findOne({ phone }, {});
-    } catch (error) {
+    let patient = await this.patientRepository.findOne({ phone }, {});
+    if (!patient) {
       // Create a new patient account if the patient is not found
       const newPatient = new Patient({ phone });
       patient = await this.patientRepository.create(newPatient);
       if (patient) {
         // Emit an event that a new patient is added
         const patientSignupEvent = new PatientCreated(patient);
-        this.kafkaClient.emit('patient-created', patientSignupEvent.toString());
+        this.kafkaClient.emit('patient-created', patientSignupEvent);
       }
     }
     const tokenPayload: TokenPayload = {
@@ -150,6 +148,9 @@ export class AuthService implements OnModuleInit {
       id: userId,
       actorType: ActorEnum.DOCTOR,
     });
+    if(!user){
+      throw new BadRequestException("Invalid invitation");
+    }
     const email = user.email;
 
     // getInvitationByToken() automatically check and update invitation status

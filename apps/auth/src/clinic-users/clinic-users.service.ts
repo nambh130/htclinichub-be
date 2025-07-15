@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ClinicUserRepository } from './clinic-users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './models/clinic-user.entity';
@@ -35,6 +35,9 @@ export class ClinicUsersService {
     if (clinicId) {
       const clinic = await this.clinicRepository.findOne({ id: clinicId });
       newUser.clinics = [clinic];
+    }
+    if(!newUser.roles){
+     throw new BadRequestException({ERR_CODE: "MISSING_FIELDS", message:"Role does not exists"}); 
     }
 
     return await this.userRepository.create(newUser);

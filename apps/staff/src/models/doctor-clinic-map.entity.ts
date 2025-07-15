@@ -20,6 +20,6 @@ export class DoctorClinicMap extends PostgresAbstractEntity<DoctorClinicMap> {
   clinic: Clinic;
 
   // Keep the clinic_id as a separate column for backwards compatibility
-  @Column({ name: 'clinic_id' })
-  clinicId: string;
+  //@Column({ name: 'clinic_id' })
+  //clinicId: string;
 }

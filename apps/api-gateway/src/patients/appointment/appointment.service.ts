@@ -39,6 +39,18 @@ export class AppointmentService {
     return result.data;
   }
 
+  async getAppointmentsByDoctorClinicLinkId(
+    doctor_id: string,
+    clinic_id: string,
+  ) {
+    const result = await firstValueFrom(
+      this.httpService.get(
+        `/patient-service/appointment/doctor-clinic-link?doctor_id=${doctor_id}&clinic_id=${clinic_id}`,
+      ),
+    );
+    return result.data;
+  }
+
   async getAppointment(id: String) {
     const result = await firstValueFrom(
       this.httpService.get(`/patient-service/appointment/${id}`),
@@ -49,6 +61,20 @@ export class AppointmentService {
   async cancelAppointment(id: String) {
     const result = await firstValueFrom(
       this.httpService.put(`/patient-service/cancel-appointment/${id}`),
+    );
+    return result.data;
+  }
+
+  async startAppointment(id: String) {
+    const result = await firstValueFrom(
+      this.httpService.put(`/patient-service/start-appointment/${id}`),
+    );
+    return result.data;
+  }
+
+  async doneAppointment(id: String) {
+    const result = await firstValueFrom(
+      this.httpService.put(`/patient-service/done-appointment/${id}`),
     );
     return result.data;
   }
