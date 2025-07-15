@@ -27,7 +27,7 @@ export class AuthService implements OnModuleInit {
     private readonly authClient: ClientKafka,
     private readonly http: HttpService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     this.authClient.subscribeToResponseOf('login');
@@ -285,7 +285,38 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
   // ------------------- INVITATIONS -------------------
-  async createInvitationOwner(
+  //async createInvitationOwner(
+  //  invitationDto: CreateInvitationDto,
+  //  req: Request,
+  //): Promise<any> {
+  //  const cookie = req.headers.cookie; // Grab incoming cookies
+
+  //  const response = await firstValueFrom(
+  //    this.http
+  //      .post(
+  //        `${this.configService.get('AUTH_SERVICE_URL')}/invitation`,
+  //        invitationDto,
+  //        {
+  //          headers: {
+  //            Cookie: cookie, // Forward the original cookie
+  //          },
+  //          withCredentials: true, // optional but doesn't hurt
+  //        },
+  //      )
+  //      .pipe(
+  //        catchError((error) => {
+  //          const e = error.response;
+  //          throw new HttpException(
+  //            e?.data || 'Upstream error',
+  //            e?.status || 500,
+  //          );
+  //        }),
+  //      ),
+  //  );
+  //  return response.data;
+  //}
+
+  async createInvitation(
     invitationDto: CreateInvitationDto,
     req: Request,
   ): Promise<any> {
@@ -294,38 +325,7 @@ export class AuthService implements OnModuleInit {
     const response = await firstValueFrom(
       this.http
         .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/invitation/clinic`,
-          invitationDto,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
-          },
-        )
-        .pipe(
-          catchError((error) => {
-            const e = error.response;
-            throw new HttpException(
-              e?.data || 'Upstream error',
-              e?.status || 500,
-            );
-          }),
-        ),
-    );
-    return response.data;
-  }
-
-  async createInvitationAdmin(
-    invitationDto: CreateInvitationDto,
-    req: Request,
-  ): Promise<any> {
-    const cookie = req.headers.cookie; // Grab incoming cookies
-
-    const response = await firstValueFrom(
-      this.http
-        .post(
-          `${this.configService.get('AUTH_SERVICE_URL')}/invitation/admin`,
+          `${this.configService.get('AUTH_SERVICE_URL')}/invitation`,
           invitationDto,
           {
             headers: {
@@ -349,7 +349,7 @@ export class AuthService implements OnModuleInit {
 
   async invitationSignup(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
     const response = await firstValueFrom(
       this.http
@@ -368,7 +368,7 @@ export class AuthService implements OnModuleInit {
           }),
         ),
     );
-    return response.data;
+    return res.status(response.status).send(response.data);
   }
 
   async getInvitationByClinic(
@@ -451,13 +451,16 @@ export class AuthService implements OnModuleInit {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
     const response = await firstValueFrom(
       this.http
         .post(
           `${this.configService.get('AUTH_SERVICE_URL')}/auth/invitation/accept`,
           req.body,
           {
-            headers: req.headers,
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
             withCredentials: true,
           },
         )

@@ -41,7 +41,7 @@ export class AuthService implements OnModuleInit {
     private readonly refreshTokenRepo: RefreshTokenRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -57,7 +57,7 @@ export class AuthService implements OnModuleInit {
       if (patient) {
         // Emit an event that a new patient is added
         const patientSignupEvent = new PatientCreated(patient);
-        this.kafkaClient.emit('patient-created', patientSignupEvent.toString());
+        this.kafkaClient.emit('patient-created', patientSignupEvent);
       }
     }
     const tokenPayload: TokenPayload = {
@@ -94,8 +94,11 @@ export class AuthService implements OnModuleInit {
       password,
       actorType: invitation.role.roleType,
       role: invitation.role.id,
-      clinic: invitation.clinic.id,
+      clinic: null,
     };
+    if (clinicUser.actorType != ActorEnum.ADMIN) {
+      clinicUser.clinic = invitation.clinic.id
+    }
 
     const newClinicUser = await this.clinicUserService.createUser(clinicUser);
 
@@ -148,7 +151,7 @@ export class AuthService implements OnModuleInit {
       id: userId,
       actorType: ActorEnum.DOCTOR,
     });
-    if(!user){
+    if (!user) {
       throw new BadRequestException("Invalid invitation");
     }
     const email = user.email;
