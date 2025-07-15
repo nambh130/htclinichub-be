@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
-import { ActorType, CreateEmployeeAccountDto, TokenPayload } from '@app/common';
+import { TokenPayload } from '@app/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ActorEnum } from '@app/common/enum/actor-type';

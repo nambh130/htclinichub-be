@@ -4,13 +4,15 @@ import { EventPattern, Payload } from '@nestjs/microservices';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ActorEnum } from '@app/common/enum/actor-type';
 import { ClinicService } from '../clinic/clinic.service';
+import { DoctorClinicRepo } from '@staff/repositories/doctor-clinic-map.repository';
 
 @Controller()
 export class DoctorEventController {
   constructor(
     private readonly doctorService: DoctorService,
     private readonly clinicService: ClinicService,
-  ) {}
+    private readonly doctorClinicRepo: DoctorClinicRepo
+  ) { }
 
   @EventPattern('clinic-user-created')
   async createDoctorAccount(
@@ -23,7 +25,6 @@ export class DoctorEventController {
         {
           id: userId,
           email,
-          clinic: clinicId,
           //clinic_id: clinicId,
           password: 'Abc@123.com',
         },
@@ -32,6 +33,8 @@ export class DoctorEventController {
           actorType: actorType,
         },
       );
+      if (user)
+        this.doctorService.doctorJoinClinic(userId, clinicId);
       if (payload.ownerOf) {
         const clinic = await this.clinicService.getClinicById(payload.ownerOf);
         clinic!.owner = user;

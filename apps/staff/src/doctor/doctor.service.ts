@@ -244,16 +244,16 @@ export class DoctorService extends BaseService {
           })) || [],
         staffInfo: doctor.staffInfo
           ? {
-              id: doctor.staffInfo.id,
-              staff_id: doctor.staffInfo.staff_id,
-              staff_type: doctor.staffInfo.staff_type,
-              full_name: doctor.staffInfo.full_name,
-              dob: doctor.staffInfo.dob,
-              phone: doctor.staffInfo.phone,
-              gender: doctor.staffInfo.gender,
-              position: doctor.staffInfo.position,
-              profile_img_id: doctor.staffInfo.profile_img_id,
-            }
+            id: doctor.staffInfo.id,
+            staff_id: doctor.staffInfo.staff_id,
+            staff_type: doctor.staffInfo.staff_type,
+            full_name: doctor.staffInfo.full_name,
+            dob: doctor.staffInfo.dob,
+            phone: doctor.staffInfo.phone,
+            gender: doctor.staffInfo.gender,
+            position: doctor.staffInfo.position,
+            profile_img_id: doctor.staffInfo.profile_img_id,
+          }
           : null,
       }));
 
@@ -325,7 +325,7 @@ export class DoctorService extends BaseService {
       doctor: doctor,
     });
 
-    return this.doctorClinicRepo.saveLink(doctorClinicLink);
+    return this.doctorClinicRepo.save(doctorClinicLink);
   }
 
   async createDoctorAccount(
@@ -1155,13 +1155,13 @@ export class DoctorService extends BaseService {
             email: doctor.email,
             clinic: clinic
               ? {
-                  id: clinic.id,
-                  name: clinic.name,
-                  location: clinic.location,
-                  phone: clinic.phone,
-                  email: clinic.email,
-                  ownerId: clinic.ownerId,
-                }
+                id: clinic.id,
+                name: clinic.name,
+                location: clinic.location,
+                phone: clinic.phone,
+                email: clinic.email,
+                ownerId: clinic.ownerId,
+              }
               : null,
           },
           info: staffInfo || null,
@@ -1237,7 +1237,7 @@ export class DoctorService extends BaseService {
       // Check if assignment already exists
       const existingAssignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinic: clinic,
+        clinic
       });
 
       if (existingAssignment) {
@@ -1255,7 +1255,7 @@ export class DoctorService extends BaseService {
       setAudit(doctorClinicLink, currentUser);
 
       const savedAssignment =
-        await this.doctorClinicRepo.saveLink(doctorClinicLink);
+        await this.doctorClinicRepo.save(doctorClinicLink);
 
       return {
         message: `Doctor ${doctorId} successfully assigned to clinic ${clinicId}`,
@@ -1302,7 +1302,7 @@ export class DoctorService extends BaseService {
       // Find the assignment
       const assignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinic: clinic,
+        clinic,
       });
 
       if (!assignment) {

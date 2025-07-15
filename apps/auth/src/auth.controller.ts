@@ -56,7 +56,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
-  ) {}
+  ) { }
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -114,13 +114,11 @@ export class AuthController {
       throw new BadRequestException();
     }
     // Check if doctor already exists
-    try {
-      const user = await this.userService.find({
-        email: invitation.email,
-        actorType: invitation.role.roleType,
-      });
-    } catch (error) {
-      // If not exists, the front end directs to signup
+    const user = await this.userService.find({
+      email: invitation.email,
+      actorType: invitation.role.roleType,
+    });
+    if (!user) {
       return {
         exists: false,
         clinicId: invitation.clinic.id,
@@ -140,7 +138,9 @@ export class AuthController {
     if (dto.password != dto.confirmPassword) {
       throw new BadRequestException('Password does not match retype password');
     }
-    return await this.authService.invitationSignup(dto);
+    const response = await this.authService.invitationSignup(dto);
+    console.log('check 3', response)
+    return response;
   }
 
   @Post('invitation/accept') // Create an account by invitation
@@ -227,6 +227,8 @@ export class AuthController {
 
     // Step 4: Generate new access token
     const user = await this.userService.find({ id: userId });
+    if (!user) throw new BadRequestException("User not found");
+
     const tokenPayload = this.authService.buildTokenPayload(user);
     const accessToken = await this.authService.createJWT(tokenPayload);
 
@@ -278,12 +280,11 @@ export class AuthController {
   // Create token for password reset
   @Post('forget-password')
   async recoverPassword(@Body() dto: PasswordRecoveryDto) {
-    try {
-      const checkUser = await this.userService.find({
-        email: dto.email,
-        actorType: dto.actorType,
-      });
-    } catch (error) {
+    const checkUser = await this.userService.find({
+      email: dto.email,
+      actorType: dto.actorType,
+    });
+    if (!checkUser) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Email not found',

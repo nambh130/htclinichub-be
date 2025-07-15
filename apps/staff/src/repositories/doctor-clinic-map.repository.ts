@@ -13,7 +13,7 @@ export class DoctorClinicRepo {
     private readonly entityManager: EntityManager,
   ) {}
 
-  async saveLink(link: DoctorClinicMap) {
+  async save(link: DoctorClinicMap) {
     return await this.itemsRepository.save(link);
   }
 

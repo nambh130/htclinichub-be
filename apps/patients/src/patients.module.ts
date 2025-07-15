@@ -37,6 +37,7 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { Appointment } from './models/appointment.entity';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { AppointmentRepository } from './repositories/appointment.repository';
+import { PatientEventController } from './patients-event.controller';
 
 @Module({
   imports: [
@@ -133,7 +134,7 @@ import { AppointmentRepository } from './repositories/appointment.repository';
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
   ],
-  controllers: [PatientsController, FavouriteDoctorController],
+  controllers: [PatientsController, FavouriteDoctorController,PatientEventController],
   providers: [
     PatientsService,
     PatientRepository,

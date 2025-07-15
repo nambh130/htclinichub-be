@@ -4,7 +4,7 @@ import { UpdatePatientDto } from '@app/common/dto/patients/update-patient.dto';
 import { PatientRepository } from './patients.repository';
 import { CLINIC_SERVICE, PATIENT_SERVICE, TokenPayload } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { Patient } from './models';
+import { Patient, PatientAccount } from './models';
 import { BadRequestException } from '@nestjs/common';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
@@ -15,6 +15,7 @@ import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { Appointment } from './models/appointment.entity';
 import { DataSource, In } from 'typeorm';
+import { PatientCreated } from '@app/common/events/auth/patient-created.event';
 
 @Injectable()
 export class PatientsService {
@@ -31,7 +32,7 @@ export class PatientsService {
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
   ) {}
 
-  async createPatient(createPatientDto: CreatePatientDto, userId: string) {
+  async createPatient(createPatientDto: Partial<CreatePatientDto>, userId: string) {
     const existedPhone = await this.patientsRepository.findByPhone(
       createPatientDto.phone,
     );
@@ -87,6 +88,8 @@ export class PatientsService {
       throw error;
     }
   }
+
+  
 
   // findAll() {
   //   return `This action returns all patients`;
@@ -865,6 +868,7 @@ export class PatientsService {
       profile: profileRes,
     };
   }
+
   async cancelAppointment(appoinmentId: string) {
     const appointment = await this.appointmentRepository.findOne({
       id: appoinmentId,
@@ -1039,5 +1043,93 @@ export class PatientsService {
       }),
     );
     return result;
+  }
+
+  async getAppointmentByDoctorClinicLink(doctor_id: string, clinic_id: string) {
+    const appointments = await this.appointmentRepository.findMany({
+      clinic_id: clinic_id,
+      doctor_id: doctor_id,
+    });
+
+    const result = await Promise.all(
+      appointments.map(async (appointment) => {
+        const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
+          firstValueFrom(
+            this.httpService.get(
+              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Clinic API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Doctor API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Slot API error:', err);
+              return null;
+            }),
+
+          firstValueFrom(
+            this.httpService.get(
+              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+            ),
+          )
+            .then((res) => {
+              return res.data;
+            })
+            .catch((err) => {
+              console.error('Profile API error:', err);
+              return null;
+            }),
+        ]);
+        return {
+          id: appointment.id,
+          reason: appointment.reason,
+          symptoms: appointment.symptoms,
+          status: appointment.status,
+          note: appointment.note,
+          createdAt: appointment.createdAt,
+          clinic: clinicRes,
+          doctor: doctorRes,
+          slot: slotRes,
+          profile: profileRes,
+        };
+      }),
+    );
+    return result;
+  }
+
+
+  async createPatientAccount(payload: { id: string; phone: string }) {
+    const phone = payload.phone;
+    const patientAccount = new PatientAccount();
+    patientAccount.id = payload.id;
+    patientAccount.phone = phone;
+    const patient = await this.patientAccountRepo.create(patientAccount);
+    return patient;
   }
 }

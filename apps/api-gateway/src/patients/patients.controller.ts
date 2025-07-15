@@ -8,6 +8,7 @@ import {
   Delete,
   Get,
   Headers,
+  Query,
 } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import {
@@ -361,6 +362,26 @@ export class PatientsController {
       throw error;
     }
   }
+
+  @Get('appointments')
+  @UseGuards(JwtAuthGuard)
+  async getAppointmentsByDoctorClinicLinkId(
+    @Query('clinic_id') clinic_id: string,
+    @Query('doctor_id') doctor_id: string,
+  ) {
+    try {
+      const result =
+        await this.appointmentService.getAppointmentsByDoctorClinicLinkId(
+          doctor_id,
+          clinic_id,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
   @Get('get-appointment/:appoinmentId')
   @UseGuards(JwtAuthGuard)
   async getAppointment(@Param('appoinmentId') appoinmentId: string) {
@@ -421,7 +442,11 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const patient = await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(mRid, user);
+      const patient =
+        await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(
+          mRid,
+          user,
+        );
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
