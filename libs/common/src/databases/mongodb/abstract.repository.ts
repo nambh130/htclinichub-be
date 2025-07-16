@@ -32,6 +32,11 @@ export abstract class MongoAbstractRepository<
     return document;
   }
 
+  async count(filterQuery: FilterQuery<TDocument>): Promise<number> {
+    const count = await this.model.countDocuments(filterQuery).exec();
+    return count;
+  }
+
   async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,
     update: UpdateQuery<TDocument>,
@@ -61,30 +66,30 @@ export abstract class MongoAbstractRepository<
     return this.model.findOneAndDelete(filterQuery).lean<TDocument>(true);
   }
 
-async findAndSort(
-  filterQuery: FilterQuery<TDocument>,
-  options?: {
-    sort?: Record<string, 1 | -1>;
-    limit?: number;
-    skip?: number;
-  }
-): Promise<TDocument[]> {
-  const query = this.model.find(filterQuery);
+  async findAndSort(
+    filterQuery: FilterQuery<TDocument>,
+    options?: {
+      sort?: Record<string, 1 | -1>;
+      limit?: number;
+      skip?: number;
+    }
+  ): Promise<TDocument[]> {
+    const query = this.model.find(filterQuery);
 
-  if (options?.sort) {
-    query.sort(options.sort);
-  }
+    if (options?.sort) {
+      query.sort(options.sort);
+    }
 
-  if (options?.limit !== undefined) {
-    query.limit(options.limit);
-  }
+    if (options?.limit !== undefined) {
+      query.limit(options.limit);
+    }
 
-  if (options?.skip !== undefined) {
-    query.skip(options.skip);
-  }
+    if (options?.skip !== undefined) {
+      query.skip(options.skip);
+    }
 
-  return query.lean<TDocument[]>(true);
-}
+    return query.lean<TDocument[]>(true);
+  }
 
 
 }

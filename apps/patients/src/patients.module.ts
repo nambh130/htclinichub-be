@@ -38,6 +38,7 @@ import { Appointment } from './models/appointment.entity';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
+import { LabTestModule } from './lab-test/lab-test.module';
 
 @Module({
   imports: [
@@ -133,6 +134,7 @@ import { PatientEventController } from './patients-event.controller';
     // Import Postgre module con
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
+    LabTestModule
   ],
   controllers: [PatientsController, FavouriteDoctorController,PatientEventController],
   providers: [

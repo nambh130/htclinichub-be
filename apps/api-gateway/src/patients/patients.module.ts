@@ -16,6 +16,8 @@ import { ManageMedicalRecordService } from './manage-medical-record/manage_medic
 import { AppointmentService } from './appointment/appointment.service';
 import { StaffModule } from '../staff/staff.module';
 import { ClinicModule } from '../clinics/clinic.module';
+import { LabTestService } from './lab-test/lab-test.service';
+import { LabTestController } from './lab-test/lab-test.controller';
 
 @Module({
   imports: [
@@ -77,12 +79,13 @@ import { ClinicModule } from '../clinics/clinic.module';
     StaffModule,
     ClinicModule,
   ],
-  controllers: [PatientsController],
+  controllers: [PatientsController, LabTestController],
   providers: [
     PatientService,
     FavouriteDoctorService,
     ManageMedicalRecordService, ManageMedicalRecordService,
     AppointmentService,
+    LabTestService
   ],
   exports: [
     PatientService,
