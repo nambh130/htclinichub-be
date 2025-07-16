@@ -53,6 +53,9 @@ export class MedicineService extends BaseService {
             timesPerDay: parseInt(row['timesPerDay'], 10) || 0,
             dosePerTime: row['dosePerTime'],
             schedule: row['schedule'],
+            madeIn: row['madeIn'],
+            category: row['category'],
+
           });
           rows.push(dto);
         })
@@ -108,6 +111,8 @@ export class MedicineService extends BaseService {
     medicine.quantity = dto.quantity;
     medicine.timesPerDay = dto.timesPerDay;
     medicine.dosePerTime = dto.dosePerTime;
+    medicine.madeIn = dto.madeIn;
+    medicine.category = dto.category;
     medicine.schedule = dto.schedule;
     medicine.createdById = clinicId;
 
@@ -123,6 +128,8 @@ export class MedicineService extends BaseService {
       quantity: result.quantity,
       timesPerDay: result.timesPerDay,
       dosePerTime: result.dosePerTime,
+      madeIn: result.madeIn,
+      category: result.category,
       schedule: result.schedule,
       clinicId: result.clinic_id?.id ?? null,
       clinicName: result.clinic_id?.name ?? null
@@ -156,6 +163,8 @@ export class MedicineService extends BaseService {
         quantity: medicine.quantity,
         timesPerDay: medicine.timesPerDay,
         dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
         schedule: medicine.schedule,
         stauts: medicine.status
       })),
@@ -201,6 +210,8 @@ export class MedicineService extends BaseService {
         quantity: medicine.quantity,
         timesPerDay: medicine.timesPerDay,
         dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
         schedule: medicine.schedule,
         stauts: medicine.status
       })),
@@ -232,6 +243,8 @@ export class MedicineService extends BaseService {
       quantity: result.quantity,
       timesPerDay: result.timesPerDay,
       dosePerTime: result.dosePerTime,
+      madeIn: result.madeIn,
+      category: result.category,
       schedule: result.schedule,
       stauts: result.status
     };
@@ -267,6 +280,8 @@ export class MedicineService extends BaseService {
       timesPerDay: updated.timesPerDay,
       dosePerTime: updated.dosePerTime,
       schedule: updated.schedule,
+      category: updated.category,
+      madeIn: updated.madeIn,
       status: updated.status,
       clinicId: clinic.id,
       clinicName: clinic.name,
@@ -295,10 +310,10 @@ export class MedicineService extends BaseService {
       };
     }
 
-    const header = 'id;code;name;concentration;ingredient;unit;quantity;timesPerDay;dosePerTime;schedule;status\n';
+    const header = 'id;code;name;concentration;ingredient;unit;quantity;timesPerDay;dosePerTime;madeIn;category;schedule;status\n';
 
     const rows = result.map(m =>
-      `${m.id};${m.code};${m.name};${m.concentration};${m.ingredient};${m.unit};${m.quantity};${m.timesPerDay};${m.dosePerTime};${m.schedule};${m.status}`
+      `${m.id};${m.code};${m.name};${m.concentration};${m.ingredient};${m.unit};${m.quantity};${m.timesPerDay};${m.dosePerTime};${m.madeIn};${m.category};${m.schedule};${m.status}`
     ).join('\n');
 
     const bom = '\uFEFF'; // ✅ BOM để Excel hiểu UTF-8

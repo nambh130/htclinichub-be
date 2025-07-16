@@ -42,6 +42,16 @@ export class Medicine extends PostgresAbstractEntity<Medicine> {
     @Column({ name: 'schedule', type: 'varchar', length: 255 })
     schedule: string; // Lịch trình
 
+    @Column({ name: 'madeIn', type: 'varchar', length: 255 })
+    madeIn: string;
+
+    @Column({
+        name: 'category',
+        type: 'enum',
+        enum: ['Thuốc', 'Thực phẩm chức năng', 'Vaccine', 'Dược mỹ phẩm', 'Dung dịch tiêm truyền', 'Hóa chất'],
+    })
+    category: 'Thuốc' | 'Thực phẩm chức năng' | 'Vaccine' | 'Dược mỹ phẩm' | 'Dung dịch tiêm truyền' | 'Hóa chất';
+
     @Column({
         name: 'status',
         type: 'enum',
