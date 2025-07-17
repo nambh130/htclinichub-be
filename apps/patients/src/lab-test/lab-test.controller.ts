@@ -102,7 +102,11 @@ export class LabTestController {
 
   @Post('quantitative')
   async createQuantiativeTest(@Body() dto: CreateQuantitativeTestDto) {
-    return this.labTestService.createQuantitativeTest(dto);
+    const uniqueObjectIds = Array.from(
+      new Map(dto.template.map(id => [id.toString(), id])).values()
+    );
+
+    return this.labTestService.createQuantitativeTest({ template: uniqueObjectIds, ...dto });
   }
 
   @Patch('quantitative/:id')
@@ -112,7 +116,11 @@ export class LabTestController {
   ) {
     if (!isValidObjectId(id))
       throw new BadRequestException("Invalidd id")
-    return this.labTestService.updateQuantiativeTest(new Types.ObjectId(id), dto);
+
+    const uniqueObjectIds = Array.from(
+      new Map(dto.template.map(id => [id.toString(), id])).values()
+    );
+    return this.labTestService.updateQuantiativeTest(new Types.ObjectId(id), { template: uniqueObjectIds, ...dto });
   }
 
   @Delete('quantitative/:id')
