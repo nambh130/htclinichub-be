@@ -1,0 +1,163 @@
+{
+  "id": "htclinichub-environment",
+  "name": "HTClinicHub - Local Development",
+  "values": [
+    {
+      "key": "environment",
+      "value": "local",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_service_url",
+      "value": "http://localhost:3001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "staging_url",
+      "value": "https://staging-api.htclinichub.com/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "staging_auth_url",
+      "value": "https://staging-auth.htclinichub.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "production_url",
+      "value": "https://api.htclinichub.com/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "production_auth_url",
+      "value": "https://auth.htclinichub.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "patient_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "staff_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "current_user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "current_clinic_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_doctor_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_employee_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_patient_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_appointment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "uploaded_image_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_vital_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "invitation_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "medical_record_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_degree_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_specialization_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_clinic_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_role_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "created_permission_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

@@ -33,7 +33,7 @@ export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
 
   async findDoctorsByIds(ids: number[]): Promise<Doctor[]> {
     return this.entityRepository.find({
-      where: { id: In(ids) }
+      where: { id: In(ids) },
     });
   }
 }

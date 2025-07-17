@@ -1,13 +1,16 @@
 import { NestFactory } from '@nestjs/core';
-import { StaffModule } from './staff.module';
+import { PaymentModule } from './payment.module';
 import { Logger } from 'nestjs-pino';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { HttpServiceExceptionFilter, STAFF_CONSUMER_GROUP } from '@app/common';
+import {
+  HttpServiceExceptionFilter,
+  PAYMENT_CONSUMER_GROUP,
+} from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(StaffModule); // HTTP + DI context
+  const app = await NestFactory.create(PaymentModule); // HTTP + DI context
   const configService = app.get(ConfigService);
   const logger = app.get(Logger);
 
@@ -27,7 +30,7 @@ async function bootstrap() {
         brokers: [kafkaBroker],
       },
       consumer: {
-        groupId: STAFF_CONSUMER_GROUP,
+        groupId: PAYMENT_CONSUMER_GROUP,
       },
     },
   });
@@ -44,14 +47,14 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get<number>('STAFF_SERVICE_PORT');
+  const port = configService.get<number>('PAYMENT_SERVICE_PORT');
 
   // Start both HTTP and Kafka servers
   await app.startAllMicroservices();
   await app.listen(port);
 
   logger.log(
-    `Staff service is running at http://staff:${port} with Kafka broker ${kafkaBroker}`,
+    `Payment service is running at http://payment:${port} with Kafka broker ${kafkaBroker}`,
   );
 }
 
