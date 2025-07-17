@@ -1,44 +1,51 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { PostgresAbstractEntity } from '@app/common/databases/postgresql/abstract.entity';
-import { PaymentStatus } from '../enums';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Payment } from './payment.entity';
+import { PostgresAbstractEntity } from '@app/common';
 
-@Entity('payment_transactions')
+@Entity('payment_transaction')
+@Index(['reference'])
+@Index(['transactionDateTime'])
 export class PaymentTransaction extends PostgresAbstractEntity<PaymentTransaction> {
-  @Column()
-  paymentId: string;
-
   @ManyToOne(() => Payment, (payment) => payment.transactions)
   @JoinColumn({ name: 'paymentId' })
   payment: Payment;
 
-  @Column()
-  providerTransactionId: string;
+  @Column({ type: 'uuid' })
+  paymentId: string;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentStatus,
-  })
-  status: PaymentStatus;
+  @Column({ type: 'varchar', length: 100 })
+  reference: string; // Provider transaction reference
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column()
-  currency: string;
+  @Column({ type: 'varchar', length: 100 })
+  accountNumber: string; // Receiving account number
+
+  @Column({ type: 'text' })
+  description: string; // Transaction description
 
   @Column()
-  transactionType: string; // 'payment', 'refund', 'chargeback', etc.
+  transactionDateTime: Date;
 
-  @Column({ type: 'json', nullable: true })
-  providerResponse: Record<string, any>;
+  @Column({ nullable: true })
+  virtualAccountName: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string;
+  @Column({ nullable: true })
+  virtualAccountNumber: string;
 
-  @Column({ type: 'json', nullable: true })
-  metadata: Record<string, any>;
+  @Column({ nullable: true })
+  counterAccountBankId: string;
 
-  @Column({ type: 'timestamp', nullable: true })
-  processedAt: Date;
+  @Column({ nullable: true })
+  counterAccountBankName: string;
+
+  @Column({ nullable: true })
+  counterAccountName: string;
+
+  @Column({ nullable: true })
+  counterAccountNumber: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  rawData: Record<string, any>; // Store raw transaction data from provider
 }

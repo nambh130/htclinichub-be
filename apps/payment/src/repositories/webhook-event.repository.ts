@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PostgresAbstractRepository } from '@app/common';
-import { Payment } from '../entities/payment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
+import { WebhookEvent } from '../entities/webhook-event.entity';
 
 @Injectable()
-export class PaymentRepository extends PostgresAbstractRepository<Payment> {
-  protected readonly logger = new Logger(PaymentRepository.name);
+export class WebhookEventRepository extends PostgresAbstractRepository<WebhookEvent> {
+  protected readonly logger = new Logger(WebhookEventRepository.name);
 
-  private readonly itemsRepository: Repository<Payment>;
+  private readonly itemsRepository: Repository<WebhookEvent>;
 
   constructor(
-    @InjectRepository(Payment)
-    itemsRepository: Repository<Payment>,
+    @InjectRepository(WebhookEvent)
+    itemsRepository: Repository<WebhookEvent>,
     entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);

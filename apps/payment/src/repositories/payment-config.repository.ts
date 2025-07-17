@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PostgresAbstractRepository } from '@app/common';
-import { Payment } from '../entities/payment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
+import { PaymentConfig } from '../entities/payment-config.entity';
 
 @Injectable()
-export class PaymentRepository extends PostgresAbstractRepository<Payment> {
-  protected readonly logger = new Logger(PaymentRepository.name);
+export class PaymentConfigRepository extends PostgresAbstractRepository<PaymentConfig> {
+  protected readonly logger = new Logger(PaymentConfigRepository.name);
 
-  private readonly itemsRepository: Repository<Payment>;
+  private readonly itemsRepository: Repository<PaymentConfig>;
 
   constructor(
-    @InjectRepository(Payment)
-    itemsRepository: Repository<Payment>,
+    @InjectRepository(PaymentConfig)
+    itemsRepository: Repository<PaymentConfig>,
     entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);

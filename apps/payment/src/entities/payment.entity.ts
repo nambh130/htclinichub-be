@@ -1,17 +1,33 @@
-import { Entity, Column, OneToMany } from 'typeorm';
-import { PostgresAbstractEntity } from '@app/common/databases/postgresql/abstract.entity';
-import { PaymentStatus, PaymentProvider } from '../enums';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { PaymentStatus } from '../enums/payment-status.enum';
+import { PaymentConfig } from './payment-config.entity';
 import { PaymentTransaction } from './payment-transaction.entity';
+import { WebhookEvent } from './webhook-event.entity';
+import { PostgresAbstractEntity } from '@app/common';
 
-@Entity('payments')
+@Entity('payment')
+@Index(['clinicId'])
+@Index(['appointmentId'])
+@Index(['status'])
+@Index(['providerPaymentId'])
 export class Payment extends PostgresAbstractEntity<Payment> {
-  @Column()
-  orderId: string;
+  @Column({ type: 'uuid' })
+  clinicId: string;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({ type: 'uuid', nullable: true })
+  appointmentId: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column()
+  @Column({ length: 3, default: 'VND' })
   currency: string;
 
   @Column({
@@ -21,48 +37,55 @@ export class Payment extends PostgresAbstractEntity<Payment> {
   })
   status: PaymentStatus;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentProvider,
-  })
-  provider: PaymentProvider;
+  @Column({ nullable: true })
+  paymentUrl: string;
 
   @Column({ nullable: true })
-  providerId: string;
+  providerPaymentId: string; // PayOS paymentLinkId
+
+  @Column({ type: 'varchar', length: 100 })
+  orderCode: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: {
+    patientId?: string;
+    patientName?: string;
+    patientEmail?: string;
+    patientPhone?: string;
+    description?: string;
+    items?: Array<{
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
+    customFields?: Record<string, any>;
+  };
+
+  @Column({ type: 'jsonb', nullable: true })
+  providerResponse: Record<string, any>;
 
   @Column({ nullable: true })
-  providerTransactionId: string;
+  failureReason: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string;
-
-  @Column({ type: 'json', nullable: true })
-  metadata: Record<string, unknown>;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  refundedAmount: number;
 
   @Column({ nullable: true })
-  patientId: string;
+  expiresAt: Date;
 
-  @Column({ nullable: true })
-  clinicId: string;
+  @ManyToOne(() => PaymentConfig, (credential) => credential.payments)
+  @JoinColumn({ name: 'credentialId' })
+  credential: PaymentConfig;
 
-  @Column({ nullable: true })
-  appointmentId: string;
-
-  @Column({ nullable: true })
-  returnUrl: string;
-
-  @Column({ nullable: true })
-  cancelUrl: string;
-
-  @Column({ nullable: true })
-  notifyUrl: string;
-
-  @Column({ type: 'timestamp', nullable: true })
-  expiredAt: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  paidAt: Date;
+  @Column({ type: 'uuid' })
+  credentialId: string;
 
   @OneToMany(() => PaymentTransaction, (transaction) => transaction.payment)
   transactions: PaymentTransaction[];
+
+  @OneToMany(() => WebhookEvent, (event) => event.payment)
+  webhookEvents: WebhookEvent[];
+
+  @Column({ nullable: true })
+  completedAt: Date;
 }

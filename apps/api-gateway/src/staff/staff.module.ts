@@ -76,7 +76,17 @@ import { MedicineService } from './medicine/medicine.service';
     ClinicModule,
   ],
   controllers: [DoctorController, EmployeeController, MedicineController],
-  providers: [DoctorService, EmployeeService, ManageDoctorScheduleService, MedicineService],
-  exports: [DoctorService, EmployeeService, ManageDoctorScheduleService, MedicineService],
+  providers: [
+    DoctorService,
+    EmployeeService,
+    ManageDoctorScheduleService,
+    MedicineService,
+  ],
+  exports: [
+    DoctorService,
+    EmployeeService,
+    ManageDoctorScheduleService,
+    MedicineService,
+  ],
 })
 export class StaffModule {}

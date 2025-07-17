@@ -8,6 +8,7 @@ import { PatientsModule } from './patients/patients.module';
 import { AnalyzeHealthcareDataModule } from './analyze-healthcare-data/analyze-healthcare-data.module';
 import { MediaModule } from './media/media.module';
 import { ClinicModule } from './clinics/clinic.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ClinicModule } from './clinics/clinic.module';
     LoggerModule,
     MediaModule,
     ClinicModule,
+    PaymentModule,
   ],
 })
 export class ApiGatewayModule {}
