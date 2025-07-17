@@ -18,6 +18,7 @@ import { StaffModule } from '../staff/staff.module';
 import { ClinicModule } from '../clinics/clinic.module';
 import { LabTestService } from './lab-test/lab-test.service';
 import { LabTestController } from './lab-test/lab-test.controller';
+import { ICDService } from './icd/icd.service';
 
 @Module({
   imports: [
@@ -85,14 +86,15 @@ import { LabTestController } from './lab-test/lab-test.controller';
     FavouriteDoctorService,
     ManageMedicalRecordService, ManageMedicalRecordService,
     AppointmentService,
-    LabTestService
+    LabTestService,
+    ICDService,
   ],
   exports: [
     PatientService,
     FavouriteDoctorService,
     ManageMedicalRecordService,
     AppointmentService,
-
+    ICDService,
   ],
 })
 export class PatientsModule { }

@@ -326,7 +326,6 @@ export class PatientsController {
     return result;
   }
 
-  
   @Get('appointment/doctor-clinic-link')
   async getAppointmentByDoctorClinicLink(
     @Query('doctor_id') doctorId: string,
@@ -344,13 +343,25 @@ export class PatientsController {
     return result;
   }
 
-  
-
   @Put('cancel-appointment/:id')
   async updateAppointment(@Param('id') id: string) {
     const result = await this.patientsService.cancelAppointment(id);
     return result;
   }
+
+  @Put('start-appointment/:id')
+  async startAppointment(@Param('id') id: string) {
+    const result = await this.patientsService.startAppointment(id);
+    return result;
+  }
+
+  @Put('done-appointment/:id')
+  async doneAppointment(@Param('id') id: string) {
+    const result = await this.patientsService.doneAppointment(id);
+    return result;
+  }
+
+
   @Get('appointments/pending/:patientAccountId')
   async getPendingAppointments(
     @Param('patientAccountId') patientAccountId: string,
@@ -366,6 +377,15 @@ export class PatientsController {
   ) {
     const result =
       await this.patientsService.getDoneAppointments(patientAccountId);
+    return result;
+  }
+
+  @Get('icd/search')
+  async searchICD(
+    @Query('keyword') keyword: string,
+    @Query('limit') limit: number = 20,
+  ) {
+    const result = await this.patientsService.searchICD(keyword, limit);
     return result;
   }
 }

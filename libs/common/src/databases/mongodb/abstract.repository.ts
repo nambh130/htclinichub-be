@@ -72,7 +72,7 @@ export abstract class MongoAbstractRepository<
       sort?: Record<string, 1 | -1>;
       limit?: number;
       skip?: number;
-    }
+    },
   ): Promise<TDocument[]> {
     const query = this.model.find(filterQuery);
 
@@ -90,6 +90,4 @@ export abstract class MongoAbstractRepository<
 
     return query.lean<TDocument[]>(true);
   }
-
-
 }

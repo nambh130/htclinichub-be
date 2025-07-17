@@ -27,9 +27,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
-import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
-import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
-import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
@@ -39,6 +36,9 @@ import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.c
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
 import { LabTestModule } from './lab-test/lab-test.module';
+import { ICD } from './models/icd.entity';
+import { ICDRepository } from './repositories/icd.repository';
+import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
 
 @Module({
   imports: [
@@ -75,6 +75,10 @@ import { LabTestModule } from './lab-test/lab-test.module';
           name: Patient.name,
           schema: PatientSchema,
         },
+        {
+          name: MedicalRecord.name,
+          schema: MedicalRecordSchema,
+        },
       ],
       'patientService',
     ),
@@ -85,6 +89,7 @@ import { LabTestModule } from './lab-test/lab-test.module';
       PatientAccount,
       PatientClinicLink,
       Appointment,
+      ICD, // Assuming ICD is also a Postgres entity
     ]),
 
     ClientsModule.registerAsync([
@@ -153,6 +158,7 @@ import { LabTestModule } from './lab-test/lab-test.module';
       useExisting: HttpService,
     },
     AppointmentRepository,
+    ICDRepository,
   ],
   exports: [
     PatientsService,
@@ -163,6 +169,7 @@ import { LabTestModule } from './lab-test/lab-test.module';
     PatientAccountRepository,
     PatientClinicLinkRepository,
     AppointmentRepository,
+    ICDRepository,
   ],
 })
 export class PatientsModule {}
