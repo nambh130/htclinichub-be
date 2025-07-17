@@ -1,20 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FavouriteDoctor } from '../models/favourite_doctor.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
-import { MongoAbstractRepository } from '@app/common';
-import { ManageMedicalRecord } from '../models/manage_medical_record.schema';
+import {MedicalRecord } from '../models/medical_record.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { MongoAbstractRepository } from '@app/common';
 
 @Injectable()
-export class ManageMedicalReportRepository extends MongoAbstractRepository<ManageMedicalRecord> {
-  protected readonly logger = new Logger(ManageMedicalReportRepository.name);
+export class MedicalReportRepository extends MongoAbstractRepository<MedicalRecord> {
+  protected readonly logger = new Logger(MedicalReportRepository.name);
 
   constructor(
-  @InjectModel(ManageMedicalRecord.name, 'patientService') // ✅ Dùng đúng tên connection
-    manageMedicalRecordModel: Model<ManageMedicalRecord>,
+  @InjectModel(MedicalRecord.name, 'patientService') // ✅ Dùng đúng tên connection
+    MedicalRecordModel: Model<MedicalRecord>,
   ) {
-    super(manageMedicalRecordModel);
+    super(MedicalRecordModel);
   }
 }

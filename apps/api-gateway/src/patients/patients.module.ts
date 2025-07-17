@@ -16,6 +16,7 @@ import { ManageMedicalRecordService } from './manage-medical-record/manage_medic
 import { AppointmentService } from './appointment/appointment.service';
 import { StaffModule } from '../staff/staff.module';
 import { ClinicModule } from '../clinics/clinic.module';
+import { ICDService } from './icd/icd.service';
 
 @Module({
   imports: [
@@ -83,12 +84,15 @@ import { ClinicModule } from '../clinics/clinic.module';
     FavouriteDoctorService,
     ManageMedicalRecordService, ManageMedicalRecordService,
     AppointmentService,
+    ICDService,
+
   ],
   exports: [
     PatientService,
     FavouriteDoctorService,
     ManageMedicalRecordService,
     AppointmentService,
+    ICDService,
 
   ],
 })

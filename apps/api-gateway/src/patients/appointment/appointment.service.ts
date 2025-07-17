@@ -64,6 +64,20 @@ export class AppointmentService {
     );
     return result.data;
   }
+
+  async startAppointment(id: String) {
+    const result = await firstValueFrom(
+      this.httpService.put(`/patient-service/start-appointment/${id}`),
+    );
+    return result.data;
+  }
+
+  async doneAppointment(id: String) {
+    const result = await firstValueFrom(
+      this.httpService.put(`/patient-service/done-appointment/${id}`),
+    );
+    return result.data;
+  }
   async getPendingAppointments(patientAccountId: string) {
     try {
       const result = await firstValueFrom(

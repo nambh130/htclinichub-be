@@ -29,7 +29,6 @@ import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.r
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
 import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
-import { ManageMedicalReportRepository } from './manage-medical-record/manage_medical_record.repository';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
@@ -38,6 +37,9 @@ import { Appointment } from './models/appointment.entity';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
+import { ICD } from './models/icd.entity';
+import { ICDRepository } from './repositories/icd.repository';
+import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
 
 @Module({
   imports: [
@@ -74,6 +76,10 @@ import { PatientEventController } from './patients-event.controller';
           name: Patient.name,
           schema: PatientSchema,
         },
+        {
+          name: MedicalRecord.name,
+          schema: MedicalRecordSchema,
+        },
       ],
       'patientService',
     ),
@@ -84,6 +90,7 @@ import { PatientEventController } from './patients-event.controller';
       PatientAccount,
       PatientClinicLink,
       Appointment,
+      ICD, // Assuming ICD is also a Postgres entity
     ]),
 
     ClientsModule.registerAsync([
@@ -151,6 +158,7 @@ import { PatientEventController } from './patients-event.controller';
       useExisting: HttpService,
     },
     AppointmentRepository,
+    ICDRepository,
   ],
   exports: [
     PatientsService,
@@ -161,6 +169,7 @@ import { PatientEventController } from './patients-event.controller';
     PatientAccountRepository,
     PatientClinicLinkRepository,
     AppointmentRepository,
+    ICDRepository,
   ],
 })
 export class PatientsModule {}

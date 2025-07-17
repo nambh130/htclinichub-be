@@ -22,6 +22,10 @@ import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.serv
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentService } from './appointment/appointment.service';
+import { ICDService } from './icd/icd.service';
+import { CreateMedicalRecordDto } from '@app/common/dto/medical-record';
+import { UpdateMedicalRecordDto } from '@app/common/dto/medical-record/update-medical-record.dto';
+import { Payload } from '@nestjs/microservices';
 
 @Controller('patient')
 export class PatientsController {
@@ -31,6 +35,7 @@ export class PatientsController {
     // private readonly downLoadMedicalReport: DownLoadMedicalReportService,
     private readonly manageMedicalRecordService: ManageMedicalRecordService,
     private readonly appointmentService: AppointmentService,
+    private readonly ICDService: ICDService,
   ) {}
 
   // Patient routes
@@ -268,6 +273,32 @@ export class PatientsController {
     }
   }
 
+  @Post('/medical-records')
+  @UseGuards(JwtAuthGuard)
+  async createMedicalRecord(
+    @Body() createMedicalRecordDto: CreateMedicalRecordDto,
+  ) {
+    try {
+      // Validate the DTO
+      if (
+        !createMedicalRecordDto.patient_id ||
+        !createMedicalRecordDto.appointment_id
+      ) {
+        throw new Error('patient_id and appointment_id are required');
+      }
+      const data = {
+        patient_id: createMedicalRecordDto.patient_id,
+        appointment_id: createMedicalRecordDto.appointment_id,
+      };
+      const result =
+        await this.manageMedicalRecordService.createMedicalRecord(data);
+      return result;
+    } catch (error) {
+      console.error('Error creating medical record:', error);
+      throw error;
+    }
+  }
+
   //khanhlq
   @Post('/assign-to-clinic/:clinicId')
   @UseGuards(JwtAuthGuard)
@@ -406,6 +437,32 @@ export class PatientsController {
     }
   }
 
+  @Put('start-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async startAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result =
+        await this.appointmentService.startAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
+  @Put('done-appointment/:appoinmentId')
+  @UseGuards(JwtAuthGuard)
+  async doneAppointment(@Param('appoinmentId') appoinmentId: string) {
+    try {
+      const result =
+        await this.appointmentService.doneAppointment(appoinmentId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments:', error);
+      throw error;
+    }
+  }
+
   @Get('get-appointments/pending/:patientAccountId')
   @UseGuards(JwtAuthGuard)
   async getPendingAppointments(
@@ -450,6 +507,63 @@ export class PatientsController {
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+  @Get('/search-icd')
+  @UseGuards(JwtAuthGuard)
+  async searchICD(
+    @Query('keyword') keyword: string,
+    @Query('limit') limit: number,
+  ) {
+    try {
+      const result = await this.ICDService.searchICD(keyword, limit);
+      return result;
+    } catch (error) {
+      console.error('Error searching ICD:', error);
+      throw error;
+    }
+  }
+
+  @Put('/update-medical-record/:mRid')
+  @UseGuards(JwtAuthGuard)
+  async updateMedicalRecord(
+    @Param('mRid') mRid: string,
+    @Payload() payload: UpdateMedicalRecordDto,
+  ) {
+    try {
+      const data = {
+        icd: payload.icd,
+        symptoms: payload.symptoms,
+        diagnosis: payload.diagnosis,
+        treatmentDirection: payload.treatmentDirection,
+        next_appoint: payload.next_appoint,
+      };
+      const result = await this.manageMedicalRecordService.updateMedicalRecord(
+        mRid,
+        data,
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error updating medical record:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-medical-record-by-appointmentId/:appointmentId')
+  @UseGuards(JwtAuthGuard)
+  async getMedicalRecordsByAppointmentId(
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    try {
+      const result =
+        await this.manageMedicalRecordService.getMedicalRecordsByAppointmentId(
+          appointmentId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medical records:', error);
       throw error;
     }
   }

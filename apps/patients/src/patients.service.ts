@@ -16,6 +16,8 @@ import { AppointmentRepository } from './repositories/appointment.repository';
 import { Appointment } from './models/appointment.entity';
 import { DataSource, In } from 'typeorm';
 import { PatientCreated } from '@app/common/events/auth/patient-created.event';
+import { ICDRepository } from './repositories/icd.repository';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 
 @Injectable()
 export class PatientsService {
@@ -25,14 +27,19 @@ export class PatientsService {
     private readonly patientAccountRepo: PatientAccountRepository,
     private readonly patientClinicLinkRepo: PatientClinicLinkRepository,
     private readonly appointmentRepository: AppointmentRepository,
-    private readonly httpService: HttpService,
+    private readonly ICDRepository: ICDRepository,
 
+    private readonly httpService: HttpService,
+    private readonly manageMedicalRecordService: ManageMedicalRecordService,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
   ) {}
 
-  async createPatient(createPatientDto: Partial<CreatePatientDto>, userId: string) {
+  async createPatient(
+    createPatientDto: Partial<CreatePatientDto>,
+    userId: string,
+  ) {
     const existedPhone = await this.patientsRepository.findByPhone(
       createPatientDto.phone,
     );
@@ -88,8 +95,6 @@ export class PatientsService {
       throw error;
     }
   }
-
-  
 
   // findAll() {
   //   return `This action returns all patients`;
@@ -880,7 +885,40 @@ export class PatientsService {
     });
     return result;
   }
+  async startAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) throw new Error('Appointment not found');
 
+    const result = await this.appointmentRepository.update(appointment, {
+      status: 'in_progress',
+    });
+
+    const data = {
+      patient_id: appointment.patient_profile_id,
+      appointment_id: appointment.id,
+    };
+    const medicalRecord =
+      await this.manageMedicalRecordService.createMedicalRecord(data);
+
+    return {
+      message: 'Appointment started and medical record created',
+      appointment: result, // trả về luôn appointment sau khi update
+      medicalRecord: medicalRecord, // trả về medical record
+    };
+  }
+  async doneAppointment(appoinmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appoinmentId,
+    });
+    if (!appointment) throw new Error('Appointment not found');
+
+    const result = await this.appointmentRepository.update(appointment, {
+      status: 'done',
+    });
+    return result;
+  }
   async getPendingAppointments(patientAccountId: string) {
     const profiles = await this.getPatientByAccountId(patientAccountId);
     if (!profiles || !profiles.length) return [];
@@ -1123,7 +1161,6 @@ export class PatientsService {
     return result;
   }
 
-
   async createPatientAccount(payload: { id: string; phone: string }) {
     const phone = payload.phone;
     const patientAccount = new PatientAccount();
@@ -1131,5 +1168,15 @@ export class PatientsService {
     patientAccount.phone = phone;
     const patient = await this.patientAccountRepo.create(patientAccount);
     return patient;
+  }
+
+  async searchICD(keyword: string, limit: number) {
+    return await this.ICDRepository.createQueryBuilder('icd')
+      .where('icd.code ILIKE :keyword OR icd.name ILIKE :keyword', {
+        keyword: `%${keyword}%`,
+      })
+      .orderBy('icd.code', 'ASC')
+      .limit(limit)
+      .getMany();
   }
 }
