@@ -6,7 +6,7 @@ export abstract class MongoAbstractRepository<
   TDocument extends MongoAbstractDocument,
 > {
   protected abstract readonly logger: Logger;
-  constructor(protected readonly model: Model<TDocument>) { }
+  constructor(protected readonly model: Model<TDocument>) {}
 
   async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
     this.logger.debug(`Creating document: ${JSON.stringify(document)}`);

@@ -79,7 +79,7 @@ import { MedicineModule } from './clinic/medicine/medicine.module';
       Doctor_WorkShift,
       Medicine,
     ]),
-    MedicineModule
+    MedicineModule,
   ],
   controllers: [
     DoctorController,

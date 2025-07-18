@@ -27,6 +27,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
 import { FavouriteDoctorRepository } from './favourite-doctor/favourite_doctor.repository';
 import { ManageMedicalRecordModule } from './manage-medical-record/manage_medical_record.module';
+import { ManageMedicalRecordController } from './manage-medical-record/manage_medical_record.controller';
+import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
 import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
