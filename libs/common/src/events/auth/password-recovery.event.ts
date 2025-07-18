@@ -3,10 +3,7 @@ export class PwdRecoveryEvent {
   public readonly to: string;
   public readonly resetLink: string;
 
-  constructor(data: {
-    to: string;
-    resetLink: string;
-  }) {
+  constructor(data: { to: string; resetLink: string }) {
     this.to = data.to;
     this.resetLink = data.resetLink;
   }
@@ -18,5 +15,3 @@ export class PwdRecoveryEvent {
     });
   }
 }
-
-
