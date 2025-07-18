@@ -10,6 +10,7 @@ export const PATIENTS_TO_STAFF_CLIENT = 'patients-staff-client';
 export const PATIENTS_TO_STAFF_CONSUMER = 'patients-staff-consumer';
 export const INPUT_VITAL_SIGNS_SERVICE = 'input-vital-signs';
 export const MEDIA_SERVICE = 'media';
+export const LAB_TEST_SERVICE = 'lab-test';
 export const PAYMENT_SERVICE = 'payment';
 
 //Service ports

@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Get,
-  Headers,
   Query,
 } from '@nestjs/common';
 import { PatientService } from './patients.service';
