@@ -17,8 +17,10 @@ export class PrescriptionService {
 
     async getPrescriptionsByMRId(mRId: string) {
         try {
-            const prescriptions = await this.prescriptionRepository.find({
+            const prescriptions = await this.prescriptionRepository.findAndSort({
                 medical_record_id: new Types.ObjectId(mRId),
+            }, {
+                sort: { createdAt: -1 },
             });
 
             if (!prescriptions || prescriptions.length === 0) {
