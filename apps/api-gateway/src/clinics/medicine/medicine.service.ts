@@ -80,4 +80,21 @@ export class MedicineService {
         return firstValueFrom(
             this.httpService.get(`medicine/export_medicine_csv/${clinicId}`));
     }
+
+    async getMedicineByCategory(
+        clinicId: string,
+        currentUser: TokenPayload,
+        category?: string,   
+    ) {
+        // Build URL có hoặc không có search
+        const url = category
+            ? `medicine/filter-category/${clinicId}?category=${encodeURIComponent(category)}`
+            : `medicine/filter-category/${clinicId}`;
+
+        const response = await firstValueFrom(
+            this.httpService.get(url),
+        );
+
+        return response.data;
+    }
 }

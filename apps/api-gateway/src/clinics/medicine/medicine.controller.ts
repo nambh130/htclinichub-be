@@ -117,7 +117,7 @@ export class MedicineController {
   ) {
     try {
       const response = await this.medicineService.exportMedicineDataToCSV(clinicId, currentUser);
-      const { csv, clinicName } = response.data; 
+      const { csv, clinicName } = response.data;
       const safeName = clinicName.replace(/[^a-zA-Z0-9-_]/g, '_');
       const fileName = `${safeName}-medicine-data.csv`;
 
@@ -127,6 +127,22 @@ export class MedicineController {
     } catch (error) {
       console.error('Error exporting medicine data:', error);
       res.status(500).send('Internal Server Error');
+    }
+  }
+
+  @Get('medicine-data/:clinicId/by-category')
+  @UseGuards(JwtAuthGuard)
+  async getMedicineByCategory(
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+    @Query('category') category?: string,
+  ) {
+    try {
+      const medicineList = await this.medicineService.getMedicineByCategory(clinicId, currentUser, category);
+      return medicineList;
+    } catch (error) {
+      console.error('Error in getMedicineClinicId:', error);
+      throw error;
     }
   }
 }

@@ -16,6 +16,7 @@ import {
   UpdatePatientDto,
   FavouriteDoctorDto,
   TokenPayload,
+  CreatePrescriptionDto,
 } from '@app/common';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
 import { FavouriteDoctorService } from './favourite-doctor/favourite_doctor.service';
@@ -26,6 +27,7 @@ import { ICDService } from './icd/icd.service';
 import { CreateMedicalRecordDto } from '@app/common/dto/medical-record';
 import { UpdateMedicalRecordDto } from '@app/common/dto/medical-record/update-medical-record.dto';
 import { Payload } from '@nestjs/microservices';
+import { PrescriptionService } from './prescription_detail/prescription_detail.service';
 
 @Controller('patient')
 export class PatientsController {
@@ -36,7 +38,8 @@ export class PatientsController {
     private readonly manageMedicalRecordService: ManageMedicalRecordService,
     private readonly appointmentService: AppointmentService,
     private readonly ICDService: ICDService,
-  ) {}
+    private readonly prescriptionService: PrescriptionService,
+  ) { }
 
   // Patient routes
   @Post('/create-patient')
@@ -564,6 +567,44 @@ export class PatientsController {
       return result;
     } catch (error) {
       console.error('Error retrieving medical records:', error);
+      throw error;
+    }
+  }
+
+  //prescription_detail
+  @Get('/get-prescriptions-by-mRId/:mRId')
+  @UseGuards(JwtAuthGuard)
+  async getPrescriptionsByMRId(
+    @Param('mRId') mRId: string,
+  ) {
+    try {
+      const result =
+        await this.prescriptionService.getPrescriptionsByMRId(
+          mRId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medical records:', error);
+      throw error;
+    }
+  }
+
+  @Post('create-prescription-by-mRId/:mRId')
+  @UseGuards(JwtAuthGuard)
+  async createPrescription(
+    @Param('mRId') mRId: string,
+    @Body() createPrescriptionDto: CreatePrescriptionDto,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const result = await this.prescriptionService.createPrescription(
+        mRId,
+        createPrescriptionDto,
+        user.userId.toString(),
+      );
+      return result;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
       throw error;
     }
   }

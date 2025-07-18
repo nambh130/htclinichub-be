@@ -322,4 +322,37 @@ export class MedicineService extends BaseService {
       clinicName: clinic?.name || 'clinic',
     };
   }
+
+  async getMedicineByCategory(clinicId: string, category: string) {
+    const clinic = await this.clinicRepository.findOne({ id: clinicId });
+    if (!clinic) {
+      throw new NotFoundException('Clinic not found');
+    }
+
+    const result = await this.medicineRepository.find({
+      category: category
+    });
+
+    return {
+      clinicId: clinic.id,
+      clinicName: clinic.name,
+      medicines: result.map((medicine) => ({
+        id: medicine.id,
+        code: medicine.code,
+        name: medicine.name,
+        concentration: medicine.concentration,
+        ingredient: medicine.ingredient,
+        unit: medicine.unit,
+        quantity: medicine.quantity,
+        timesPerDay: medicine.timesPerDay,
+        dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
+        schedule: medicine.schedule,
+        status: medicine.status,
+      })),
+    };
+  }
+
+
 }

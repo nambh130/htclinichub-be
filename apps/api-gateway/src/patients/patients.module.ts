@@ -17,6 +17,7 @@ import { AppointmentService } from './appointment/appointment.service';
 import { StaffModule } from '../staff/staff.module';
 import { ClinicModule } from '../clinics/clinic.module';
 import { ICDService } from './icd/icd.service';
+import { PrescriptionService } from './prescription_detail/prescription_detail.service';
 
 @Module({
   imports: [
@@ -85,7 +86,7 @@ import { ICDService } from './icd/icd.service';
     ManageMedicalRecordService, ManageMedicalRecordService,
     AppointmentService,
     ICDService,
-
+    PrescriptionService
   ],
   exports: [
     PatientService,
@@ -93,7 +94,7 @@ import { ICDService } from './icd/icd.service';
     ManageMedicalRecordService,
     AppointmentService,
     ICDService,
-
+    PrescriptionService,
   ],
 })
 export class PatientsModule { }

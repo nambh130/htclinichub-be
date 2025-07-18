@@ -1,5 +1,5 @@
 // apps/patients/patients.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsService } from './patients.service';
 import { PatientsController } from './patients.controller';
@@ -40,6 +40,11 @@ import { PatientEventController } from './patients-event.controller';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
 import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
+import { PrescriptionDetail, PrescriptionDetailSchema } from './models/prescription_detail.schema';
+import { PrescriptionModule } from './prescription_detail/prescription_detail.module';
+import { PrescriptionController } from './prescription_detail/prescription_detail.controller';
+import { PrescriptionService } from './prescription_detail/prescription_detail.service';
+import { PrescriptionRepository } from './prescription_detail/prescription_detail.repository';
 
 @Module({
   imports: [
@@ -79,6 +84,10 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
         {
           name: MedicalRecord.name,
           schema: MedicalRecordSchema,
+        },
+        {
+          name: PrescriptionDetail.name,
+          schema: PrescriptionDetailSchema,
         },
       ],
       'patientService',
@@ -140,8 +149,9 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
     // Import Postgre module con
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
+    forwardRef(() => PrescriptionModule),
   ],
-  controllers: [PatientsController, FavouriteDoctorController,PatientEventController],
+  controllers: [PatientsController, FavouriteDoctorController, PatientEventController, PrescriptionController],
   providers: [
     PatientsService,
     PatientRepository,
@@ -159,6 +169,7 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
     },
     AppointmentRepository,
     ICDRepository,
+    PrescriptionService, PrescriptionRepository
   ],
   exports: [
     PatientsService,
@@ -170,6 +181,7 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
     PatientClinicLinkRepository,
     AppointmentRepository,
     ICDRepository,
+    PrescriptionService, PrescriptionRepository
   ],
 })
-export class PatientsModule {}
+export class PatientsModule { }
