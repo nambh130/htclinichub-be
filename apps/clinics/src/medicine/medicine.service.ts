@@ -166,7 +166,8 @@ export class MedicineService extends BaseService {
         madeIn: medicine.madeIn,
         category: medicine.category,
         schedule: medicine.schedule,
-        stauts: medicine.status
+        stauts: medicine.status,
+        createdAt: medicine.createdAt
       })),
     };
 
@@ -213,7 +214,8 @@ export class MedicineService extends BaseService {
         madeIn: medicine.madeIn,
         category: medicine.category,
         schedule: medicine.schedule,
-        stauts: medicine.status
+        stauts: medicine.status,
+        createdAt: medicine.createdAt
       })),
     };
   }
@@ -246,7 +248,8 @@ export class MedicineService extends BaseService {
       madeIn: result.madeIn,
       category: result.category,
       schedule: result.schedule,
-      stauts: result.status
+      stauts: result.status,
+      createdAt: result.createdAt
     };
   }
 
@@ -350,6 +353,7 @@ export class MedicineService extends BaseService {
         category: medicine.category,
         schedule: medicine.schedule,
         status: medicine.status,
+        createdAt: medicine.createdAt
       })),
     };
   }
