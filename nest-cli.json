@@ -4,8 +4,7 @@
   "sourceRoot": "apps",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true,
-    "tsConfigPath": "apps/reservations/tsconfig.app.json"
+    "webpack": true
   },
   "projects": {
     "api-gateway": {
@@ -33,6 +32,15 @@
       "sourceRoot": "apps/clinics/src",
       "compilerOptions": {
         "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
+    },
+    "chat": {
+      "type": "application",
+      "root": "apps/chat",
+      "entryFile": "main",
+      "sourceRoot": "apps/chat/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chat/tsconfig.app.json"
       }
     },
     "common": {
