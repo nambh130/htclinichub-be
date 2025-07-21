@@ -17,6 +17,9 @@ export abstract class MongoAbstractRepository<
     return (await createdDocument.save()).toJSON() as TDocument;
   }
 
+  async createMany(docs: Partial<TDocument>[]) {
+    return this.model.insertMany(docs, { lean: true });
+  }
   async findOne(filterQuery: FilterQuery<TDocument>): Promise<TDocument> {
     const document = await this.model
       .findOne(filterQuery)

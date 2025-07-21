@@ -41,6 +41,7 @@ import { LabTestModule } from './lab-test/lab-test.module';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
 import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
         },
       }),
       inject: [ConfigService],
+      global: true
     }),
 
     LoggerModule,
@@ -143,7 +145,11 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
     ManageMedicalRecordModule,
     LabTestModule
   ],
-  controllers: [PatientsController, FavouriteDoctorController,PatientEventController],
+  controllers: [
+    PatientsController,
+    FavouriteDoctorController,
+    PatientEventController,
+  ],
   providers: [
     PatientsService,
     PatientRepository,
@@ -152,7 +158,7 @@ import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.sche
     FavouriteDoctorRepository,
 
     //  ManageMedicalRecordService, ManageMedicalReportRepository,
-    JwtModule,
+    JwtStrategy,
     PatientAccountRepository,
     PatientClinicLinkRepository,
     {

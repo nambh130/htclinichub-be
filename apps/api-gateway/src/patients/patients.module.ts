@@ -19,6 +19,8 @@ import { ClinicModule } from '../clinics/clinic.module';
 import { LabTestService } from './lab-test/lab-test.service';
 import { LabTestController } from './lab-test/lab-test.controller';
 import { ICDService } from './icd/icd.service';
+import { LabOrderService } from './lab-order/lab-order.service';
+import { LabOrderController } from './lab-order/lab-order.controller';
 
 @Module({
   imports: [
@@ -80,7 +82,7 @@ import { ICDService } from './icd/icd.service';
     StaffModule,
     ClinicModule,
   ],
-  controllers: [PatientsController, LabTestController],
+  controllers: [PatientsController, LabTestController, LabOrderController],
   providers: [
     PatientService,
     FavouriteDoctorService,
@@ -88,6 +90,7 @@ import { ICDService } from './icd/icd.service';
     AppointmentService,
     LabTestService,
     ICDService,
+    LabOrderService
   ],
   exports: [
     PatientService,
