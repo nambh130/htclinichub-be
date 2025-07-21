@@ -179,6 +179,9 @@ importers:
       typeorm:
         specifier: ^0.3.24
         version: 0.3.24(mongodb@6.16.0(@aws-sdk/credential-providers@3.821.0)(socks@2.8.4))(pg@8.16.0)(reflect-metadata@0.2.2)(ts-node@10.9.2(@swc/core@1.11.29)(@types/node@22.15.21)(typescript@5.8.3))
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0

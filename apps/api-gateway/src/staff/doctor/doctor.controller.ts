@@ -30,7 +30,10 @@ import { DoctorProfileDto, UpdateProfileDto } from '@app/common';
 import { SetupWorkingShiftDto } from '@app/common/dto/staffs/doctor/setup-working-shift.dto';
 import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
+import {
+  ImportMedicineDto,
+  UpdateMedicineDto,
+} from '@app/common/dto/staffs/medicine';
 
 @Controller('staff/doctor')
 export class DoctorController {
@@ -60,12 +63,14 @@ export class DoctorController {
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
     @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
+    @Query('clinicId') clinicId?: string,
   ) {
     return await this.doctorService.getDoctorListWithProfile(
       +page,
       +limit,
       search,
       searchField,
+      clinicId,
     );
   }
 
@@ -295,7 +300,7 @@ export class DoctorController {
     );
   }
 
-  @Delete(':id/remove-clinic/:clinicId')
+  @Delete('remove-clinic/:id/:clinicId')
   @UseGuards(JwtAuthGuard)
   async removeDoctorFromClinic(
     @Param('id') doctorId: string,
