@@ -1,15 +1,19 @@
 import { Module } from '@nestjs/common';
 import { CommunicationController } from './communication.controller';
 import { CommunicationService } from './communication.service';
-import { EmailService } from './email/email.service';
-import { SmsService } from './sms/sms.service';
+import { EmailService } from './services/email/email.service';
+import { SmsService } from './services/sms/sms.service';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { COMMUNICATION_CONSUMER_GROUP, COMMUNICATION_SERVICE, LoggerModule } from '@app/common';
+import {
+  COMMUNICATION_CONSUMER_GROUP,
+  COMMUNICATION_SERVICE,
+  LoggerModule,
+} from '@app/common';
 import Joi from 'joi';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -17,27 +21,40 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       isGlobal: true,
       envFilePath: '.env',
       validationSchema: Joi.object({
+        // Email configuration
         EMAIL_PASSWORD: Joi.string().required(),
         EMAIL_HOST: Joi.string().required(),
         EMAIL_PORT: Joi.string().required(),
         EMAIL_USERNAME: Joi.string().required(),
-      })
+        EMAIL_SECURE: Joi.boolean().default(false),
+        EMAIL_FROM: Joi.string().required(),
+
+        // eSMS configuration
+        ESMS_API_KEY: Joi.string().required(),
+        ESMS_SECRET_KEY: Joi.string().required(),
+        ESMS_BRANDNAME: Joi.string().required(),
+        ESMS_CALLBACK_URL: Joi.string().optional(),
+        ESMS_SANDBOX: Joi.boolean().default(false),
+
+        // Kafka configuration
+        KAFKA_BROKER: Joi.string().required(),
+      }),
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
+      useFactory: (config: ConfigService) => ({
         transport: {
-          host: config.get('EMAIL_HOST'),
-          port: config.get('EMAIL_PORT'),
-          secure: config.get('EMAIL_SECURE'),
+          host: config.get<string>('EMAIL_HOST'),
+          port: config.get<number>('EMAIL_PORT'),
+          secure: config.get<boolean>('EMAIL_SECURE'),
           auth: {
-            user: config.get('EMAIL_USERNAME'),
-            pass: config.get('EMAIL_PASSWORD'),
+            user: config.get<string>('EMAIL_USERNAME'),
+            pass: config.get<string>('EMAIL_PASSWORD'),
           },
         },
         defaults: {
-          from: `"htclinic" <${config.get('EMAIL_FROM')}>`,
+          from: `"htclinic" <${config.get<string>('EMAIL_FROM')}>`,
         },
         template: {
           dir: join(__dirname, 'email-templates'), // Folder for templates
@@ -57,7 +74,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
           options: {
             client: {
               clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get<string>('KAFKA_BROKER')],
             },
             consumer: {
               groupId: COMMUNICATION_CONSUMER_GROUP,
@@ -67,9 +84,9 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
         inject: [ConfigService],
       },
     ]),
-    LoggerModule
+    LoggerModule,
   ],
   controllers: [CommunicationController],
   providers: [CommunicationService, EmailService, SmsService],
 })
-export class CommunicationModule { }
+export class CommunicationModule {}

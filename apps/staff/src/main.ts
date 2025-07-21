@@ -44,7 +44,7 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get<number>('STAFF_SERVICE_PORT') as number;
+  const port = configService.get<number>('STAFF_SERVICE_PORT');
 
   // Start both HTTP and Kafka servers
   await app.startAllMicroservices();

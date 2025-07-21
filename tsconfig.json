@@ -21,38 +21,38 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@api-gateway/*": [
+        "apps/api-gateway/src/*"
+      ],
       "@app/common": [
         "libs/common/src"
       ],
       "@app/common/*": [
         "libs/common/src/*"
       ],
-      "@api-gateway/*": [
-        "apps/api-gateway/src/*"
-      ],
-      "@staff-gw/*": [
-        "apps/api-gateway/src/staff/*"
-      ],
-      "@clinics-gw/*": [
-        "apps/api-gateway/src/clinics/*"
-      ],
       "@auth-gw/*": [
         "apps/api-gateway/src/auth/*"
-      ],
-      "@media-gw/*": [
-        "apps/api-gateway/src/media/*"
       ],
       "@auth/*": [
         "apps/auth/src/*"
       ],
+      "@clinics-gw/*": [
+        "apps/api-gateway/src/clinics/*"
+      ],
       "@clinics/*": [
         "apps/clinics/src/*"
       ],
-      "@staff/*": [
-        "apps/staff/src/*"
+      "@media-gw/*": [
+        "apps/api-gateway/src/media/*"
       ],
       "@media/*": [
         "apps/media/src/*"
+      ],
+      "@staff-gw/*": [
+        "apps/api-gateway/src/staff/*"
+      ],
+      "@staff/*": [
+        "apps/staff/src/*"
       ]
     }
   }

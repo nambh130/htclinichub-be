@@ -8,6 +8,15 @@
     "tsConfigPath": "apps/reservations/tsconfig.app.json"
   },
   "projects": {
+    "analyze-healthcare-data": {
+      "type": "application",
+      "root": "apps/analyze-healthcare-data",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
+      }
+    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",
@@ -59,6 +68,15 @@
         ]
       }
     },
+    "media": {
+      "type": "application",
+      "root": "apps/media",
+      "entryFile": "main",
+      "sourceRoot": "apps/media/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/media/tsconfig.app.json"
+      }
+    },
     "patients": {
       "type": "application",
       "root": "apps/patients",
@@ -68,22 +86,13 @@
         "tsConfigPath": "apps/patients/tsconfig.app.json"
       }
     },
-    "analyze-healthcare-data": {
+    "payment": {
       "type": "application",
-      "root": "apps/analyze-healthcare-data",
+      "root": "apps/payment",
       "entryFile": "main",
-      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "sourceRoot": "apps/payment/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
-      }
-    },
-    "media": {
-      "type": "application",
-      "root": "apps/media",
-      "entryFile": "main",
-      "sourceRoot": "apps/media/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/media/tsconfig.app.json"
+        "tsConfigPath": "apps/payment/tsconfig.app.json"
       }
     },
     "reservations": {

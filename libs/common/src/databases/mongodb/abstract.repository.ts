@@ -32,6 +32,11 @@ export abstract class MongoAbstractRepository<
     return document;
   }
 
+  async count(filterQuery: FilterQuery<TDocument>): Promise<number> {
+    const count = await this.model.countDocuments(filterQuery).exec();
+    return count;
+  }
+
   async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,
     update: UpdateQuery<TDocument>,

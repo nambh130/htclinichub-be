@@ -37,6 +37,7 @@ import { Appointment } from './models/appointment.entity';
 import { FavouriteDoctorController } from './favourite-doctor/favourite_doctor.controller';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { PatientEventController } from './patients-event.controller';
+import { LabTestModule } from './lab-test/lab-test.module';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
 import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
@@ -149,6 +150,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     // Import Postgre module con
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
+    LabTestModule,
     forwardRef(() => PrescriptionModule),
   ],
   controllers: [PatientsController, FavouriteDoctorController, PatientEventController, PrescriptionController],
