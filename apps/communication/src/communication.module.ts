@@ -33,8 +33,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         ESMS_API_KEY: Joi.string().required(),
         ESMS_SECRET_KEY: Joi.string().required(),
         ESMS_BRANDNAME: Joi.string().required(),
-        ESMS_CALLBACK_URL: Joi.string().optional(),
-        ESMS_SANDBOX: Joi.boolean().default(false),
+        // ESMS_CALLBACK_URL: Joi.string().optional(),
+        // ESMS_SANDBOX: Joi.boolean().default(false),
 
         // Kafka configuration
         KAFKA_BROKER: Joi.string().required(),

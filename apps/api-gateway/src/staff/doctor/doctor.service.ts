@@ -23,7 +23,7 @@ export class DoctorService {
   constructor(
     private readonly mediaService: MediaService,
     @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
-  ) { }
+  ) {}
 
   // ============================================================================
   // HELPER METHODS
@@ -56,6 +56,7 @@ export class DoctorService {
     limit = 10,
     search?: string,
     searchField?: 'name' | 'email' | 'phone' | 'all',
+    clinicId?: string,
   ): Promise<unknown> {
     try {
       const params: {
@@ -63,17 +64,11 @@ export class DoctorService {
         limit: number;
         search?: string;
         searchField?: string;
-      } = {
-        page,
-        limit,
-      };
-      if (search) {
-        params.search = search;
-      }
-      if (searchField) {
-        params.searchField = searchField;
-      }
-
+        clinicId?: string;
+      } = { page, limit };
+      if (search) params.search = search;
+      if (searchField) params.searchField = searchField;
+      if (clinicId) params.clinicId = clinicId;
       const response = await firstValueFrom(
         this.staffService.get(`/staff/doctor/account-list-with-profile`, {
           params,
@@ -86,7 +81,7 @@ export class DoctorService {
         if (axiosError.response?.data) {
           throw new HttpException(
             (axiosError.response.data as Record<string, unknown>).message ||
-            'Service error',
+              'Service error',
             axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
@@ -126,8 +121,8 @@ export class DoctorService {
     if (staffInfo) {
       staffInfo.profile_img = staffInfo.profile_img_id
         ? ((await this.mediaService.getFileById(
-          staffInfo.profile_img_id,
-        )) as Media | null)
+            staffInfo.profile_img_id,
+          )) as Media | null)
         : null;
 
       for (const degree of staffInfo.degrees ?? []) {
@@ -250,7 +245,7 @@ export class DoctorService {
         if (axiosError.response?.data) {
           throw new HttpException(
             (axiosError.response.data as Record<string, unknown>).message ||
-            'Failed to update doctor profile',
+              'Failed to update doctor profile',
             axiosError.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }

@@ -1,4 +1,11 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator"
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateInvitationDto {
   @IsEmail()
@@ -7,15 +14,15 @@ export class CreateInvitationDto {
 
   @IsUUID()
   @IsNotEmpty()
-  clinic: string
+  clinic: string;
 
   @IsOptional()
   @IsString()
-  clinicName?: string
+  clinicName?: string;
 
   @IsUUID()
   @IsNotEmpty()
-  role: string
+  role: string;
 
   @IsBoolean()
   @IsOptional()
