@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DoctorRepository } from '../../repositories/doctor.repository';
 import { ManageDoctorScheduleRepository } from './manage-doctor-schedule.repository';
 import dayjs from 'dayjs';
@@ -11,7 +11,6 @@ import { ClinicRepository } from '../../clinic/clinic.repository';
 import { ChangeWorkingShiftDto } from '@app/common/dto/staffs/doctor/change-working-shift.dto';
 import { DoctorClinicRepo } from '../../repositories/doctor-clinic-map.repository';
 import { Between } from 'typeorm';
-import { spawn } from 'child_process';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -152,6 +151,30 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Doctor-clinic link not found');
     }
 
+    const startTime = new Date(dto.startTime);
+    const durationMs = this.parseDurationToMilliseconds(dto.duration); // convert "02:00:00" to milliseconds
+    const endTime = new Date(startTime.getTime() + durationMs);
+
+    // ✅ Lấy tất cả các ca làm việc đã có của bác sĩ tại clinic
+    const existingShifts = await this.manageDoctorScheduleRepository.findMany({ doctor_clinic_link_id: { id: dto.doctor_clinic_link_id } });
+
+    // ✅ Kiểm tra trùng lịch
+    for (const shift of existingShifts) {
+      const existingStart = new Date(shift.startTime);
+      const existingDurationMs = this.parseDurationToMilliseconds(shift.duration);
+
+      const existingEnd = new Date(existingStart.getTime() + existingDurationMs);
+
+      const isOverlap =
+        (startTime >= existingStart && startTime < existingEnd) ||
+        (endTime > existingStart && endTime <= existingEnd) ||
+        (startTime <= existingStart && endTime >= existingEnd);
+
+      if (isOverlap) {
+        throw new BadRequestException('Lịch bị trùng với ca làm việc đã có');
+      }
+    }
+
     const workShift = new Doctor_WorkShift();
     workShift.doctor_clinic_link_id = doctorClinicLink;
     workShift.startTime = new Date(dto.startTime);
@@ -159,7 +182,6 @@ export class ManageDoctorScheduleService extends BaseService {
     workShift.space = dto.space || 0;
     workShift.createdById = currentUser.userId;
     workShift.createdByType = currentUser.actorType;
-    //missing space
     workShift.space = dto.space;
     return await this.manageDoctorScheduleRepository.create(workShift);
   }
@@ -175,20 +197,54 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Doctor not found');
     }
 
-    const shift = await this.manageDoctorScheduleRepository.findOne({
-      id: shiftId,
-    });
+    const shift = await this.manageDoctorScheduleRepository.findOne(
+      { id: shiftId },
+      ['doctor_clinic_link_id']
+    );
 
     if (!shift) {
       throw new NotFoundException('Shift not found');
     }
 
+    // Dự đoán thời gian mới để kiểm tra trùng (nếu có startTime hoặc duration mới)
+    const newStart = dto.startTime ? new Date(dto.startTime) : new Date(shift.startTime);
+    const newDuration = dto.duration || shift.duration;
+
+    const newDurationMs = this.parseDurationToMilliseconds(newDuration);
+    const newEnd = new Date(newStart.getTime() + newDurationMs);
+
+    // ✅ Lấy tất cả các ca làm cùng doctor-clinic, loại trừ chính ca hiện tại
+    const existingShifts = await this.manageDoctorScheduleRepository.findMany({
+      doctor_clinic_link_id: { id: shift.doctor_clinic_link_id.id },
+    });
+
+    //  const existingShifts = await this.manageDoctorScheduleRepository.findMany({ doctor_clinic_link_id: { id: shift.doctor_clinic_link_id. }});
+
+
+    for (const existing of existingShifts) {
+      if (existing.id === shift.id) continue; // Bỏ qua chính ca hiện tại
+
+      const existingStart = new Date(existing.startTime);
+      const existingDurationMs = this.parseDurationToMilliseconds(existing.duration);
+      const existingEnd = new Date(existingStart.getTime() + existingDurationMs);
+
+      const isOverlap =
+        (newStart >= existingStart && newStart < existingEnd) ||
+        (newEnd > existingStart && newEnd <= existingEnd) ||
+        (newStart <= existingStart && newEnd >= existingEnd);
+
+      if (isOverlap) {
+        throw new BadRequestException('Lịch bị trùng với ca làm việc đã có');
+      }
+    }
+
+    // ✅ Cập nhật các trường mới
     if (dto.startTime) {
-      shift.startTime = new Date(dto.startTime);
+      shift.startTime = newStart;
     }
 
     if (dto.duration) {
-      shift.duration = dto.duration;
+      shift.duration = newDuration;
     }
 
     if (typeof dto.space === 'number' && dto.space >= 0) {
@@ -198,18 +254,19 @@ export class ManageDoctorScheduleService extends BaseService {
     shift.updatedById = currentUser.userId;
     shift.updatedByType = currentUser.actorType;
 
-    // 6. Lưu lại
+    // ✅ Lưu lại
     return await this.manageDoctorScheduleRepository.findOneAndUpdate(
       { id: shiftId },
       {
-        ...(dto.startTime && { startTime: new Date(dto.startTime) }),
-        ...(dto.duration && { duration: dto.duration }),
-        ...(dto.space && { space: dto.space }),
+        ...(dto.startTime && { startTime: newStart }),
+        ...(dto.duration && { duration: newDuration }),
+        ...(dto.space !== undefined && { space: dto.space }),
         updatedById: currentUser.userId,
         updatedByType: currentUser.actorType,
       },
     );
   }
+
 
   async getShiftsInDate(date: string, doctorId: string, clinicId: string) {
     if (!doctorId || !date) {
@@ -246,7 +303,7 @@ export class ManageDoctorScheduleService extends BaseService {
       },
     });
 
-    
+
     return {
       doctorId: doctor.id,
       doctorName: doctor.staffInfo?.full_name ?? null,
@@ -322,5 +379,32 @@ export class ManageDoctorScheduleService extends BaseService {
       throw new NotFoundException('Shift not found');
     }
     return await this.manageDoctorScheduleRepository.findOneAndUpdate({ id: shiftId }, { status: 'fully-booked' });
+  }
+
+  parseDurationToMilliseconds(duration: any): number {
+    if (typeof duration === 'string') {
+      const [hours, minutes, seconds] = duration.split(':').map(Number);
+      return ((hours * 60 + minutes) * 60 + (seconds || 0)) * 1000;
+    }
+
+    // PostgreSQL interval object (typeORM)
+    if (typeof duration === 'object' && duration !== null) {
+      const hours = Number(duration.hours || 0);
+      const minutes = Number(duration.minutes || 0);
+      const seconds = Number(duration.seconds || 0);
+      return ((hours * 60 + minutes) * 60 + seconds) * 1000;
+    }
+
+    throw new Error('Invalid duration format');
+  }
+
+async getDoctorClinicLinkByDoctorIdAndClinicId(doctorId: string, clinicId: string) {
+    // Tìm mapping giữa doctor và clinic
+    const mapping = await this.doctorClinicRepo.findOne({
+      doctor: { id: doctorId },
+      clinic: { id: clinicId },
+    });
+
+    return mapping.id;
   }
 }

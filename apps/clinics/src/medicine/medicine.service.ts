@@ -64,12 +64,27 @@ export class MedicineService extends BaseService {
             const savedList: Medicine[] = [];
 
             for (const dto of rows) {
-              const medicine = new Medicine();
-              Object.assign(medicine, dto);
-              medicine.clinic_id = { id: clinicId } as any;
+              // Check if medicine with the same code already exists in the clinic
+              const existing = await this.medicineRepository.findOne({
+                code: dto.code,
+                clinic_id: { id: clinicId },
+              }
+              );
 
-              const saved = await this.medicineRepository.create(medicine);
-              savedList.push(saved);
+              if (existing) {
+                // Update existing medicine
+                Object.assign(existing, dto);
+                const updated = await this.medicineRepository.update(existing, dto);
+                savedList.push(updated);
+              } else {
+                // Create new medicine
+                const newMedicine = new Medicine();
+                Object.assign(newMedicine, dto);
+                newMedicine.clinic_id = { id: clinicId } as any;
+
+                const saved = await this.medicineRepository.create(newMedicine);
+                savedList.push(saved);
+              }
             }
 
             resolve({
@@ -99,6 +114,15 @@ export class MedicineService extends BaseService {
     const clinic = await this.clinicRepository.findOne({ id: clinicId });
     if (!clinic) {
       throw new NotFoundException('Doctor not found');
+    }
+
+    const existing = await this.medicineRepository.findOne({
+      code: dto.code,
+      clinic_id: { id: clinicId }
+    });
+
+    if (existing) {
+      throw new BadRequestException(`Mã thuốc "${dto.code}" đã tồn tại trong phòng khám.`);
     }
 
     const medicine = new Medicine();

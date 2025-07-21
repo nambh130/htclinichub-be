@@ -428,4 +428,26 @@ export class DoctorController {
       throw error;
     }
   }
+
+  //
+    @Get('/get-doctor-clinic-link/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorClinicLinkByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const shifts =
+        await this.manageDoctorScheduleService.getDoctorClinicLinkByDoctorIdAndClinicId(
+          doctorId,
+          clinicId,
+          user,
+        );
+      return shifts;
+    } catch (error) {
+      console.error('Error retrieving shifts:', error);
+      throw error;
+    }
+  }
 }

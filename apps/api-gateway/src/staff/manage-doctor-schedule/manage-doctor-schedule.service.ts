@@ -151,4 +151,31 @@ export class ManageDoctorScheduleService {
       throw error;
     }
   }
+
+  async getDoctorClinicLinkByDoctorIdAndClinicId(
+    doctorId: string,
+    clinicId: string,
+    user: TokenPayload,
+  ) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `/manage-doctor-schedule/doctor/get-doctor-clinic-link/${doctorId}/${clinicId}`,
+          {
+            params: {
+              doctorId: user.userId,
+            },
+          },
+        ),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Error retrieving working shift:',
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
+  }
 }

@@ -2,6 +2,10 @@ import { IsString, IsDateString, IsBoolean, IsOptional, Matches, IsNotEmpty, IsN
 
 export class ChangeWorkingShiftDto {
     @IsOptional()
+    @IsString()
+    doctor_clinic_link_id: string;
+
+    @IsOptional()
     @IsDateString()
     startTime?: string; // ISO format: '2025-07-01T08:00:00Z'
 
@@ -17,7 +21,7 @@ export class ChangeWorkingShiftDto {
         message: 'status must be one of: available, booked, or cancelled',
     })
     status?: 'available' | 'booked' | 'cancelled';
- 
+
     @IsOptional()
     @IsNumber()
     space?: number;
