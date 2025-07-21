@@ -6,6 +6,7 @@ import { ImagingTemplate, ImagingTemplateSchema } from "./imaging-template.schem
 export type TestType = 'LAB' | 'IMAGING'
 export enum TestEnum { LAB = 'LAB', IMAGE = 'IMAGING' }
 
+//Base template
 @Schema({ timestamps: true, discriminatorKey: 'testType' })
 export class LabTest extends MongoAbstractDocument {
   @Prop()

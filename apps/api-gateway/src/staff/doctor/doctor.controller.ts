@@ -309,7 +309,7 @@ export class DoctorController {
     return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
   }
 
-  @Get('/doctor/view-working-shift/:doctorId')
+  @Get('/view-working-shift/:doctorId')
   @UseGuards(JwtAuthGuard)
   async getViewWorkingShift(
     @Param('doctorId') doctorId: string,
@@ -328,7 +328,7 @@ export class DoctorController {
     }
   }
 
-  @Get('/doctor/detail-shift/:shiftId')
+  @Get('/detail-shift/:shiftId')
   @UseGuards(JwtAuthGuard)
   async getDetailShiftByShiftId(
     @Param('shiftId') shiftId: string,
@@ -346,7 +346,7 @@ export class DoctorController {
     }
   }
 
-  @Post('/doctor/setup-working-shift/:doctorId')
+  @Post('/setup-working-shift/:doctorId')
   @UseGuards(JwtAuthGuard)
   async setUpWorkingShiftByDoctorId(
     @Param('doctorId') doctorId: string,
@@ -368,7 +368,7 @@ export class DoctorController {
     }
   }
 
-  @Put('/doctor/:doctorId/change-working-shift/:shiftId')
+  @Put('/:doctorId/change-working-shift/:shiftId')
   @UseGuards(JwtAuthGuard)
   async changeWorkingShiftByDoctorId(
     @Param('doctorId') doctorId: string,
@@ -391,7 +391,7 @@ export class DoctorController {
     }
   }
 
-  @Get('/doctor/shifts-by-date/:clinicId/:doctorId/:date')
+  @Get('/shifts-by-date/:clinicId/:doctorId/:date')
   @UseGuards(JwtAuthGuard)
   async getDoctorShiftsByDate(
     @Param('clinicId') clinicId: string,
@@ -413,7 +413,7 @@ export class DoctorController {
     }
   }
 
-  @Get('doctor/shifts/:doctorId/:clinicId')
+  @Get('/shifts/:doctorId/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getShiftsByDoctorIdAndClinicId(
     @Param('doctorId') doctorId: string,

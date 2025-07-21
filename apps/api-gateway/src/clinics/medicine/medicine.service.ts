@@ -8,7 +8,7 @@ import FormData from 'form-data';
 @Injectable()
 export class MedicineService {
     constructor(
-        @Inject(STAFF_SERVICE) private readonly staffService: HttpService,
+        @Inject('CLINIC_HTTP_SERVICE') private readonly httpService: HttpService,
     ) { }
     async importMedicineCsvHttp(file: Express.Multer.File, clinicId: string) {
         const form = new FormData();
@@ -18,7 +18,7 @@ export class MedicineService {
         });
 
         const response = await firstValueFrom(
-            this.staffService.post(`medicine/import-csv-to-medicine-data/${clinicId}`, form, {
+            this.httpService.post(`medicine/import-csv-to-medicine-data/${clinicId}`, form, {
                 headers: form.getHeaders(),
             }
             ))
@@ -27,7 +27,7 @@ export class MedicineService {
 
     async createMedicine(dto: ImportMedicineDto, clinicId: string, currentUser: TokenPayload) {
         const response = await firstValueFrom(
-            this.staffService.post(`medicine/input-data-to-medicine-data/${clinicId}`, {
+            this.httpService.post(`medicine/input-data-to-medicine-data/${clinicId}`, {
                 dto,
                 currentUser,
             }),
@@ -38,7 +38,7 @@ export class MedicineService {
 
     async getMedicineClinicId(clinicId: string, currentUser: TokenPayload) {
         const response = await firstValueFrom(
-            this.staffService.get(`medicine/medicine-data/${clinicId}`));
+            this.httpService.get(`medicine/medicine-data/${clinicId}`));
         return response.data;
     }
 
@@ -53,7 +53,7 @@ export class MedicineService {
             : `medicine/search-medicine/${clinicId}`;
 
         const response = await firstValueFrom(
-            this.staffService.get(url),
+            this.httpService.get(url),
         );
 
         return response.data;
@@ -61,16 +61,38 @@ export class MedicineService {
 
     async medicineInfo(clinicId: string, medicineInfo: string) {
         const response = await firstValueFrom(
-            this.staffService.get(`medicine/medicine-info/${clinicId}/${medicineInfo}`));
+            this.httpService.get(`medicine/medicine-info/${clinicId}/${medicineInfo}`));
         return response.data;
     }
 
     async medicineUpdate(clinicId: string, medicineId: string, dto: UpdateMedicineDto, currentUser: TokenPayload) {
         const response = await firstValueFrom(
-            this.staffService.put(`medicine/${clinicId}/update-medicine/${medicineId}`, {
+            this.httpService.put(`medicine/${clinicId}/update-medicine/${medicineId}`, {
                 dto,
                 currentUser,
             }),
+        );
+
+        return response.data;
+    }
+
+    async exportMedicineDataToCSV(clinicId: string, currentUser: TokenPayload) {
+        return firstValueFrom(
+            this.httpService.get(`medicine/export_medicine_csv/${clinicId}`));
+    }
+
+    async getMedicineByCategory(
+        clinicId: string,
+        currentUser: TokenPayload,
+        category?: string,   
+    ) {
+        // Build URL có hoặc không có search
+        const url = category
+            ? `medicine/filter-category/${clinicId}?category=${encodeURIComponent(category)}`
+            : `medicine/filter-category/${clinicId}`;
+
+        const response = await firstValueFrom(
+            this.httpService.get(url),
         );
 
         return response.data;

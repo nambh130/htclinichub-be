@@ -36,9 +36,11 @@ export class InvitationsController {
     @Body() createInvitationDto: CreateInvitationDto,
     @CurrentUser() user: TokenPayload,
   ) {
+    console.log('check user: ', user)
     return await this.invitationService.createInvitationWithValidation(createInvitationDto, {
       id: user.userId,
       type: user.actorType,
+      adminOf: user.adminOf
     });
   }
 

@@ -96,10 +96,37 @@ export class MedicineController {
     try {
       const { dto, currentUser } = payload;
       // console.log(payload);
-      const shift = await this.medicineService.medicineUpdate(clinicId, medicineId ,dto);
+      const shift = await this.medicineService.medicineUpdate(clinicId, medicineId, dto);
       return shift;
     } catch (error) {
       console.error('Error in getPatientById:', error);
+      throw error;
+    }
+  }
+
+  @Get('export_medicine_csv/:clinicId')
+  async handleExportCSV(
+    @Param('clinicId') clinicId: string,
+  ) {
+    try {
+      const result = await this.medicineService.exportMedicineDataToCSV(clinicId);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
+
+  @Get('filter-category/:clinicId')
+  async getMedicineByCategory(
+    @Param('clinicId') clinicId: string,
+    @Query('category') category: string,
+  ) {
+    try {
+      const result = await this.medicineService.getMedicineByCategory(clinicId, category);
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medicine data:', error);
       throw error;
     }
   }

@@ -28,11 +28,3 @@ export class LabField extends MongoAbstractDocument{
   };
 }
 export const LabFieldSchema = SchemaFactory.createForClass(LabField);
-
-//@Schema()
-//export class LabTemplate {
-//  @Prop({ type: [LabFieldSchema] })
-//  fields: LabField[];
-//}
-//
-//export const LabTemplateSchema = SchemaFactory.createForClass(LabTemplate);

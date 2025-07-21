@@ -5,10 +5,10 @@ import { BaseService } from '@app/common';
 import { MedicineRepository } from './medicine.repository';
 import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/medicine';
 import { plainToInstance } from 'class-transformer';
-import { Medicine } from '../../models/medicine.entity';
 import stripBomStream from 'strip-bom-stream';
 import { ClinicRepository } from '../clinic.repository';
 import { Brackets } from 'typeorm';
+import { Medicine } from '@clinics/models';
 @Injectable()
 export class MedicineService extends BaseService {
   constructor(
@@ -53,6 +53,9 @@ export class MedicineService extends BaseService {
             timesPerDay: parseInt(row['timesPerDay'], 10) || 0,
             dosePerTime: row['dosePerTime'],
             schedule: row['schedule'],
+            madeIn: row['madeIn'],
+            category: row['category'],
+
           });
           rows.push(dto);
         })
@@ -108,6 +111,8 @@ export class MedicineService extends BaseService {
     medicine.quantity = dto.quantity;
     medicine.timesPerDay = dto.timesPerDay;
     medicine.dosePerTime = dto.dosePerTime;
+    medicine.madeIn = dto.madeIn;
+    medicine.category = dto.category;
     medicine.schedule = dto.schedule;
     medicine.createdById = clinicId;
 
@@ -123,6 +128,8 @@ export class MedicineService extends BaseService {
       quantity: result.quantity,
       timesPerDay: result.timesPerDay,
       dosePerTime: result.dosePerTime,
+      madeIn: result.madeIn,
+      category: result.category,
       schedule: result.schedule,
       clinicId: result.clinic_id?.id ?? null,
       clinicName: result.clinic_id?.name ?? null
@@ -156,8 +163,11 @@ export class MedicineService extends BaseService {
         quantity: medicine.quantity,
         timesPerDay: medicine.timesPerDay,
         dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
         schedule: medicine.schedule,
-        stauts: medicine.status
+        status: medicine.status,
+        createdAt: medicine.createdAt
       })),
     };
 
@@ -201,8 +211,11 @@ export class MedicineService extends BaseService {
         quantity: medicine.quantity,
         timesPerDay: medicine.timesPerDay,
         dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
         schedule: medicine.schedule,
-        stauts: medicine.status
+        status: medicine.status,
+        createdAt: medicine.createdAt
       })),
     };
   }
@@ -232,8 +245,11 @@ export class MedicineService extends BaseService {
       quantity: result.quantity,
       timesPerDay: result.timesPerDay,
       dosePerTime: result.dosePerTime,
+      madeIn: result.madeIn,
+      category: result.category,
       schedule: result.schedule,
-      stauts: result.status
+      status: result.status,
+      createdAt: result.createdAt
     };
   }
 
@@ -267,9 +283,80 @@ export class MedicineService extends BaseService {
       timesPerDay: updated.timesPerDay,
       dosePerTime: updated.dosePerTime,
       schedule: updated.schedule,
+      category: updated.category,
+      madeIn: updated.madeIn,
       status: updated.status,
       clinicId: clinic.id,
       clinicName: clinic.name,
     };
   }
+
+  async exportMedicineDataToCSV(clinicId: string) {
+    const clinic = await this.clinicRepository.findOne({ id: clinicId });
+
+    const result = await this.medicineRepository.find({
+      clinic_id: {
+        id: clinicId,
+      },
+    });
+    if (!result.length) {
+      return {
+        csv: 'No data found',
+        clinicName: clinic?.name || 'clinic',
+      };
+    }
+
+    if (!result.length) {
+      return {
+        csv: '\uFEFFNo data found',
+        clinicName: clinic?.name || 'clinic',
+      };
+    }
+
+    const header = 'id;code;name;concentration;ingredient;unit;quantity;timesPerDay;dosePerTime;madeIn;category;schedule;status\n';
+
+    const rows = result.map(m =>
+      `${m.id};${m.code};${m.name};${m.concentration};${m.ingredient};${m.unit};${m.quantity};${m.timesPerDay};${m.dosePerTime};${m.madeIn};${m.category};${m.schedule};${m.status}`
+    ).join('\n');
+
+    const bom = '\uFEFF'; // ✅ BOM để Excel hiểu UTF-8
+    return {
+      csv: bom + header + rows,
+      clinicName: clinic?.name || 'clinic',
+    };
+  }
+
+  async getMedicineByCategory(clinicId: string, category: string) {
+    const clinic = await this.clinicRepository.findOne({ id: clinicId });
+    if (!clinic) {
+      throw new NotFoundException('Clinic not found');
+    }
+
+    const result = await this.medicineRepository.find({
+      category: category
+    });
+
+    return {
+      clinicId: clinic.id,
+      clinicName: clinic.name,
+      medicines: result.map((medicine) => ({
+        id: medicine.id,
+        code: medicine.code,
+        name: medicine.name,
+        concentration: medicine.concentration,
+        ingredient: medicine.ingredient,
+        unit: medicine.unit,
+        quantity: medicine.quantity,
+        timesPerDay: medicine.timesPerDay,
+        dosePerTime: medicine.dosePerTime,
+        madeIn: medicine.madeIn,
+        category: medicine.category,
+        schedule: medicine.schedule,
+        status: medicine.status,
+        createdAt: medicine.createdAt
+      })),
+    };
+  }
+
+
 }

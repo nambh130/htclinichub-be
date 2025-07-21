@@ -5,5 +5,5 @@ export class CreateClinicDto {
 
   @IsUUID()
   @IsOptional()
-  owner: string;
+  ownerId: string;
 }
