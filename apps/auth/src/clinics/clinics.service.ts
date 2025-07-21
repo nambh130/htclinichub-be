@@ -14,10 +14,10 @@ export class ClinicsService {
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
     const newClinic: Partial<Clinic> = { id: createClinicDto.id };
 
-    if (createClinicDto.owner) {
+    if (createClinicDto.ownerId) {
       try {
         const owner = await this.clinicUserRepository.findOne({
-          id: createClinicDto.owner,
+          id: createClinicDto.ownerId,
         });
         newClinic.owner = owner;
       } catch (error) {
