@@ -3,9 +3,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class EmailService {
-  constructor(
-    private readonly mailerService: MailerService
-  ) { }
+  constructor(private readonly mailerService: MailerService) {}
 
   async sendInvitationEmail(to: string, token: string) {
     await this.mailerService.sendMail({
@@ -20,7 +18,12 @@ export class EmailService {
     });
   }
 
-  async sendInvitation(to: string, roleName: string, clinicName: string, invitationLink: string) {
+  async sendInvitation(
+    to: string,
+    roleName: string,
+    clinicName: string,
+    invitationLink: string,
+  ) {
     await this.mailerService.sendMail({
       to,
       subject: 'Thư mời tham gia hệ thống.',
@@ -35,7 +38,7 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(to: string, resetLink: string) {
-    console.log(to, resetLink)
+    console.log(to, resetLink);
     await this.mailerService.sendMail({
       to,
       subject: 'Khôi phục mật khẩu HTClinic hub',
@@ -47,5 +50,4 @@ export class EmailService {
       },
     });
   }
-
 }

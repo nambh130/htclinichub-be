@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Clinic } from '../models/clinics.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { PostgresAbstractRepository } from '@app/common';

@@ -43,6 +43,14 @@ export class UpdateMedicineDto {
   schedule: string;
 
   @IsOptional()
+  @IsString()
+  madeIn: string;
+
+  @IsOptional()
+  @IsEnum(['Thuốc', 'Thực phẩm chức năng', 'Vaccine', 'Dược mỹ phẩm	', 'Dung dịch tiêm truyền', 'Hóa chất'])
+  category: 'Thuốc' | 'Thực phẩm chức năng' | 'Vaccine' | 'Dược mỹ phẩm' | 'Dung dịch tiêm truyền' | 'Hóa chất';
+
+  @IsOptional()
   @IsEnum(['DANG_SU_DUNG', 'TAM_NGUNG', 'NGUNG_LUU_HANH'])
   status: 'DANG_SU_DUNG' | 'TAM_NGUNG' | 'NGUNG_LUU_HANH';
 }

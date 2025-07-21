@@ -1,5 +1,5 @@
 // apps/patients/patients.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PatientsService } from './patients.service';
 import { PatientsController } from './patients.controller';
@@ -42,6 +42,11 @@ import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
 import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { PrescriptionDetail, PrescriptionDetailSchema } from './models/prescription_detail.schema';
+import { PrescriptionModule } from './prescription_detail/prescription_detail.module';
+import { PrescriptionController } from './prescription_detail/prescription_detail.controller';
+import { PrescriptionService } from './prescription_detail/prescription_detail.service';
+import { PrescriptionRepository } from './prescription_detail/prescription_detail.repository';
 
 @Module({
   imports: [
@@ -82,6 +87,10 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
         {
           name: MedicalRecord.name,
           schema: MedicalRecordSchema,
+        },
+        {
+          name: PrescriptionDetail.name,
+          schema: PrescriptionDetailSchema,
         },
       ],
       'patientService',
@@ -143,12 +152,14 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
     // Import Postgre module con
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
-    LabTestModule
+    LabTestModule,
+    forwardRef(() => PrescriptionModule),
   ],
   controllers: [
     PatientsController,
     FavouriteDoctorController,
     PatientEventController,
+    PrescriptionController
   ],
   providers: [
     PatientsService,
@@ -167,6 +178,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
     },
     AppointmentRepository,
     ICDRepository,
+    PrescriptionService, PrescriptionRepository
   ],
   exports: [
     PatientsService,
@@ -178,6 +190,7 @@ import { JwtStrategy } from '@app/common/auth/jwt.strategy';
     PatientClinicLinkRepository,
     AppointmentRepository,
     ICDRepository,
+    PrescriptionService, PrescriptionRepository
   ],
 })
-export class PatientsModule {}
+export class PatientsModule { }

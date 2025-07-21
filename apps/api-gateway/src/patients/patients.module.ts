@@ -21,6 +21,7 @@ import { LabTestController } from './lab-test/lab-test.controller';
 import { ICDService } from './icd/icd.service';
 import { LabOrderService } from './lab-order/lab-order.service';
 import { LabOrderController } from './lab-order/lab-order.controller';
+import { PrescriptionService } from './prescription_detail/prescription_detail.service';
 
 @Module({
   imports: [
@@ -90,7 +91,8 @@ import { LabOrderController } from './lab-order/lab-order.controller';
     AppointmentService,
     LabTestService,
     ICDService,
-    LabOrderService
+    LabOrderService,
+    PrescriptionService
   ],
   exports: [
     PatientService,
@@ -98,6 +100,7 @@ import { LabOrderController } from './lab-order/lab-order.controller';
     ManageMedicalRecordService,
     AppointmentService,
     ICDService,
+    PrescriptionService,
   ],
 })
 export class PatientsModule { }

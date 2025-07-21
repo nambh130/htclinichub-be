@@ -1,15 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { MedicineService } from "./medicine.service";
 import { CurrentUser, JwtAuthGuard, TokenPayload } from "@app/common";
 import { ImportMedicineDto, UpdateMedicineDto } from "@app/common/dto/staffs/medicine";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { Response } from 'express';
 
-@Controller('staff/medicine')
+@Controller('clinic/medicine')
 export class MedicineController {
   constructor(
     private readonly medicineService: MedicineService,
-  ) {}
-@Post('/clinic/import-csv-to-medicine-data/:clinicId')
+  ) { }
+  @Post('/import-csv-to-medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async importMedicineData(
@@ -25,7 +26,7 @@ export class MedicineController {
     }
   }
 
-  @Post('/clinic/input-data-to-medicine-data/:clinicId')
+  @Post('/input-data-to-medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   async createMedicine(
     @Param('clinicId') clinicId: string,
@@ -42,22 +43,22 @@ export class MedicineController {
     }
   }
 
-  @Get('/clinic/medicine-data/:clinicId')
+  @Get('/medicine-data/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getMedicineClinicId(
     @Param('clinicId') clinicId: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const shifts = await this.medicineService.getMedicineClinicId(clinicId, currentUser);
-      return shifts;
+      const medicines = await this.medicineService.getMedicineClinicId(clinicId, currentUser);
+      return medicines;
     } catch (error) {
       console.error('Error retrieving shifts:', error);
       throw error;
     }
   }
 
-  @Get('/clinic/search-medicine/:clinicId')
+  @Get('/search-medicine/:clinicId')
   @UseGuards(JwtAuthGuard)
   async searchMedicine(
     @Param('clinicId') clinicId: string,
@@ -73,7 +74,7 @@ export class MedicineController {
     }
   }
 
-  @Get('/clinic/:clinicId/medicine-info/:medicineId')
+  @Get('/:clinicId/medicine-info/:medicineId')
   @UseGuards(JwtAuthGuard)
   async medicineInfo(
     @Param('clinicId') clinicId: string,
@@ -81,15 +82,15 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const medicines = await this.medicineService.medicineInfo(clinicId, medicineId);
-      return medicines;
+      const medicine = await this.medicineService.medicineInfo(clinicId, medicineId);
+      return medicine;
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
       throw error;
     }
   }
 
-  @Put('/clinic/:clinicId/update-medicine/:medicineId')
+  @Put('/:clinicId/update-medicine/:medicineId')
   @UseGuards(JwtAuthGuard)
   async medicineUpdate(
     @Param('clinicId') clinicId: string,
@@ -98,10 +99,49 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      const medicines = await this.medicineService.medicineUpdate(clinicId, medicineId, dto, currentUser);
-      return medicines;
+      const medicine = await this.medicineService.medicineUpdate(clinicId, medicineId, dto, currentUser);
+      return medicine;
     } catch (error) {
       console.error('Error retrieving medicine data:', error);
+      throw error;
+    }
+  }
+
+  @Get('/export-medicine/:clinicId') //thay vì bấm send -> chọn send & download
+  @UseGuards(JwtAuthGuard)
+  async exportMedicinesToCSV(
+    @Param('clinicId') clinicId: string,
+    @Res() res: Response,
+    @CurrentUser() currentUser: TokenPayload,
+
+  ) {
+    try {
+      const response = await this.medicineService.exportMedicineDataToCSV(clinicId, currentUser);
+      const { csv, clinicName } = response.data;
+      const safeName = clinicName.replace(/[^a-zA-Z0-9-_]/g, '_');
+      const fileName = `${safeName}-medicine-data.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting medicine data:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  }
+
+  @Get('medicine-data/:clinicId/by-category')
+  @UseGuards(JwtAuthGuard)
+  async getMedicineByCategory(
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+    @Query('category') category?: string,
+  ) {
+    try {
+      const medicineList = await this.medicineService.getMedicineByCategory(clinicId, currentUser, category);
+      return medicineList;
+    } catch (error) {
+      console.error('Error in getMedicineClinicId:', error);
       throw error;
     }
   }

@@ -103,7 +103,7 @@ export class ClinicController {
     return this.clinicService.getClinicStaff(clinicId, queryParams.toString());
   }
 
-  @Get('get-schedule-rule/:clinicId')
+  @Get('/get-schedule-rule/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getClinicScheduleRuleByClinicId(
     @CurrentUser() user: TokenPayload,

@@ -6,8 +6,7 @@ import {
     OneToOne,
 } from 'typeorm';
 import { PostgresAbstractEntity } from '@app/common';
-import { DoctorClinicMap } from './doctor-clinic-map.entity';
-import { Clinic } from './clinic.entity';
+import { Clinic } from './clinics.entity';
 
 @Entity({ name: 'medicine' })
 export class Medicine extends PostgresAbstractEntity<Medicine> {
@@ -42,6 +41,16 @@ export class Medicine extends PostgresAbstractEntity<Medicine> {
 
     @Column({ name: 'schedule', type: 'varchar', length: 255 })
     schedule: string; // Lịch trình
+
+    @Column({ name: 'madeIn', type: 'varchar', length: 255 })
+    madeIn: string;
+
+    @Column({
+        name: 'category',
+        type: 'enum',
+        enum: ['Thuốc', 'Thực phẩm chức năng', 'Vaccine', 'Dược mỹ phẩm', 'Dung dịch tiêm truyền', 'Hóa chất'],
+    })
+    category: string;
 
     @Column({
         name: 'status',

@@ -117,6 +117,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    ports:
+    - "3007:3007"
 
   auth:
     build:
@@ -290,8 +292,6 @@ services:
           path: ./package.json
     env_file:
       - .env
-    ports:
-      - '3004:3003'
     depends_on:
       kafka:
         condition: service_healthy
@@ -320,6 +320,4 @@ services:
       - .env
     depends_on:
       kafka:
-        condition: service_healthy
-      mongo:
         condition: service_healthy
