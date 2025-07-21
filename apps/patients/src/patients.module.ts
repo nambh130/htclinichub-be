@@ -41,6 +41,7 @@ import { LabTestModule } from './lab-test/lab-test.module';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
 import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 import { PrescriptionDetail, PrescriptionDetailSchema } from './models/prescription_detail.schema';
 import { PrescriptionModule } from './prescription_detail/prescription_detail.module';
 import { PrescriptionController } from './prescription_detail/prescription_detail.controller';
@@ -69,6 +70,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
         },
       }),
       inject: [ConfigService],
+      global: true
     }),
 
     LoggerModule,
@@ -153,7 +155,12 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     LabTestModule,
     forwardRef(() => PrescriptionModule),
   ],
-  controllers: [PatientsController, FavouriteDoctorController, PatientEventController, PrescriptionController],
+  controllers: [
+    PatientsController,
+    FavouriteDoctorController,
+    PatientEventController,
+    PrescriptionController
+  ],
   providers: [
     PatientsService,
     PatientRepository,
@@ -162,7 +169,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     FavouriteDoctorRepository,
 
     //  ManageMedicalRecordService, ManageMedicalReportRepository,
-    JwtModule,
+    JwtStrategy,
     PatientAccountRepository,
     PatientClinicLinkRepository,
     {
