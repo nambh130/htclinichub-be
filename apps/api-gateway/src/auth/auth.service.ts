@@ -283,36 +283,6 @@ export class AuthService implements OnModuleInit {
     return res.status(response.status).send(response.data);
   }
   // ------------------- INVITATIONS -------------------
-  //async createInvitationOwner(
-  //  invitationDto: CreateInvitationDto,
-  //  req: Request,
-  //): Promise<any> {
-  //  const cookie = req.headers.cookie; // Grab incoming cookies
-
-  //  const response = await firstValueFrom(
-  //    this.http
-  //      .post(
-  //        `${this.configService.get('AUTH_SERVICE_URL')}/invitation`,
-  //        invitationDto,
-  //        {
-  //          headers: {
-  //            Cookie: cookie, // Forward the original cookie
-  //          },
-  //          withCredentials: true, // optional but doesn't hurt
-  //        },
-  //      )
-  //      .pipe(
-  //        catchError((error) => {
-  //          const e = error.response;
-  //          throw new HttpException(
-  //            e?.data || 'Upstream error',
-  //            e?.status || 500,
-  //          );
-  //        }),
-  //      ),
-  //  );
-  //  return response.data;
-  //}
 
   async createInvitation(
     invitationDto: CreateInvitationDto,
@@ -445,6 +415,7 @@ export class AuthService implements OnModuleInit {
     );
     return response.data;
   }
+
   async invitationAccept(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -501,5 +472,33 @@ export class AuthService implements OnModuleInit {
       const e = error.response;
       throw new HttpException(e.data, e.status);
     }
+  }
+
+  async createDoctor(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+    const response = await firstValueFrom(
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/doctor`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          }),
+        ),
+    );
+    return res.status(response.status).send(response.data);
   }
 }

@@ -19,7 +19,7 @@ import { ActorEnum, User } from './clinic-users/models/clinic-user.entity';
 import { InvitationEnum } from './invitations/models/invitation.entity';
 import { ClinicRepository } from './clinics/clinics.repository';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
-import { AUTH_SERVICE, TokenPayload } from '@app/common';
+import { ActorType, AUTH_SERVICE, TokenPayload } from '@app/common';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { ClinicOwnerAdded } from '@app/common/events/auth/clinic-owner-added.event';
 import { PatientCreated } from '@app/common/events/auth/patient-created.event';
@@ -28,6 +28,7 @@ import { RefreshToken } from './refresh-token/models/refresh-token.model';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
 import AuthResponse from '@app/common/dto/auth/login-response.dto';
+import { RoleRepository } from './roles/roles.repository';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -39,6 +40,7 @@ export class AuthService implements OnModuleInit {
     private readonly clinicUserService: ClinicUsersService,
     private readonly clinicRepository: ClinicRepository,
     private readonly refreshTokenRepo: RefreshTokenRepository,
+    private readonly roleRepo: RoleRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
   ) { }
@@ -254,6 +256,22 @@ export class AuthService implements OnModuleInit {
       token,
       refreshToken,
     };
+  }
+
+  async createDoctorAccount(email: string, password: string, role: string) {
+    const checkRole = await this.roleRepo.findOne({ name: role });
+    const checkDoctor = await this.clinicUserService.find({email, actorType: checkRole.roleType});
+    if(checkDoctor){
+      throw new BadRequestException("Doctor already exists");
+    }
+
+    const createdAcc = await this.clinicUserService.createUser({
+      email,
+      password,
+      role: checkRole.id,
+      actorType: checkRole.roleType
+    });
+    return createdAcc
   }
 
   // ------------------------------ UTILITIES ---------------------------------
