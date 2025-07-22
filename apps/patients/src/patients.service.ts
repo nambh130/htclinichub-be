@@ -591,7 +591,7 @@ export class PatientsService {
       });
 
       // Lưu vào DB
-      await this.patientClinicLinkRepo.repo.save(link);
+      await this.patientClinicLinkRepo.repo.upsert(link, ['clinic_id', 'patientAccount']);
 
       return link;
     } catch (error) {
@@ -607,7 +607,6 @@ export class PatientsService {
     });
     const clinicIds = links.map((link) => link.clinic_id);
     if (clinicIds.length === 0) return [];
-
     // Gửi request sang clinic-service
     const clinics = await firstValueFrom(
       this.clinicsHttpService.post('/clinics/get-clinics-by-ids', {
@@ -700,6 +699,7 @@ export class PatientsService {
     appointment.reason = createAppointmentDto.reason;
     appointment.symptoms = createAppointmentDto.symptoms;
     appointment.note = createAppointmentDto.note ?? null;
+    appointment.examFee = createAppointmentDto.examFee ;
     appointment.createdById = user.userId.toString();
     appointment.createdByType = user.actorType;
     appointment.status = 'pending';

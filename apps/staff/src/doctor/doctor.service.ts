@@ -1134,7 +1134,10 @@ export class DoctorService extends BaseService {
 
     // Lặp từng doctor để lấy info
     const results = await Promise.all(
-      doctors.map(async (doctor) => {
+      doctorClinicMaps.map(async (map) => {
+        const doctor = map.doctor;
+        const clinic = map.clinic;
+
         const staffInfo = await this.staffInfoRepository.findOne(
           {
             staff_id: doctor.id,
@@ -1144,12 +1147,6 @@ export class DoctorService extends BaseService {
           },
           ['degrees', 'specializes'],
         );
-
-        // Get clinic info from the mapping (since we know they're all from the same clinic)
-        const clinicMap = doctorClinicMaps.find(
-          (map) => map.doctor.id === doctor.id,
-        );
-        const clinic = clinicMap?.clinic;
 
         return {
           account: {
@@ -1167,6 +1164,7 @@ export class DoctorService extends BaseService {
               : null,
           },
           info: staffInfo || null,
+          examFee: map.examFee ?? null, // <-- thêm dòng này để trả về giá khám
         };
       }),
     );

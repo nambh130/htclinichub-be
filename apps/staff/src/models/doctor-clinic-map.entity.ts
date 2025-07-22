@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, Unique, Column } from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { Clinic } from './clinic.entity';
 import { PostgresAbstractEntity } from '@app/common';
@@ -18,4 +18,11 @@ export class DoctorClinicMap extends PostgresAbstractEntity<DoctorClinicMap> {
   @ManyToOne(() => Clinic, (clinic) => clinic.doctorClinicMaps)
   @JoinColumn({ name: 'clinic_id' })
   clinic: Clinic;
+
+  @Column({
+    type: 'integer',
+    name: 'exam_fee',
+    nullable: true,
+  })
+  examFee: number;
 }
