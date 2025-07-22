@@ -22,4 +22,11 @@ export class ManageDoctorScheduleRepository extends PostgresAbstractRepository<D
       order: { startTime: 'ASC' },
     });
   }
+
+  async findByDoctorClinicLinkId(linkId: string) {
+    return this.entityRepository.find({
+      where: { doctor_clinic_link_id: { id: linkId } },
+      order: { startTime: 'ASC' },
+    });
+  }
 }

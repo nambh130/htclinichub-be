@@ -106,5 +106,11 @@ export class ManageDoctorScheduleController {
     return this.manageDoctorScheduleService.updateShifttFull(shiftId);
   }
 
-
+@Get('/doctor/get-doctor-clinic-link/:doctorId/:clinicId')
+  getDoctorClinicLinkByDoctorIdAndClinicId(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+  ) {
+    return this.manageDoctorScheduleService.getDoctorClinicLinkByDoctorIdAndClinicId(doctorId, clinicId);
+  }
 }

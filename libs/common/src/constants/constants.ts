@@ -1,7 +1,7 @@
 // Service names
 export const AUTH_SERVICE = 'auth';
 export const RESERVATIONS_SERVICE = 'reservations';
-export const CLINIC_SERVICE = 'clinics';
+export const CLINIC_SERVICE = 'clinic';
 
 export const PATIENT_SERVICE = 'patients';
 export const STAFF_SERVICE = 'staffs';

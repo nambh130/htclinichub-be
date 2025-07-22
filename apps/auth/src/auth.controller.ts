@@ -43,6 +43,9 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import AuthResponse from '@app/common/dto/auth/login-response.dto';
+import { CreateDoctorAccount } from './dto/create-doctor-account.dto';
+import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
+import { CreateEmployeeAccount } from './dto/create-clinic-employee.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -100,7 +103,67 @@ export class AuthController {
       token,
     });
   }
+
   // ------------------------------ STAFF AND DOCTOR ------------------------------
+  @Post('/doctor')
+  async createDoctorAccount(
+    @Body() account: CreateDoctorAccount
+  ) {
+    const { email, password } = account;
+    const createdAccount = await this.authService.createAccount(email, password, 'doctor');
+    if (createdAccount) {
+      this.messageBroker
+        .emit(
+          'clinic-user-created',
+          new ClinicUserCreated({
+            id: createdAccount.id,
+            email: createdAccount.email,
+            actorType: createdAccount.actorType,
+          }),
+        )
+        .subscribe({
+          error: (err) => {
+            console.error('Failed to emit event:', err);
+          },
+        });
+    }
+    return createdAccount;
+  }
+
+  @Post('/admin')
+  async createAdmin(
+    @Body() account: CreateDoctorAccount
+  ) {
+    const { email, password } = account;
+    const createdAccount = await this.authService.createAccount(email, password, 'admin');
+    return createdAccount;
+  }
+
+  @Post('/clinic-employee')
+  async createClinicEmployee(
+    @Body() account: CreateEmployeeAccount
+  ) {
+    const { email, password, roleId } = account;
+    const createdAccount = await this.authService.createAccountByRoleId(email, password, roleId);
+    if (createdAccount) {
+      this.messageBroker
+        .emit(
+          'clinic-user-created',
+          new ClinicUserCreated({
+            id: createdAccount.id,
+            email: createdAccount.email,
+            actorType: createdAccount.actorType,
+          }),
+        )
+        .subscribe({
+          error: (err) => {
+            console.error('Failed to emit event:', err);
+          },
+        });
+    }
+    return createdAccount;
+  }
+
   // Check if the email in the invitation already has an account
   @Post('invitation/check')
   async checkInvitation(@Body() invitationCheckDto: InvitationCheckDto) {

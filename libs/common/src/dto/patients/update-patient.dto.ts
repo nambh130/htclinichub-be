@@ -37,8 +37,8 @@ export class UpdatePatientDto {
 
   @IsOptional()
   @IsString()
-  @IsEnum(['Chính chủ', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'])
-  relation?: 'Chính chủ' | 'Vợ' | 'Con' | 'Bố' | 'Mẹ' | 'Ông' | 'Bà' | 'Chị' | 'Anh' | 'Em' | 'Cháu' | 'Khác';
+  @IsEnum(['Chính chủ', 'Chồng', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'])
+  relation?: 'Chính chủ' | 'Chồng' | 'Vợ' | 'Con' | 'Bố' | 'Mẹ' | 'Ông' | 'Bà' | 'Chị' | 'Anh' | 'Em' | 'Cháu' | 'Khác';
 
   @IsString()
   @IsOptional()

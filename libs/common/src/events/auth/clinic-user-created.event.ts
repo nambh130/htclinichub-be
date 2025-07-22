@@ -3,14 +3,14 @@ export class ClinicUserCreated {
   public readonly id: string;
   public readonly email: string;
   public readonly actorType: string;
-  public readonly clinicId: string;
+  public readonly clinicId?: string;
   public readonly ownerOf?: string;
 
   constructor(data: {
     id: string;
     email: string;
     actorType: string;
-    clinicId: string;
+    clinicId?: string;
     ownerOf?: string;
   }) {
     this.id = data.id;

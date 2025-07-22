@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -29,7 +30,7 @@ export class PatientsController {
     private readonly patientsService: PatientsService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
-  ) {}
+  ) { }
 
   @Post('create-patient')
   async createPatient(
@@ -52,13 +53,10 @@ export class PatientsController {
         data: createdPatient,
       };
     } catch (error) {
-      console.error('Error in createPatient:', error?.response?.data || error);
+      console.error('Error in createPatient:', error);
 
-      return {
-        success: false,
-        message: 'Failed to create patient',
-        error: error?.message || 'Unknown error',
-      };
+      // ✅ QUAN TRỌNG: throw exception để Gateway bắt được, không trả 200 OK
+      throw new BadRequestException(error?.message || 'Tạo hồ sơ thất bại');
     }
   }
 
@@ -76,13 +74,25 @@ export class PatientsController {
       currentUser: TokenPayload;
     },
   ) {
-    const { updatePatientDto, currentUser } = data;
+    try {
+      const { updatePatientDto, currentUser } = data;
 
-    return await this.patientsService.updatePatient(
-      patient_account_id,
-      updatePatientDto,
-      currentUser.userId,
-    );
+      const updatePatient = await this.patientsService.updatePatient(
+        patient_account_id,
+        updatePatientDto,
+        currentUser.userId,
+      );
+
+      return {
+        success: true,
+        data: updatePatient,
+      };
+    } catch (error) {
+      console.error('Error in createPatient:', error);
+
+      // ✅ QUAN TRỌNG: throw exception để Gateway bắt được, không trả 200 OK
+      throw new BadRequestException(error?.message || 'Tạo hồ sơ thất bại');
+    }
   }
 
   @EventPattern('patient-updated')
@@ -387,5 +397,16 @@ export class PatientsController {
   ) {
     const result = await this.patientsService.searchICD(keyword, limit);
     return result;
+  }
+
+  @Get('check-profile/:accountId')
+  async checkProfileByAccountId(@Param('accountId') accountId: string) {
+    try {
+      const patient = await this.patientsService.checkProfileByAccountId(accountId);
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientById:', error);
+      throw error;
+    }
   }
 }

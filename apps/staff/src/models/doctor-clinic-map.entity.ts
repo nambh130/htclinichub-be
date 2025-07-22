@@ -25,9 +25,16 @@ export class DoctorClinicMap extends PostgresAbstractEntity<DoctorClinicMap> {
   clinic: Clinic;
 
   @Column({
+    type: 'integer',
+    name: 'exam_fee',
+    nullable: true,
+  })
+  examFee: number;
+  @Column({
     type: 'enum',
     enum: DoctorClinicStatus,
     default: DoctorClinicStatus.ACTIVE,
   })
   status: DoctorClinicStatus;
+
 }

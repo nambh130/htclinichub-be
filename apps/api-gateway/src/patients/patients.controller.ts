@@ -8,6 +8,7 @@ import {
   Delete,
   Get,
   Query,
+  HttpException,
 } from '@nestjs/common';
 import { PatientService } from './patients.service';
 import {
@@ -54,8 +55,19 @@ export class PatientsController {
       );
       return newPatient;
     } catch (error) {
-      console.error('Error creating patient:', error);
-      throw error;
+      console.error('Error in createPatient:', error?.response?.data || error);
+
+      // Nếu là BadRequestException, ta truyền nguyên message lên
+      const message =
+        error?.response?.data?.message || // Khi dùng HttpException
+        error?.message ||                // Lỗi thường
+        'Unknown error';
+
+      return {
+        success: false,
+        message,           // ✅ truyền đúng nội dung lỗi cho FE
+        error: message,
+      };
     }
   }
 
@@ -74,8 +86,19 @@ export class PatientsController {
       );
       return updatedPatient;
     } catch (error) {
-      console.error('Error update patient:', error);
-      throw error;
+      console.error('Error in createPatient:', error?.response?.data || error);
+
+      // Nếu là BadRequestException, ta truyền nguyên message lên
+      const message =
+        error?.response?.data?.message || // Khi dùng HttpException
+        error?.message ||                // Lỗi thường
+        'Unknown error';
+
+      return {
+        success: false,
+        message,           // ✅ truyền đúng nội dung lỗi cho FE
+        error: message,
+      };
     }
   }
 
@@ -604,6 +627,23 @@ export class PatientsController {
       return result;
     } catch (error) {
       console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+
+  @Get('/check-profile/:accountId')
+  @UseGuards(JwtAuthGuard)
+  async checkProfileByAccountId(
+    @Param('accountId') accountId: string,
+  ) {
+    try {
+      const result =
+        await this.patientService.checkProfileByAccountId(
+          accountId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving medical records:', error);
       throw error;
     }
   }

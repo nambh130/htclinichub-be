@@ -29,6 +29,19 @@ export class AuthController {
     private readonly clinicService: ClinicService,
   ) {}
 
+  @Post('/doctor')
+  async createDoctor(@Req() req: Request, @Res() res: Response) {
+    return this.authService.createDoctor(req, res);
+  }
+  @Post('/clinic-employee')
+  async createEmployeeAccount(@Req() req: Request, @Res() res: Response) {
+    return this.authService.createClinicEmployeeAccount(req, res);
+  }
+  @Post('/admin')
+  async createAdminAccount(@Req() req: Request, @Res() res: Response) {
+    return this.authService.createAdminAccount(req, res);
+  }
+
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')
   @ApiOperation({ summary: 'Patient login with phone number' })
@@ -39,11 +52,6 @@ export class AuthController {
   })
   async requestOtp(@Body() otpRequestDto: LoginOtpRequestDto) {
     return this.authService.requestOtp(otpRequestDto);
-  }
-
-  @EventPattern('user_created')
-  async handleUserCreated(@Payload() data: any) {
-    console.log('User created event:', data);
   }
 
   @Post('patient/login/verify-otp')

@@ -51,7 +51,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: 'http://clinics:3007',
+      baseURL: 'http://clinic:3007',
     }),
     ConfigModule.forRoot({
       isGlobal: true,

@@ -26,4 +26,11 @@ export class Appointment extends PostgresAbstractEntity<Appointment> {
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   note: string | null;
+
+  @Column({
+    type: 'integer',
+    name: 'exam_fee',
+    nullable: true,
+  })
+  examFee: number;
 }
