@@ -56,7 +56,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
-  ) { }
+  ) {}
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -139,7 +139,7 @@ export class AuthController {
       throw new BadRequestException('Password does not match retype password');
     }
     const response = await this.authService.invitationSignup(dto);
-    console.log('check 3', response)
+    console.log('check 3', response);
     return response;
   }
 
@@ -227,7 +227,7 @@ export class AuthController {
 
     // Step 4: Generate new access token
     const user = await this.userService.find({ id: userId });
-    if (!user) throw new BadRequestException("User not found");
+    if (!user) throw new BadRequestException('User not found');
 
     const tokenPayload = this.authService.buildTokenPayload(user);
     const accessToken = await this.authService.createJWT(tokenPayload);

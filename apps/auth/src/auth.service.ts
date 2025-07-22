@@ -41,7 +41,7 @@ export class AuthService implements OnModuleInit {
     private readonly refreshTokenRepo: RefreshTokenRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -97,7 +97,7 @@ export class AuthService implements OnModuleInit {
       clinic: null,
     };
     if (clinicUser.actorType != ActorEnum.ADMIN) {
-      clinicUser.clinic = invitation.clinic.id
+      clinicUser.clinic = invitation.clinic.id;
     }
 
     const newClinicUser = await this.clinicUserService.createUser(clinicUser);
@@ -152,7 +152,7 @@ export class AuthService implements OnModuleInit {
       actorType: ActorEnum.DOCTOR,
     });
     if (!user) {
-      throw new BadRequestException("Invalid invitation");
+      throw new BadRequestException('Invalid invitation');
     }
     const email = user.email;
 
@@ -225,8 +225,11 @@ export class AuthService implements OnModuleInit {
     return { message: 'Invitation accepted', user };
   }
 
-  async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string)
-    : Promise<AuthResponse & { refreshToken: string }> {
+  async userLogin(
+    dto: ClinicUserLoginDto,
+    userAgent?: string,
+    ip?: string,
+  ): Promise<AuthResponse & { refreshToken: string }> {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
       email: email.toLowerCase().trim(),
