@@ -29,12 +29,14 @@ export class DoctorController {
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
     @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
+    @Query('clinicId') clinicId?: string,
   ) {
     return this.doctorService.getDoctorListWithProfile(
       +page,
       +limit,
       search,
       searchField,
+      clinicId,
     );
   }
 

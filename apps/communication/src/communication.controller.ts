@@ -30,7 +30,7 @@ export class CommunicationController {
     return this.emailService.sendPasswordResetEmail(dto.to, dto.resetLink);
   }
 
-  @EventPattern('sms-verification-code')
+  @EventPattern('send-sms-verification-code')
   async sendSmsVerificationCode(@Payload() dto: SmsVerificationEvent) {
     console.log('SMS verification requested: ', dto);
     try {

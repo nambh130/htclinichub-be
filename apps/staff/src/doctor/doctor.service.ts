@@ -29,6 +29,7 @@ import { StaffInfo } from '../models/staffInfo.entity';
 import { Degree } from '../models/degree.entity';
 import { Specialize } from '../models/specialize.entity';
 import { DoctorClinicMap } from '../models/doctor-clinic-map.entity';
+import { DoctorClinicStatus } from '../models/doctor-clinic-map.entity';
 
 import { DoctorRepository } from '../repositories/doctor.repository';
 import { StaffInfoRepository } from '../repositories/staffInfo.repository';
@@ -163,6 +164,7 @@ export class DoctorService extends BaseService {
     limit = 10,
     search?: string,
     searchField: 'name' | 'email' | 'phone' | 'all' = 'all',
+    clinicId?: string,
   ): Promise<any> {
     try {
       const baseCondition = {
@@ -183,19 +185,16 @@ export class DoctorService extends BaseService {
             email: Like(`%${searchTerm}%`),
           };
         } else if (searchField === 'name') {
+          // Use a different approach for name search that properly handles the relation
           whereCondition = {
             ...baseCondition,
-            staffInfo: {
-              full_name: Like(`%${searchTerm}%`),
-            },
           };
+          // We'll filter the results after fetching to handle the relation properly
         } else if (searchField === 'phone') {
           whereCondition = {
             ...baseCondition,
-            staffInfo: {
-              phone: Like(`%${searchTerm}%`),
-            },
           };
+          // We'll filter the results after fetching to handle the relation properly
         } else {
           // Default 'all' - search across all fields
           whereCondition = [
@@ -203,22 +202,22 @@ export class DoctorService extends BaseService {
               ...baseCondition,
               email: Like(`%${searchTerm}%`),
             },
-            {
-              ...baseCondition,
-              staffInfo: {
-                full_name: Like(`%${searchTerm}%`),
-              },
-            },
-            {
-              ...baseCondition,
-              staffInfo: {
-                phone: Like(`%${searchTerm}%`),
-              },
-            },
           ];
         }
       } else {
         whereCondition = baseCondition;
+      }
+
+      // Add clinic filter
+      if (clinicId) {
+        whereCondition = {
+          ...baseCondition,
+          clinics: {
+            clinic: {
+              id: clinicId,
+            },
+          },
+        };
       }
 
       const result = await this.doctorRepository.paginate({
@@ -229,7 +228,7 @@ export class DoctorService extends BaseService {
       });
 
       // Map the data to exclude audit fields and include only basic info
-      const mappedData = result.data.map((doctor) => ({
+      let mappedData = result.data.map((doctor) => ({
         id: doctor.id,
         email: doctor.email,
         is_locked: doctor.is_locked,
@@ -256,6 +255,26 @@ export class DoctorService extends BaseService {
             }
           : null,
       }));
+
+      // Apply post-query filtering for name and phone searches
+      if (
+        search?.trim() &&
+        (searchField === 'name' || searchField === 'phone')
+      ) {
+        const searchTerm = search.trim().toLowerCase();
+        mappedData = mappedData.filter((doctor) => {
+          if (!doctor.staffInfo) return false;
+
+          if (searchField === 'name') {
+            return doctor.staffInfo.full_name
+              ?.toLowerCase()
+              .includes(searchTerm);
+          } else if (searchField === 'phone') {
+            return doctor.staffInfo.phone?.toLowerCase().includes(searchTerm);
+          }
+          return true;
+        });
+      }
 
       return {
         ...result,
@@ -290,18 +309,20 @@ export class DoctorService extends BaseService {
       throw new NotFoundException('Doctor not found');
     }
 
-    // Đảm bảo clinics tồn tại
-    const clinicLinks = doctor.clinics.map((clinicMap) => ({
-      id: clinicMap.id,
-      clinic: {
-        id: clinicMap.clinic?.id ?? '',
-        name: clinicMap.clinic?.name ?? '',
-        location: clinicMap.clinic?.location ?? '',
-        phone: clinicMap.clinic?.phone ?? '',
-        email: clinicMap.clinic?.email ?? '',
-        ownerId: clinicMap.clinic?.ownerId ?? '',
-      },
-    }));
+    // Đảm bảo clinics tồn tại và chỉ lấy những clinic map có status active
+    const clinicLinks = doctor.clinics
+      .filter((clinicMap) => clinicMap.status === DoctorClinicStatus.ACTIVE)
+      .map((clinicMap) => ({
+        id: clinicMap.id,
+        clinic: {
+          id: clinicMap.clinic?.id ?? '',
+          name: clinicMap.clinic?.name ?? '',
+          location: clinicMap.clinic?.location ?? '',
+          phone: clinicMap.clinic?.phone ?? '',
+          email: clinicMap.clinic?.email ?? '',
+          ownerId: clinicMap.clinic?.ownerId ?? '',
+        },
+      }));
     console.log(clinicLinks);
 
     return clinicLinks;
@@ -1121,13 +1142,16 @@ export class DoctorService extends BaseService {
 
   //khanh
   async getDoctorByClinic(clinicId: string): Promise<any[]> {
-    // Query doctor theo clinicId
+    // Query doctor theo clinicId, only ACTIVE status
     const doctorClinicMaps = await this.doctorRepository.repo.manager
       .getRepository(DoctorClinicMap)
       .createQueryBuilder('doctorClinicMap')
       .innerJoinAndSelect('doctorClinicMap.doctor', 'doctor')
       .innerJoinAndSelect('doctorClinicMap.clinic', 'clinic')
       .where('doctorClinicMap.clinic = :clinicId', { clinicId })
+      .andWhere('doctorClinicMap.status = :status', {
+        status: DoctorClinicStatus.ACTIVE,
+      })
       .getMany();
 
     const doctors = doctorClinicMaps.map((map) => map.doctor);
@@ -1292,17 +1316,10 @@ export class DoctorService extends BaseService {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
       }
 
-      const clinic = await this.clinicRepository.findOne({
-        id: clinicId,
-        deletedAt: IsNull(),
-        deletedById: IsNull(),
-        deletedByType: IsNull(),
-      });
-
       // Find the assignment
       const assignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinic: clinic,
+        clinic: { id: clinicId },
       });
 
       if (!assignment) {
@@ -1312,7 +1329,9 @@ export class DoctorService extends BaseService {
       }
 
       // Remove the assignment
-      await this.doctorClinicRepo.deleteLink(assignment.id);
+      // await this.doctorClinicRepo.deleteLink(assignment.id);
+      assignment.status = DoctorClinicStatus.BLOCKED;
+      await this.doctorClinicRepo.save(assignment);
 
       return {
         message: `Doctor ${doctorId} successfully removed from clinic ${clinicId}`,
