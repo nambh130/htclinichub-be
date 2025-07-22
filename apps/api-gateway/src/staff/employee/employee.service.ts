@@ -55,6 +55,7 @@ export class EmployeeService {
     limit = 10,
     search?: string,
     searchField?: 'name' | 'email' | 'phone' | 'all',
+    clinicId?: string,
   ): Promise<unknown> {
     try {
       const params: {
@@ -62,17 +63,11 @@ export class EmployeeService {
         limit: number;
         search?: string;
         searchField?: string;
-      } = {
-        page,
-        limit,
-      };
-      if (search) {
-        params.search = search;
-      }
-      if (searchField) {
-        params.searchField = searchField;
-      }
-
+        clinicId?: string;
+      } = { page, limit };
+      if (search) params.search = search;
+      if (searchField) params.searchField = searchField;
+      if (clinicId) params.clinicId = clinicId;
       const response = await firstValueFrom(
         this.staffService.get(`/staff/employee/account-list-with-profile`, {
           params,

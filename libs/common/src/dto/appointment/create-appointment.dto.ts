@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsUUID, MaxLength, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  MaxLength,
+  IsOptional,
+  IsNumber,
+} from 'class-validator';
 
 export class CreateAppointmentDto {
   @IsString()
@@ -31,4 +38,7 @@ export class CreateAppointmentDto {
   @IsOptional()
   @MaxLength(500)
   note?: string;
+
+  @IsNumber()
+  examFee: number;
 }

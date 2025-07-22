@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { IsNull, Like, In } from 'typeorm';
+import { IsNull, Like, In, FindOptionsWhere } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import {
@@ -184,6 +184,7 @@ export class EmployeeService extends BaseService {
     limit = 10,
     search?: string,
     searchField: 'name' | 'email' | 'phone' | 'all' = 'all',
+    clinicId?: string,
   ): Promise<any> {
     try {
       const baseCondition = {
@@ -193,10 +194,13 @@ export class EmployeeService extends BaseService {
       };
       const searchTerm = search?.trim().toLowerCase();
 
-      const employeeWhere =
-        searchTerm && searchField === 'email'
-          ? { ...baseCondition, email: Like(`%${searchTerm}%`) }
-          : baseCondition;
+      let employeeWhere: FindOptionsWhere<Employee> = baseCondition;
+      if (clinicId) {
+        employeeWhere = { ...employeeWhere, clinic_id: clinicId };
+      }
+      if (searchTerm && searchField === 'email') {
+        employeeWhere = { ...employeeWhere, email: Like(`%${searchTerm}%`) };
+      }
 
       const result = await this.employeeRepository.paginate({
         where: employeeWhere,

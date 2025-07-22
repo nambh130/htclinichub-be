@@ -46,12 +46,14 @@ export class EmployeeController {
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
     @Query('searchField') searchField?: 'name' | 'email' | 'phone' | 'all',
+    @Query('clinicId') clinicId?: string,
   ) {
     return await this.employeeService.getEmployeeListWithProfile(
       +page,
       +limit,
       search,
       searchField,
+      clinicId,
     );
   }
 

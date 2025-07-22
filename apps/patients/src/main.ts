@@ -5,6 +5,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { PATIENT_CONSUMER_GROUP } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(PatientsModule); // HTTP + DI context
@@ -19,6 +20,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useLogger(logger);
+  app.use(cookieParser());
 
   // Connect Kafka microservice
   app.connectMicroservice<MicroserviceOptions>({

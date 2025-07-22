@@ -9,6 +9,12 @@ import { LabField, LabFieldSchema } from './models/lab-field.schema';
 import { QuantitativeTestRepository } from './repositories/quantiative-test.repository';
 import { LabTestRepository } from './repositories/lab-test.repoository';
 import { ImagingTestRepository } from './repositories/imaging-test.repository';
+import { LabOrder, LabOrderSchema } from '../lab-order/models/lab-order.schema';
+import { LabOrderItem, LabOrderItemSchema } from '../lab-order/models/lab-order-item.schema';
+import { LabOrderController } from '../lab-order/lab-order.controller';
+import { LabOrderRepository } from '../lab-order/repositories/lab-order.repository';
+import { LabOrderService } from '../lab-order/lab-order.service';
+import { LabOrderItemRepository } from '../lab-order/repositories/lab-order-item.repository';
 
 @Module({
   imports: [
@@ -37,19 +43,30 @@ import { ImagingTestRepository } from './repositories/imaging-test.repository';
         {
           name: LabField.name,
           schema: LabFieldSchema
-        }
+        },
+        {
+          name: LabOrder.name,
+          schema: LabOrderSchema,
+        },
+        {
+          name: LabOrderItem.name,
+          schema: LabOrderItemSchema,
+        },
       ],
-
       'patientService', // connectionName from forRoot
     )
-
   ],
-  controllers: [LabTestController],
+  controllers: [LabTestController, LabOrderController],
   providers: [LabTestService,
     LabFieldRepository,
     QuantitativeTestRepository,
     LabTestRepository,
-    ImagingTestRepository
-  ]
+    ImagingTestRepository,
+
+    LabOrderRepository,
+    LabOrderService,
+    LabOrderItemRepository
+  ],
+  exports: [LabTestRepository, LabTestService]
 })
 export class LabTestModule { }
