@@ -19,7 +19,7 @@ export class Patient extends MongoAbstractDocument {
     @Prop()
     fullname: string;
 
-    @Prop({ type: String, enum: ['Chính chủ', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'], default: 'Khác' })
+    @Prop({ type: String, enum: ['Chính chủ', 'Chồng', 'Vợ', 'Con', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Chị', 'Anh', 'Em', 'Cháu', 'Khác'], default: 'Khác' })
     relation: string;
 
     @Prop({ unique: true, sparse: true })

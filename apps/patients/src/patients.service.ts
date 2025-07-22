@@ -34,12 +34,33 @@ export class PatientsService {
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
-  ) {}
+  ) { }
 
   async createPatient(
     createPatientDto: Partial<CreatePatientDto>,
     userId: string,
   ) {
+
+    const existingMainProfiles = await this.patientsRepository.find({
+      patient_account_id: createPatientDto.patient_account_id,
+      relation: 'Chính chủ',
+    });
+
+    const hasMainProfile = existingMainProfiles.length > 0;
+
+    if (createPatientDto.relation === 'Chính chủ' && hasMainProfile) {
+      throw new BadRequestException(
+        'Tài khoản này đã có hồ sơ "Chính chủ" rồi.',
+      );
+    }
+
+    if (createPatientDto.relation !== 'Chính chủ' && !hasMainProfile) {
+      throw new BadRequestException(
+        'Bạn cần tạo hồ sơ "Chính chủ" trước khi thêm hồ sơ phụ.',
+      );
+    }
+
+    // Kiểm tra số điện thoại
     const existedPhone = await this.patientsRepository.findByPhone(
       createPatientDto.phone,
     );
@@ -47,6 +68,7 @@ export class PatientsService {
       throw new BadRequestException('Số điện thoại đã tồn tại!');
     }
 
+    // Kiểm tra CCCD
     const existedCitizenId = await this.patientsRepository.findCitizenId(
       createPatientDto.citizen_id,
     );
@@ -54,6 +76,7 @@ export class PatientsService {
       throw new BadRequestException('CCCD đã tồn tại!');
     }
 
+    // Kiểm tra BHYT
     const existedHealthInsuranceId =
       await this.patientsRepository.findHealthInsuranceId(
         createPatientDto.health_insurance_id,
@@ -62,6 +85,7 @@ export class PatientsService {
       throw new BadRequestException('BHYT đã tồn tại!');
     }
 
+    // Tạo dữ liệu bệnh nhân
     const patientData = {
       fullname: createPatientDto.fullname,
       patient_account_id: createPatientDto.patient_account_id,
@@ -91,7 +115,7 @@ export class PatientsService {
       console.log('Patient saved:', patient);
       return patient;
     } catch (error) {
-      console.error('Error saving patient:', error);
+      console.error('Error saved patient:', error);
       throw error;
     }
   }
@@ -105,90 +129,115 @@ export class PatientsService {
   // }
 
   async updatePatient(
-    patient_account_id: string,
+    patient_account_id: string, // chính là _id của hồ sơ cụ thể
     updatePatientDto: UpdatePatientDto,
     userId: string,
   ) {
     if (!patient_account_id) {
-      throw new NotFoundException('Invalid patient_account_id');
+      throw new NotFoundException('Thiếu ID hồ sơ cần cập nhật');
     }
 
     try {
-      const patient = await this.patientsRepository.findOne({
-        _id: patient_account_id,
+      // Lấy hồ sơ cụ thể đang cập nhật
+      const currentProfile = await this.patientsRepository.findOne({ _id: patient_account_id });
+
+      if (!currentProfile) {
+        throw new NotFoundException(`Không tìm thấy hồ sơ với ID ${patient_account_id}`);
+      }
+
+      const accountId = currentProfile.patient_account_id;
+
+      // Lấy tất cả hồ sơ "Chính chủ" thuộc cùng tài khoản (accountId)
+      const existingMainProfiles = await this.patientsRepository.find({
+        patient_account_id: accountId,
+        relation: 'Chính chủ',
       });
 
-      if (!patient) {
-        throw new NotFoundException(
-          `Patient with patient_account_id ${patient_account_id} not found`,
+      const isCurrentProfileMain = currentProfile.relation === 'Chính chủ';
+      const hasAnyMainProfile = existingMainProfiles.length > 0;
+
+      // Loại trừ chính hồ sơ đang cập nhật ra khỏi danh sách hồ sơ chính chủ
+      const otherMainProfiles = existingMainProfiles.filter(
+        (p) => p._id.toString() !== currentProfile._id.toString(),
+      );
+
+      const hasOtherMainProfile = otherMainProfiles.length > 0;
+
+      // ❌ Muốn cập nhật thành "Chính chủ" nhưng đã có hồ sơ chính chủ khác
+      if (updatePatientDto.relation === 'Chính chủ' && hasOtherMainProfile) {
+        throw new BadRequestException('Tài khoản này đã có hồ sơ "Chính chủ" khác.');
+      }
+
+      // ❌ Muốn cập nhật thành hồ sơ phụ nhưng không có hồ sơ Chính chủ nào
+      if (updatePatientDto.relation !== 'Chính chủ' && !hasAnyMainProfile && !isCurrentProfileMain) {
+        throw new BadRequestException(
+          'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
         );
       }
 
-      if (updatePatientDto.phone) {
-        const existedPhone = await this.patientsRepository.findByPhone(
-          updatePatientDto.phone,
+      if (
+        currentProfile.relation === 'Chính chủ' &&
+        updatePatientDto.relation &&
+        updatePatientDto.relation !== 'Chính chủ'
+      ) {
+        throw new BadRequestException(
+          'Hồ sơ "Chính chủ" không được phép đổi thành quan hệ khác.',
         );
+      }
 
-        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+      // Kiểm tra số điện thoại
+      if (updatePatientDto.phone) {
+        const existedPhone = await this.patientsRepository.findByPhone(updatePatientDto.phone);
         if (
           existedPhone &&
-          existedPhone.patient_account_id !== patient.patient_account_id
+          existedPhone._id.toString() !== currentProfile._id.toString()
         ) {
           throw new BadRequestException('Số điện thoại đã tồn tại!');
         }
       }
 
+      // Kiểm tra CCCD
       if (updatePatientDto.citizen_id) {
-        const existedCitizenId = await this.patientsRepository.findCitizenId(
-          updatePatientDto.citizen_id,
-        );
-
-        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+        const existedCCCD = await this.patientsRepository.findCitizenId(updatePatientDto.citizen_id);
         if (
-          existedCitizenId &&
-          existedCitizenId.patient_account_id !== patient.patient_account_id
+          existedCCCD &&
+          existedCCCD._id.toString() !== currentProfile._id.toString()
         ) {
           throw new BadRequestException('CCCD đã tồn tại!');
         }
       }
 
+      // Kiểm tra BHYT
       if (updatePatientDto.health_insurance_id) {
-        const existedHealthInsuranceId =
-          await this.patientsRepository.findHealthInsuranceId(
-            updatePatientDto.health_insurance_id,
-          );
-
-        // Nếu đã tồn tại và không phải chính bệnh nhân đang update thì báo lỗi
+        const existedBHYT = await this.patientsRepository.findHealthInsuranceId(
+          updatePatientDto.health_insurance_id,
+        );
         if (
-          existedHealthInsuranceId &&
-          existedHealthInsuranceId.patient_account_id !==
-            patient.patient_account_id
+          existedBHYT &&
+          existedBHYT._id.toString() !== currentProfile._id.toString()
         ) {
           throw new BadRequestException('BHYT đã tồn tại!');
         }
       }
 
-      const updatedPatient = await this.patientsRepository.findOneAndUpdate(
-        patient,
-        {
-          ...updatePatientDto,
-          updatedBy: userId,
-          updatedAt: new Date(),
-        },
-      );
+      // Thực hiện cập nhật
+      const updated = await this.patientsRepository.findOneAndUpdate(currentProfile, {
+        ...updatePatientDto,
+        updatedBy: userId,
+        updatedAt: new Date(),
+      });
 
-      if (!updatedPatient) {
-        throw new NotFoundException(
-          `Patient with patient_account_id ${patient_account_id} not updated`,
-        );
+      if (!updated) {
+        throw new NotFoundException(`Không thể cập nhật hồ sơ với ID ${patient_account_id}`);
       }
 
-      return updatedPatient;
-    } catch (error) {
-      console.error('Error updating patient:', error);
-      throw error;
+      return updated;
+    } catch (err) {
+      console.error('❌ Lỗi khi cập nhật:', err);
+      throw err;
     }
   }
+
 
   async deletePatient(id: string) {
     if (!id) {
@@ -1179,4 +1228,21 @@ export class PatientsService {
       .limit(limit)
       .getMany();
   }
+
+  async checkProfileByAccountId(accountId: string) {
+    if (!accountId) {
+      throw new BadRequestException('Invalid accountId');
+    }
+
+    const profile = await this.patientsRepository.find({
+      patient_account_id: accountId,
+    });
+
+    if (profile.length === 0) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+
 }

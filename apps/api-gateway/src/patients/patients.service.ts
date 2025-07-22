@@ -6,7 +6,7 @@ import {
   TokenPayload,
 } from '@app/common';
 import { HttpService } from '@nestjs/axios';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { HttpException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 export class PatientService {
   constructor(
     @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   // Patient-related methods
   async createPatient(
@@ -27,10 +27,34 @@ export class PatientService {
       const response = await firstValueFrom(
         this.httpService.post('/patient-service/create-patient', payload),
       );
-      return response.data;
+      const responseData = response.data;
+
+      // ✅ Nếu BE trả về { success: false } thì throw lỗi lên Gateway Controller
+      if (!responseData.success) {
+        throw new HttpException(
+          {
+            message: responseData.message || 'Tạo hồ sơ thất bại!',
+            statusCode: 400,
+          },
+          400,
+        );
+      }
+
+      return responseData.data;
     } catch (error) {
       console.error('Error creating patient:', error);
-      throw error;
+
+      const message =
+        error?.response?.data?.message || error.message || 'Unknown error';
+      const status = error?.response?.data?.statusCode || 500;
+
+      throw new HttpException(
+        {
+          message,
+          statusCode: status,
+        },
+        status
+      );
     }
   }
 
@@ -52,10 +76,34 @@ export class PatientService {
         ),
       );
 
-      return result.data;
+      const responseData = result.data;
+
+      // ✅ Nếu BE trả về { success: false } thì throw lỗi lên Gateway Controller
+      if (!responseData.success) {
+        throw new HttpException(
+          {
+            message: responseData.message || 'Tạo hồ sơ thất bại!',
+            statusCode: 400,
+          },
+          400,
+        );
+      }
+
+      return responseData.data;
     } catch (error) {
-      console.error('Error update patient:', error?.response?.data || error);
-      throw error;
+      console.error('Error creating patient:', error);
+
+      const message =
+        error?.response?.data?.message || error.message || 'Unknown error';
+      const status = error?.response?.data?.statusCode || 500;
+
+      throw new HttpException(
+        {
+          message,
+          statusCode: status,
+        },
+        status
+      );
     }
   }
 
@@ -231,5 +279,16 @@ export class PatientService {
       throw error;
     }
   }
-  
+
+  async checkProfileByAccountId(accountId: string) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/check-profile/${accountId}`),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
 }
