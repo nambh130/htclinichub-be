@@ -33,6 +33,14 @@ export class AuthController {
   async createDoctor(@Req() req: Request, @Res() res: Response) {
     return this.authService.createDoctor(req, res);
   }
+  @Post('/clinic-employee')
+  async createEmployeeAccount(@Req() req: Request, @Res() res: Response) {
+    return this.authService.createClinicEmployeeAccount(req, res);
+  }
+  @Post('/admin')
+  async createAdminAccount(@Req() req: Request, @Res() res: Response) {
+    return this.authService.createAdminAccount(req, res);
+  }
 
   // ------------------------------ PATIENT ------------------------------
   @Post('patient/login/request-otp')

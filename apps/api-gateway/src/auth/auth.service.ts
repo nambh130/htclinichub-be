@@ -501,4 +501,61 @@ export class AuthService implements OnModuleInit {
     );
     return res.status(response.status).send(response.data);
   }
+
+  async createClinicEmployeeAccount(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+    const response = await firstValueFrom(
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/clinic-employee`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          }),
+        ),
+    );
+    return res.status(response.status).send(response.data);
+  }
+
+
+  async createAdminAccount(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+    const response = await firstValueFrom(
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/admin`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true,
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            // Rethrow downstream error status/message
+            throw new HttpException(e.data, e.status);
+          }),
+        ),
+    );
+    return res.status(response.status).send(response.data);
+  }
 }
