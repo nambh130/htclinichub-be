@@ -17,6 +17,10 @@ export class DoctorClinicRepo {
     return await this.itemsRepository.save(link);
   }
 
+  async update(link: DoctorClinicMap) {
+    return await this.itemsRepository.update(link.id, link);
+  }
+
   async findOne(
     where: FindOptionsWhere<DoctorClinicMap>,
   ): Promise<DoctorClinicMap | null> {

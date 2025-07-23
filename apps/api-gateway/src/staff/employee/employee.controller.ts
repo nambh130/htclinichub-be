@@ -7,6 +7,7 @@ import {
   UseGuards,
   Query,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import {
@@ -268,7 +269,7 @@ export class EmployeeController {
     );
   }
 
-  @Delete(':id/clinic')
+  @Patch(':id/clinic')
   @UseGuards(JwtAuthGuard)
   async removeEmployeeFromClinic(
     @Param('id') employeeId: string,

@@ -310,6 +310,8 @@ export class EmployeeService extends BaseService {
       }
 
       const employee = new Employee();
+      // In case event from other service
+      if (dto.id) employee.id = dto.id;
       employee.email = email;
       employee.password = await bcrypt.hash(dto.password, 10);
       employee.clinic_id = dto.clinic_id;

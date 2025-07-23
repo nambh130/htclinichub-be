@@ -24,7 +24,7 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsUUID()
-  clinic: string;
+  clinic?: string;
 
   @IsEnum(ActorEnum)
   actorType: ActorType;

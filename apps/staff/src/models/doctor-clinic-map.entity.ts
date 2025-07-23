@@ -36,5 +36,4 @@ export class DoctorClinicMap extends PostgresAbstractEntity<DoctorClinicMap> {
     default: DoctorClinicStatus.ACTIVE,
   })
   status: DoctorClinicStatus;
-
 }

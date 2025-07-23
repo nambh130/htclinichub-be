@@ -1258,16 +1258,31 @@ export class DoctorService extends BaseService {
         deletedByType: IsNull(),
       });
 
+      if (!clinic) {
+        throw new NotFoundException(`Clinic with ID ${clinicId} not found`);
+      }
+
       // Check if assignment already exists
       const existingAssignment = await this.doctorClinicRepo.findOne({
         doctor: { id: doctorId },
-        clinic,
+        clinic: { id: clinicId },
       });
 
       if (existingAssignment) {
-        throw new ConflictException(
-          `Doctor ${doctorId} is already assigned to clinic ${clinicId}`,
-        );
+        if (existingAssignment.status === DoctorClinicStatus.BLOCKED) {
+          existingAssignment.status = DoctorClinicStatus.ACTIVE;
+          updateAudit(existingAssignment, currentUser);
+          const savedAssignment =
+            await this.doctorClinicRepo.save(existingAssignment);
+          return {
+            message: `Doctor ${doctorId} re-activated assignment to clinic ${clinicId}`,
+            assignment: savedAssignment,
+          };
+        } else {
+          throw new ConflictException(
+            `Doctor ${doctorId} is already assigned to clinic ${clinicId}`,
+          );
+        }
       }
 
       // Create new clinic assignment
