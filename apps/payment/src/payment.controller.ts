@@ -5,6 +5,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Put,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { StorePayOSCredentialsDto } from './dtos/store-credentials.dto';
@@ -23,6 +24,14 @@ export class PaymentController {
   ): Promise<{ message: string }> {
     await this.paymentService.storePayOSCredentials(dto);
     return { message: 'PayOS credentials stored successfully' };
+  }
+
+  @Put('payos/credentials')
+  async updatePayOSCredentials(
+    @Body() dto: StorePayOSCredentialsDto,
+  ): Promise<{ message: string }> {
+    await this.paymentService.updatePayOSCredentials(dto);
+    return { message: 'PayOS credentials updated successfully' };
   }
 
   @Post('payos/link')

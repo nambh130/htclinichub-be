@@ -34,6 +34,10 @@ export interface CreatePaymentLinkResponse {
 
 export interface PaymentProvider {
   storeCredentials(clinicId: string, credentials: PaymentConfig): Promise<void>;
+  updateCredentials(
+    clinicId: string,
+    credentials: PaymentConfig,
+  ): Promise<void>;
   createPaymentLink(
     request: CreatePaymentLinkRequest,
   ): Promise<CreatePaymentLinkResponse>;

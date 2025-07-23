@@ -19,6 +19,15 @@ export class PaymentService {
     });
   }
 
+  async updatePayOSCredentials(dto: StorePayOSCredentialsDto): Promise<void> {
+    // Update PayOS credentials for a clinic
+    await this.payosService.updateCredentials(dto.clinicId, {
+      clientId: dto.clientId,
+      apiKey: dto.apiKey,
+      checksumKey: dto.checksumKey,
+    });
+  }
+
   async createPayOSPaymentLink(dto: CreatePaymentLinkDto) {
     // Create a payment link using PayOS
     return this.payosService.createPaymentLink(dto);

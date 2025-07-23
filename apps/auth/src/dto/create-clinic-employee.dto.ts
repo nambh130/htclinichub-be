@@ -13,7 +13,8 @@ export class CreateEmployeeAccount {
   password: string;
 
   @IsUUID()
+  clinicId: string;
+
+  @IsUUID()
   roleId: string;
 }
-
-

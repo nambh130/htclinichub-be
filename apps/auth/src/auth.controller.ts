@@ -106,11 +106,13 @@ export class AuthController {
 
   // ------------------------------ STAFF AND DOCTOR ------------------------------
   @Post('/doctor')
-  async createDoctorAccount(
-    @Body() account: CreateDoctorAccount
-  ) {
+  async createDoctorAccount(@Body() account: CreateDoctorAccount) {
     const { email, password } = account;
-    const createdAccount = await this.authService.createAccount(email, password, 'doctor');
+    const createdAccount = await this.authService.createAccount(
+      email,
+      password,
+      'doctor',
+    );
     if (createdAccount) {
       this.messageBroker
         .emit(
@@ -131,20 +133,24 @@ export class AuthController {
   }
 
   @Post('/admin')
-  async createAdmin(
-    @Body() account: CreateDoctorAccount
-  ) {
+  async createAdmin(@Body() account: CreateDoctorAccount) {
     const { email, password } = account;
-    const createdAccount = await this.authService.createAccount(email, password, 'admin');
+    const createdAccount = await this.authService.createAccount(
+      email,
+      password,
+      'admin',
+    );
     return createdAccount;
   }
 
   @Post('/clinic-employee')
-  async createClinicEmployee(
-    @Body() account: CreateEmployeeAccount
-  ) {
-    const { email, password, roleId } = account;
-    const createdAccount = await this.authService.createAccountByRoleId(email, password, roleId);
+  async createClinicEmployee(@Body() account: CreateEmployeeAccount) {
+    const { email, password, roleId, clinicId } = account;
+    const createdAccount = await this.authService.createAccountByRoleId(
+      email,
+      password,
+      roleId,
+    );
     if (createdAccount) {
       this.messageBroker
         .emit(
@@ -153,6 +159,7 @@ export class AuthController {
             id: createdAccount.id,
             email: createdAccount.email,
             actorType: createdAccount.actorType,
+            clinicId,
           }),
         )
         .subscribe({

@@ -11,8 +11,8 @@ export class DoctorEventController {
   constructor(
     private readonly doctorService: DoctorService,
     private readonly clinicService: ClinicService,
-    private readonly doctorClinicRepo: DoctorClinicRepo
-  ) { }
+    private readonly doctorClinicRepo: DoctorClinicRepo,
+  ) {}
 
   @EventPattern('clinic-user-created')
   async createDoctorAccount(
@@ -33,8 +33,9 @@ export class DoctorEventController {
           actorType: actorType,
         },
       );
-      if (user)
-        this.doctorService.doctorJoinClinic(userId, clinicId);
+      if (user && clinicId) {
+        await this.doctorService.doctorJoinClinic(userId, clinicId);
+      }
       if (payload.ownerOf) {
         const clinic = await this.clinicService.getClinicById(payload.ownerOf);
         clinic!.owner = user;

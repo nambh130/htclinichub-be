@@ -264,41 +264,47 @@ export class AuthService implements OnModuleInit {
   async createAccount(email: string, password: string, role: string) {
     const checkRole = await this.roleRepo.findOne({ name: role });
     if (!checkRole) {
-      throw new BadRequestException("Role not found");
+      throw new BadRequestException('Role not found');
     }
 
-    const checkDoctor = await this.clinicUserService.find({ email, actorType: checkRole.roleType });
+    const checkDoctor = await this.clinicUserService.find({
+      email,
+      actorType: checkRole.roleType,
+    });
     if (checkDoctor) {
-      throw new BadRequestException("Account already exists");
+      throw new BadRequestException('Account already exists');
     }
 
     const createdAcc = await this.clinicUserService.createUser({
       email,
       password,
       role: checkRole.id,
-      actorType: checkRole.roleType
+      actorType: checkRole.roleType,
     });
-    return createdAcc
+    return createdAcc;
   }
 
   async createAccountByRoleId(email: string, password: string, role: string) {
     const checkRole = await this.roleRepo.findOne({ id: role });
     if (!checkRole) {
-      throw new BadRequestException("Role not found");
+      throw new BadRequestException('Role not found');
     }
 
-    const checkDoctor = await this.clinicUserService.find({ email, actorType: checkRole.roleType });
+    const checkDoctor = await this.clinicUserService.find({
+      email,
+      actorType: checkRole.roleType,
+    });
     if (checkDoctor) {
-      throw new BadRequestException("Account already exists");
+      throw new BadRequestException('Account already exists');
     }
 
     const createdAcc = await this.clinicUserService.createUser({
       email,
       password,
       role: checkRole.id,
-      actorType: checkRole.roleType
+      actorType: checkRole.roleType,
     });
-    return createdAcc
+    return createdAcc;
   }
   // ------------------------------ UTILITIES ---------------------------------
   async createJWT(payload: TokenPayload) {

@@ -179,6 +179,57 @@ export class PayOSService implements PaymentProvider {
     this.encryptionService.secureCleanup(payosCredentials);
   }
 
+  async updateCredentials(
+    clinicId: string,
+    newCredentials: PaymentConfig,
+  ): Promise<void> {
+    // Validate new credentials
+    if (
+      !newCredentials.clientId ||
+      !newCredentials.apiKey ||
+      !newCredentials.checksumKey
+    ) {
+      throw new Error('Missing required PayOS credentials');
+    }
+
+    // Check if credentials exist for this clinic and provider
+    const existingCredential = await this.paymentConfigRepository.findOne({
+      clinicId,
+      provider: 'payos',
+    });
+
+    if (!existingCredential) {
+      throw new Error(
+        'No existing PayOS credentials found for this clinic. Use storeCredentials instead.',
+      );
+    }
+
+    // Encrypt new credentials
+    const encryptedNewCredentials =
+      this.encryptionService.encrypt(newCredentials);
+
+    try {
+      // Update existing credentials with new encrypted data
+      await this.paymentConfigRepository.findOneAndUpdate(
+        { clinicId, provider: 'payos' },
+        {
+          encryptedCredentials: encryptedNewCredentials,
+          isActive: true,
+          updatedAt: new Date(),
+        },
+      );
+    } catch (error) {
+      throw new Error(
+        `Failed to update PayOS credentials: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    } finally {
+      // Clean up new credentials from memory
+      this.encryptionService.secureCleanup(newCredentials);
+    }
+  }
+
   /**
    * Create payment link using PayOS
    */

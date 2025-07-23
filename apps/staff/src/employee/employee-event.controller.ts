@@ -21,6 +21,7 @@ export class EmployeeEventController {
       console.log('found: ', data);
       return this.employeeService.createEmployeeAccount(
         {
+          id: userId,
           email,
           clinic_id: clinicId,
           password: 'Abc@123.com',

@@ -25,7 +25,7 @@ export class AuthService implements OnModuleInit {
     private readonly authClient: ClientKafka,
     private readonly http: HttpService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     this.authClient.subscribeToResponseOf('login');
@@ -529,7 +529,6 @@ export class AuthService implements OnModuleInit {
     );
     return res.status(response.status).send(response.data);
   }
-
 
   async createAdminAccount(
     @Req() req: Request,
