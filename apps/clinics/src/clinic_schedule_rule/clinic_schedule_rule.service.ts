@@ -2,11 +2,16 @@ import { Inject, Injectable, BadRequestException, OnModuleInit, NotFoundExceptio
 import { HttpService } from '@nestjs/axios';
 
 import { ClinicScheduleRuleRepository } from './clinic_schedule_rule.repository';
+import { CreateClinicScheduleRuleDto, UpdateClinicScheduleRuleDto } from '@app/common/dto/clinic';
+import { ClinicRepository } from '@clinics/clinic.repository';
+import { ClinicScheduleRule } from '@clinics/models';
 
 @Injectable()
 export class ClinicScheduleRuleService {
     constructor(
         private readonly clinicScheduleRuleRepository: ClinicScheduleRuleRepository,
+        private readonly clinicRepository: ClinicRepository,
+
     ) { }
     async getClinicScheduleRuleByClinicId(clinicId: string) {
         try {
@@ -38,6 +43,8 @@ export class ClinicScheduleRuleService {
                 open_time: result.open_time,
                 close_time: result.close_time,
                 break_time: result.break_time,
+                duration: result.duration,
+                space: result.space
             }
             return data;
         } catch (error) {
@@ -46,5 +53,54 @@ export class ClinicScheduleRuleService {
         }
     }
 
+    async createClinicScheduleRuleByClinicId(
+        clinicId: string,
+        dto: CreateClinicScheduleRuleDto,
+    ) {
+        const clinic = await this.clinicRepository.findOne({ id: clinicId });
+        if (!clinic) {
+            throw new NotFoundException('clinic not found');
+        }
+
+        const existingRule = await this.clinicScheduleRuleRepository.findOne({
+            clinic: { id: clinicId }
+        },
+        );
+
+        if (existingRule) {
+            throw new BadRequestException('Clinic already has a schedule rule');
+        }
+
+        const rule = new ClinicScheduleRule();
+        rule.clinic = clinic;
+        rule.duration = dto.duration;
+        rule.space = dto.space;
+        rule.open_time = dto.open_time;
+        rule.close_time = dto.close_time;
+        rule.break_time = dto.break_time ?? null; // nếu optional
+
+        const result = await this.clinicScheduleRuleRepository.create(rule);
+
+        return result;
+    }
+
+    async updateClinicScheduleRuleByClinicId(
+        clinicId: string,
+        dto: UpdateClinicScheduleRuleDto,
+    ) {
+        const clinic = await this.clinicRepository.findOne({ id: clinicId });
+        if (!clinic) {
+            throw new NotFoundException('Clinic not found');
+        }
+
+        const existingRule = await this.clinicScheduleRuleRepository.findOne({
+            clinic: { id: clinicId }
+        },
+        );
+
+        return this.clinicScheduleRuleRepository.update(existingRule, {
+            ...dto,
+        });
+    }
 }
 
