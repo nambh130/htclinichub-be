@@ -10,6 +10,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Patch,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { ManageDoctorScheduleService } from '../manage-doctor-schedule/manage-doctor-schedule.service';
@@ -300,7 +301,7 @@ export class DoctorController {
     );
   }
 
-  @Delete('remove-clinic/:id/:clinicId')
+  @Patch('remove-clinic/:id/:clinicId')
   @UseGuards(JwtAuthGuard)
   async removeDoctorFromClinic(
     @Param('id') doctorId: string,
@@ -435,7 +436,7 @@ export class DoctorController {
   }
 
   //
-    @Get('/get-doctor-clinic-link/:doctorId/:clinicId')
+  @Get('/get-doctor-clinic-link/:doctorId/:clinicId')
   @UseGuards(JwtAuthGuard)
   async getDoctorClinicLinkByDoctorIdAndClinicId(
     @Param('doctorId') doctorId: string,

@@ -12,4 +12,3 @@ export class CreateDoctorAccount {
   @IsNotEmpty()
   password: string;
 }
-

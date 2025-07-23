@@ -18,7 +18,7 @@ import { ActorEnum } from '@app/common/enum/actor-type';
 
 @Controller('roles')
 export class RolesController {
-  constructor(private readonly roleService: RolesService) { }
+  constructor(private readonly roleService: RolesService) {}
 
   @Post()
   create(@Body() createRoleDto: CreateRoleDto) {
@@ -40,9 +40,11 @@ export class RolesController {
     return this.roleService.getRole(getRoleDto);
   }
 
-  @Get("clinic")
+  @Get('clinic')
   getAllClinicRoles() {
-    console.log("Hello")
-    return this.roleService.getAll({ roleType: In([ActorEnum.DOCTOR, ActorEnum.EMPLOYEE]) });
+    console.log('Hello');
+    return this.roleService.getAll({
+      roleType: In([ActorEnum.DOCTOR, ActorEnum.EMPLOYEE]),
+    });
   }
 }

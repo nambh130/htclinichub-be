@@ -36,8 +36,11 @@ export class ClinicUsersService {
       const clinic = await this.clinicRepository.findOne({ id: clinicId });
       newUser.clinics = [clinic];
     }
-    if(!newUser.roles){
-     throw new BadRequestException({ERR_CODE: "MISSING_FIELDS", message:"Role does not exists"}); 
+    if (!newUser.roles) {
+      throw new BadRequestException({
+        ERR_CODE: 'MISSING_FIELDS',
+        message: 'Role does not exists',
+      });
     }
 
     return await this.userRepository.create(newUser);

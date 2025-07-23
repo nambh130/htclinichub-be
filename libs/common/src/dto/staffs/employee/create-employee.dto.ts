@@ -1,6 +1,16 @@
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  Matches,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateEmployeeAccountDto {
+  @IsString()
+  @IsOptional()
+  id?: string;
+
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 

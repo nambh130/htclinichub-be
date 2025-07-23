@@ -59,7 +59,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
-  ) { }
+  ) {}
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -106,11 +106,13 @@ export class AuthController {
 
   // ------------------------------ STAFF AND DOCTOR ------------------------------
   @Post('/doctor')
-  async createDoctorAccount(
-    @Body() account: CreateDoctorAccount
-  ) {
+  async createDoctorAccount(@Body() account: CreateDoctorAccount) {
     const { email, password } = account;
-    const createdAccount = await this.authService.createAccount(email, password, 'doctor');
+    const createdAccount = await this.authService.createAccount(
+      email,
+      password,
+      'doctor',
+    );
     if (createdAccount) {
       this.messageBroker
         .emit(
@@ -131,20 +133,24 @@ export class AuthController {
   }
 
   @Post('/admin')
-  async createAdmin(
-    @Body() account: CreateDoctorAccount
-  ) {
+  async createAdmin(@Body() account: CreateDoctorAccount) {
     const { email, password } = account;
-    const createdAccount = await this.authService.createAccount(email, password, 'admin');
+    const createdAccount = await this.authService.createAccount(
+      email,
+      password,
+      'admin',
+    );
     return createdAccount;
   }
 
   @Post('/clinic-employee')
-  async createClinicEmployee(
-    @Body() account: CreateEmployeeAccount
-  ) {
-    const { email, password, roleId } = account;
-    const createdAccount = await this.authService.createAccountByRoleId(email, password, roleId);
+  async createClinicEmployee(@Body() account: CreateEmployeeAccount) {
+    const { email, password, roleId, clinicId } = account;
+    const createdAccount = await this.authService.createAccountByRoleId(
+      email,
+      password,
+      roleId,
+    );
     if (createdAccount) {
       this.messageBroker
         .emit(
@@ -153,6 +159,7 @@ export class AuthController {
             id: createdAccount.id,
             email: createdAccount.email,
             actorType: createdAccount.actorType,
+            clinicId,
           }),
         )
         .subscribe({
@@ -202,7 +209,7 @@ export class AuthController {
       throw new BadRequestException('Password does not match retype password');
     }
     const response = await this.authService.invitationSignup(dto);
-    console.log('check 3', response)
+    console.log('check 3', response);
     return response;
   }
 
@@ -290,7 +297,7 @@ export class AuthController {
 
     // Step 4: Generate new access token
     const user = await this.userService.find({ id: userId });
-    if (!user) throw new BadRequestException("User not found");
+    if (!user) throw new BadRequestException('User not found');
 
     const tokenPayload = this.authService.buildTokenPayload(user);
     const accessToken = await this.authService.createJWT(tokenPayload);

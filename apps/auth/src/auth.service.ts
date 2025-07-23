@@ -43,7 +43,7 @@ export class AuthService implements OnModuleInit {
     private readonly roleRepo: RoleRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -99,7 +99,7 @@ export class AuthService implements OnModuleInit {
       clinic: null,
     };
     if (clinicUser.actorType != ActorEnum.ADMIN) {
-      clinicUser.clinic = invitation.clinic.id
+      clinicUser.clinic = invitation.clinic.id;
     }
 
     const newClinicUser = await this.clinicUserService.createUser(clinicUser);
@@ -154,7 +154,7 @@ export class AuthService implements OnModuleInit {
       actorType: ActorEnum.DOCTOR,
     });
     if (!user) {
-      throw new BadRequestException("Invalid invitation");
+      throw new BadRequestException('Invalid invitation');
     }
     const email = user.email;
 
@@ -227,8 +227,11 @@ export class AuthService implements OnModuleInit {
     return { message: 'Invitation accepted', user };
   }
 
-  async userLogin(dto: ClinicUserLoginDto, userAgent?: string, ip?: string)
-    : Promise<AuthResponse & { refreshToken: string }> {
+  async userLogin(
+    dto: ClinicUserLoginDto,
+    userAgent?: string,
+    ip?: string,
+  ): Promise<AuthResponse & { refreshToken: string }> {
     const { email, userType } = dto;
     const user = await this.clinicUserService.find({
       email: email.toLowerCase().trim(),
@@ -261,41 +264,47 @@ export class AuthService implements OnModuleInit {
   async createAccount(email: string, password: string, role: string) {
     const checkRole = await this.roleRepo.findOne({ name: role });
     if (!checkRole) {
-      throw new BadRequestException("Role not found");
+      throw new BadRequestException('Role not found');
     }
 
-    const checkDoctor = await this.clinicUserService.find({ email, actorType: checkRole.roleType });
+    const checkDoctor = await this.clinicUserService.find({
+      email,
+      actorType: checkRole.roleType,
+    });
     if (checkDoctor) {
-      throw new BadRequestException("Account already exists");
+      throw new BadRequestException('Account already exists');
     }
 
     const createdAcc = await this.clinicUserService.createUser({
       email,
       password,
       role: checkRole.id,
-      actorType: checkRole.roleType
+      actorType: checkRole.roleType,
     });
-    return createdAcc
+    return createdAcc;
   }
 
   async createAccountByRoleId(email: string, password: string, role: string) {
     const checkRole = await this.roleRepo.findOne({ id: role });
     if (!checkRole) {
-      throw new BadRequestException("Role not found");
+      throw new BadRequestException('Role not found');
     }
 
-    const checkDoctor = await this.clinicUserService.find({ email, actorType: checkRole.roleType });
+    const checkDoctor = await this.clinicUserService.find({
+      email,
+      actorType: checkRole.roleType,
+    });
     if (checkDoctor) {
-      throw new BadRequestException("Account already exists");
+      throw new BadRequestException('Account already exists');
     }
 
     const createdAcc = await this.clinicUserService.createUser({
       email,
       password,
       role: checkRole.id,
-      actorType: checkRole.roleType
+      actorType: checkRole.roleType,
     });
-    return createdAcc
+    return createdAcc;
   }
   // ------------------------------ UTILITIES ---------------------------------
   async createJWT(payload: TokenPayload) {
