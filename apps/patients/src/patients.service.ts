@@ -34,13 +34,12 @@ export class PatientsService {
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
-  ) { }
+  ) {}
 
   async createPatient(
     createPatientDto: Partial<CreatePatientDto>,
     userId: string,
   ) {
-
     const existingMainProfiles = await this.patientsRepository.find({
       patient_account_id: createPatientDto.patient_account_id,
       relation: 'Chính chủ',
@@ -108,9 +107,11 @@ export class PatientsService {
         family_history: createPatientDto.medical_history.family_history,
       },
       bloodGroup: createPatientDto.bloodGroup,
+      clinic_id: createPatientDto.clinic_id,
     };
 
     try {
+      console.log('Creating patient with data:', patientData);
       const patient = await this.patientsRepository.createPatient(patientData);
       console.log('Patient saved:', patient);
       return patient;
@@ -139,10 +140,14 @@ export class PatientsService {
 
     try {
       // Lấy hồ sơ cụ thể đang cập nhật
-      const currentProfile = await this.patientsRepository.findOne({ _id: patient_account_id });
+      const currentProfile = await this.patientsRepository.findOne({
+        _id: patient_account_id,
+      });
 
       if (!currentProfile) {
-        throw new NotFoundException(`Không tìm thấy hồ sơ với ID ${patient_account_id}`);
+        throw new NotFoundException(
+          `Không tìm thấy hồ sơ với ID ${patient_account_id}`,
+        );
       }
 
       const accountId = currentProfile.patient_account_id;
@@ -165,11 +170,17 @@ export class PatientsService {
 
       // ❌ Muốn cập nhật thành "Chính chủ" nhưng đã có hồ sơ chính chủ khác
       if (updatePatientDto.relation === 'Chính chủ' && hasOtherMainProfile) {
-        throw new BadRequestException('Tài khoản này đã có hồ sơ "Chính chủ" khác.');
+        throw new BadRequestException(
+          'Tài khoản này đã có hồ sơ "Chính chủ" khác.',
+        );
       }
 
       // ❌ Muốn cập nhật thành hồ sơ phụ nhưng không có hồ sơ Chính chủ nào
-      if (updatePatientDto.relation !== 'Chính chủ' && !hasAnyMainProfile && !isCurrentProfileMain) {
+      if (
+        updatePatientDto.relation !== 'Chính chủ' &&
+        !hasAnyMainProfile &&
+        !isCurrentProfileMain
+      ) {
         throw new BadRequestException(
           'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
         );
@@ -187,7 +198,9 @@ export class PatientsService {
 
       // Kiểm tra số điện thoại
       if (updatePatientDto.phone) {
-        const existedPhone = await this.patientsRepository.findByPhone(updatePatientDto.phone);
+        const existedPhone = await this.patientsRepository.findByPhone(
+          updatePatientDto.phone,
+        );
         if (
           existedPhone &&
           existedPhone._id.toString() !== currentProfile._id.toString()
@@ -198,7 +211,9 @@ export class PatientsService {
 
       // Kiểm tra CCCD
       if (updatePatientDto.citizen_id) {
-        const existedCCCD = await this.patientsRepository.findCitizenId(updatePatientDto.citizen_id);
+        const existedCCCD = await this.patientsRepository.findCitizenId(
+          updatePatientDto.citizen_id,
+        );
         if (
           existedCCCD &&
           existedCCCD._id.toString() !== currentProfile._id.toString()
@@ -221,14 +236,19 @@ export class PatientsService {
       }
 
       // Thực hiện cập nhật
-      const updated = await this.patientsRepository.findOneAndUpdate(currentProfile, {
-        ...updatePatientDto,
-        updatedBy: userId,
-        updatedAt: new Date(),
-      });
+      const updated = await this.patientsRepository.findOneAndUpdate(
+        currentProfile,
+        {
+          ...updatePatientDto,
+          updatedBy: userId,
+          updatedAt: new Date(),
+        },
+      );
 
       if (!updated) {
-        throw new NotFoundException(`Không thể cập nhật hồ sơ với ID ${patient_account_id}`);
+        throw new NotFoundException(
+          `Không thể cập nhật hồ sơ với ID ${patient_account_id}`,
+        );
       }
 
       return updated;
@@ -237,7 +257,6 @@ export class PatientsService {
       throw err;
     }
   }
-
 
   async deletePatient(id: string) {
     if (!id) {
@@ -640,7 +659,10 @@ export class PatientsService {
       });
 
       // Lưu vào DB
-      await this.patientClinicLinkRepo.repo.upsert(link, ['clinic_id', 'patientAccount']);
+      await this.patientClinicLinkRepo.repo.upsert(link, [
+        'clinic_id',
+        'patientAccount',
+      ]);
 
       return link;
     } catch (error) {
@@ -707,6 +729,18 @@ export class PatientsService {
     }
   }
 
+  async getPatientsWithoutAccount(clinicId: string) {
+    try {
+      const patients = await this.patientsRepository.find({
+        patient_account_id: { $exists: false },
+        clinic_id: clinicId,
+      });
+      return patients;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getShiftById(shiftId: string) {
     const url = `http://staff:3003/manage-doctor-schedule/detail-working-shift/${shiftId}`;
     const response = await firstValueFrom(this.httpService.get(url));
@@ -748,7 +782,7 @@ export class PatientsService {
     appointment.reason = createAppointmentDto.reason;
     appointment.symptoms = createAppointmentDto.symptoms;
     appointment.note = createAppointmentDto.note ?? null;
-    appointment.examFee = createAppointmentDto.examFee ;
+    appointment.examFee = createAppointmentDto.examFee;
     appointment.createdById = user.userId.toString();
     appointment.createdByType = user.actorType;
     appointment.status = 'pending';
@@ -1244,5 +1278,4 @@ export class PatientsService {
       return 1;
     }
   }
-
 }

@@ -317,6 +317,18 @@ export class PatientsController {
     return patient;
   }
 
+  @Get('get-patient-offline/:clinicId')
+  async getPatientOffline(@Param('clinicId') clinicId: string) {
+    const patient = await this.patientsService.getPatientsWithoutAccount(clinicId);
+    if (!patient) {
+      return {
+        message: 'Không có hồ sơ bệnh nhân',
+        data: null,
+      };
+    }
+    return patient;
+  }
+
   @Post('appointment')
   async createAppointment(
     @Body('createAppointmentDto') createAppointmentDto: CreateAppointmentDto,

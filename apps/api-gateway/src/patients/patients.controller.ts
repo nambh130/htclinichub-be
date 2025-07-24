@@ -132,6 +132,21 @@ export class PatientsController {
     }
   }
 
+  @Get('/get-patient-offline/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getPatientOffline(
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const patient = await this.patientService.getPatientOffline(clinicId, user);
+      return patient;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
   @Get('/get-patient-by-fullName/:fullName')
   @UseGuards(JwtAuthGuard)
   async getPatientByFullName(
