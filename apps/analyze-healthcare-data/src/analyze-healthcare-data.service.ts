@@ -20,6 +20,9 @@ export class AnalyzeHealthcareDataService {
     userId: string,
   ) {
     try {
+
+      console.log("mRID: ", inputVitalDto)
+
       const vitalsData = {
         spo2: inputVitalDto.spo2,
         heartRate: inputVitalDto.heartRate,
@@ -37,6 +40,7 @@ export class AnalyzeHealthcareDataService {
           diastolic: inputVitalDto.bloodPressure.diastolic,
         },
         source: inputVitalDto.source,
+        mRId: inputVitalDto.mRId ?? null,
         patientId: new Types.ObjectId(inputVitalDto.patientId)
       }
 
@@ -85,6 +89,7 @@ export class AnalyzeHealthcareDataService {
           createdAt: v.createdAt,
           updatedAt: v.updatedAt,
           source: v.source,
+          mRId: v.mRId || null
         }))
       };
 
@@ -130,6 +135,7 @@ export class AnalyzeHealthcareDataService {
           createdAt: vitalsData.createdAt,
           updatedAt: vitalsData.updatedAt,
           source: vitalsData.source,
+          mRId: vitalsData.mRId || null
         },
       };
     } catch (error) {
@@ -172,6 +178,51 @@ export class AnalyzeHealthcareDataService {
       return updateVitalData;
     } catch (error) {
       console.error('Error updating patient:', error);
+      throw error;
+    }
+  }
+
+  async vitalInMRId(mRId: string) {
+    if (!mRId) {
+      throw new NotFoundException('Invalid mRId');
+    }
+
+    try {
+      const vitalsData = await this.analyzeHealthcareDataRepository.findOne({
+        mRId: mRId,
+      });
+
+      if (!vitalsData) {
+        throw new NotFoundException(`Patient with ${mRId} not found`);
+      }
+
+      return {
+        data: {
+          _id: vitalsData._id,
+          patientId: vitalsData.patientId,
+          spo2: vitalsData.spo2,
+          heartRate: vitalsData.heartRate,
+          respiratoryRate: vitalsData.respiratoryRate,
+          temperature: vitalsData.temperature,
+          weight: vitalsData.weight,
+          height: vitalsData.height,
+          bmi: vitalsData.bmi,
+          glucoseLevel: {
+            min: vitalsData.glucoseLevel?.min,
+            max: vitalsData.glucoseLevel?.max,
+          },
+          bloodPressure: {
+            systolic: vitalsData.bloodPressure?.systolic,
+            diastolic: vitalsData.bloodPressure?.diastolic,
+          },
+          createdAt: vitalsData.createdAt,
+          updatedAt: vitalsData.updatedAt,
+          source: vitalsData.source,
+          mRId: vitalsData.mRId || null
+        },
+      };
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
       throw error;
     }
   }

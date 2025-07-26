@@ -83,4 +83,20 @@ export class AnalyzeHealthcareDataService {
       throw error;
     }
   }
+
+  async vitalInMRId(
+    mRId: String,
+    currentUser: TokenPayload,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(`/analyze-healthcare/vital-in-mRId/${mRId}`)
+      );
+      console.log('input Vital API-GATEWAY successfully:', result);
+      return result.data;
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      throw error;
+    }
+  }
 }

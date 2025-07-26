@@ -8,12 +8,14 @@ import { PinoLogger } from 'nestjs-pino';
 import { nanoid } from 'nanoid';
 import { In } from 'typeorm';
 import { ClinicScheduleRuleRepository } from './clinic_schedule_rule/clinic_schedule_rule.repository';
+import { ClinicScheduleRuleService } from './clinic_schedule_rule/clinic_schedule_rule.service';
 
 @Injectable()
 export class ClinicsService {
   constructor(
     private readonly clinicsRepository: ClinicRepository,
-        private readonly ClinicScheduleRuleRepository: ClinicScheduleRuleRepository,
+    private readonly ClinicScheduleRuleRepository: ClinicScheduleRuleRepository,
+    private readonly clinicScheduleRuleService: ClinicScheduleRuleService,
 
     @Inject(CLINIC_SERVICE)
     private readonly clinicsClient: ClientKafka,
@@ -51,6 +53,16 @@ export class ClinicsService {
       newClinic.createdById = userId;
 
       const clinic = await this.clinicsRepository.create(newClinic);
+
+      if (clinic) {
+        await this.clinicScheduleRuleService.createClinicScheduleRuleByClinicId(clinic.id, {
+          open_time: '00:00',
+          close_time: '23:59', //Mở cửa cả ngày
+          duration: '00:30',
+          break_time: '00:00',
+          space: 2,
+        });
+      }
 
       this.logger.info({
         msg: 'Clinic created successfully',
@@ -389,7 +401,7 @@ export class ClinicsService {
     });
   }
 
-   async getClinicScheduleRuleByClinicId(clinicId: string, userId: string): Promise<Clinic> {
+  async getClinicScheduleRuleByClinicId(clinicId: string, userId: string): Promise<Clinic> {
     if (!clinicId) {
       throw new Error('Invalid clinic ID');
     }

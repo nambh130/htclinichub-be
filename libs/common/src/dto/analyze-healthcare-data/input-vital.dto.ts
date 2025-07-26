@@ -6,6 +6,8 @@ import {
   Min,
   Max,
   IsDefined,
+  IsString,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -71,4 +73,8 @@ export class InputVitalDto {
 
   @IsEnum(['wearable', 'manual', 'nurse'])
   source: 'wearable' | 'manual' | 'nurse';
+
+  @IsOptional()
+  @IsString()
+  mRId: string;
 }

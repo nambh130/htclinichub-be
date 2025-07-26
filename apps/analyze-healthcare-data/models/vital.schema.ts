@@ -66,6 +66,9 @@ export class Vitals extends MongoAbstractDocument {
 
     @Prop({ type: String, enum: ['wearable', 'manual', 'nurse'], default: 'manual' })
     source: string;
+
+    @Prop({ type: String, default: null })
+    mRId: string;
 }
 
 export const VitalsSchema = SchemaFactory.createForClass(Vitals);
