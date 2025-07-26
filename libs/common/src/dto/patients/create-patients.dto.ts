@@ -32,8 +32,12 @@ class MedicalHistoryDto {
 
 export class CreatePatientDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   patient_account_id: string;
+
+  @IsString()
+  @IsOptional()
+  clinic_id: string;
 
   @IsString()
   @IsNotEmpty()
