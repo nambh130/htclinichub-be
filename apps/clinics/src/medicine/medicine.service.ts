@@ -139,7 +139,7 @@ export class MedicineService extends BaseService {
     medicine.category = dto.category;
     medicine.schedule = dto.schedule;
     medicine.createdById = clinicId;
-
+    medicine.status = 'DANG_SU_DUNG';
     const result = await this.medicineRepository.create(medicine);
 
     return {
