@@ -15,6 +15,9 @@ export class LabTest extends MongoAbstractDocument {
   @Prop({ required: true })
   name: string;
 
+  // No need prop because discriminatorKey
+  testType?: TestType;
+
   @Prop()
   code?: string;
 

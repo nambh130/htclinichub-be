@@ -17,7 +17,7 @@ export class LabTestService {
     private readonly labFieldRepo: LabFieldRepository,
     private readonly quantitativeTestRepo: QuantitativeTestRepository,
     private readonly labTestRepo: LabTestRepository,
-    private readonly imagingRepo: ImagingTestRepository
+    private readonly imagingRepo: ImagingTestRepository,
   ) { }
 
   // ==================================
@@ -169,7 +169,7 @@ export class LabTestService {
       clinicId: test.clinicId,
       code: test.code,
       template: test.template,
-      price: test.price
+      price: test.price,
     })
   }
 

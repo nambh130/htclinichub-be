@@ -14,4 +14,7 @@ export class CreateManyLabOrderDto {
   @IsMongoId({ each: true })
   @Type(() => String)
   labTest: Types.ObjectId[];
+
+  @IsString()
+  clinicId: string
 }

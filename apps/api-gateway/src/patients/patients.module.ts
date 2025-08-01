@@ -22,6 +22,7 @@ import { ICDService } from './icd/icd.service';
 import { LabOrderService } from './lab-order/lab-order.service';
 import { LabOrderController } from './lab-order/lab-order.controller';
 import { PrescriptionService } from './prescription_detail/prescription_detail.service';
+import { MediaModule } from '@api-gateway/media/media.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { PrescriptionService } from './prescription_detail/prescription_detail.s
     AuthModule,
     StaffModule,
     ClinicModule,
+    MediaModule
   ],
   controllers: [PatientsController, LabTestController, LabOrderController],
   providers: [

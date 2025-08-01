@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
-// 2b. ImagingTemplate
 @Schema()
 export class ImagingTemplate {
   @Prop()

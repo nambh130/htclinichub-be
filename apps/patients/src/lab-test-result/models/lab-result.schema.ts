@@ -12,13 +12,16 @@ export enum ResultFileEnum {
 @Schema({ discriminatorKey: 'type', timestamps: true }) // `type` determines sub-type
 export class LabTestResult {
   @Prop({ type: Types.ObjectId, ref: 'LabOrderItem', required: true, unique: true })
-  testOrder: Types.ObjectId;
+  orderId: Types.ObjectId;
+
+  //@Prop({ default: Date.now })
+  //completedAt: Date;
 
   @Prop({ default: Date.now })
-  completedAt: Date;
+  createdAt: Date;
 
-  @Prop()
-  takenDate: string;
+  @Prop({ default: Date.now })
+  updatedAt: Date;
 
   @Prop({
     type: {
@@ -28,7 +31,7 @@ export class LabTestResult {
   })
   takenBy: {
     doctorId: string;
-    doctorName: string;
+    doctorName?: string;
   };
 
   @Prop({
