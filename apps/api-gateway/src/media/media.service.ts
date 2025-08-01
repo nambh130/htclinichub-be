@@ -72,6 +72,7 @@ export class MediaService {
       `/media/${endpoint}`,
       form,
       {
+        timeout: 90000,
         headers,
       },
     );

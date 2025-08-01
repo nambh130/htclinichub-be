@@ -161,7 +161,7 @@ export class LabOrderService {
     return response.data;
   }
 
-  async saveImagingResult(req: Request, payload) {
+  async saveImagingResult(req: Request, payload: any) {
     const cookie = req.headers.cookie;
 
     const response = await firstValueFrom(
