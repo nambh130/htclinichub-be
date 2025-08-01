@@ -115,4 +115,13 @@ export class MediaService {
     );
     return response.data;
   }
+
+  async deleteMultipleFiles(ids: string[], currentUser: TokenPayload): Promise<unknown> {
+    const payload = { ids, currentUser };
+
+    const response = await lastValueFrom(
+      this.mediaService.post(`/media/delete-multiple`, payload),
+    );
+    return response.data;
+  }
 }

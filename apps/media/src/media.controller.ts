@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Headers,
@@ -53,6 +54,16 @@ export class MediaController {
     const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
 
     return this.mediaService.deleteFile(id, currentUser);
+  }
+
+  @Post('delete-multiple')
+  async deleteMultipleFile(
+    @Body() body: {ids: string[]},
+    @Headers('x-current-user') currentUserRaw: string,
+  ) {
+    const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
+
+    return this.mediaService.deleteMultipleFiles(body.ids, currentUser);
   }
 
   @Post('upload-images')
