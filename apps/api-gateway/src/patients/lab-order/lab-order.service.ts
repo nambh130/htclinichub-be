@@ -10,8 +10,8 @@ export class LabOrderService {
     @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
   ) { }
 
-  async createLabField(req: Request) {
-    const cookie = req.headers.cookie; // Grab incoming cookies
+  async createLabOrder(req: Request) {
+    const cookie = req.headers.cookie;
 
     const response = await firstValueFrom(
       this.httpService
@@ -22,7 +22,33 @@ export class LabOrderService {
             headers: {
               Cookie: cookie, // Forward the original cookie
             },
-            withCredentials: true, // optional but doesn't hurt
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+
+  async updateOrderItemStatus(req: Request, id: string) {
+    const cookie = req.headers.cookie;
+
+    const response = await firstValueFrom(
+      this.httpService
+        .patch(
+          `/lab-order/item/${id}/status`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie,
+            },
           },
         )
         .pipe(
@@ -50,6 +76,115 @@ export class LabOrderService {
       }),
     );
 
+    return response.data;
+  }
+
+  async getLabOrderByClinictId(query: Record<string, any>, req: Request) {
+    const queryString = new URLSearchParams(query).toString();
+
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/by-clinic?${queryString}`, {
+        headers: {
+          Cookie: req.headers.cookie || '', // Forward incoming cookies
+        },
+        withCredentials: true,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async getOrderItemById(req: Request, id: string) {
+
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/item/${id}`, {
+        headers: {
+          Cookie: req.headers.cookie || '',
+        },
+        withCredentials: true,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async getOrderItemQuantResult(req: Request, id: string) {
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/item/${id}/quantitative-result`, {
+        headers: {
+          Cookie: req.headers.cookie || '',
+        },
+        withCredentials: true,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async getOrderItemImagingResult(req: Request, id: string) {
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/item/${id}/imaging-result`, {
+        headers: {
+          Cookie: req.headers.cookie || '',
+        },
+        withCredentials: true,
+      }),
+    );
+
+    return response.data;
+  }
+
+  async saveQuantitativeResult(req: Request) {
+    const cookie = req.headers.cookie;
+
+    const response = await firstValueFrom(
+      this.httpService
+        .post(
+          `/lab-order/item/quantitative-result`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+
+  async saveImagingResult(req: Request, payload: any) {
+    const cookie = req.headers.cookie;
+
+    const response = await firstValueFrom(
+      this.httpService
+        .post(
+          `/lab-order/item/imaging-result`,
+          payload,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
     return response.data;
   }
 }

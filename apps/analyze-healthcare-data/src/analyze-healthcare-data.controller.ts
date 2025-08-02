@@ -20,6 +20,7 @@ export class AnalyzeHealthcareDataController {
   ) {
     try {
       const { inputVitalDto, currentUser } = payload;
+      console.log("inputVitalDto2", payload.inputVitalDto)
       const inputVitalData = await this.analyzeHealthcareDataService.inputVital(inputVitalDto, currentUser.userId);
       return inputVitalData;
     } catch (error) {
@@ -74,6 +75,19 @@ export class AnalyzeHealthcareDataController {
       return createPatient;
     } catch (error) {
       console.error('Error in updatePatient:', error);
+      throw error;
+    }
+  }
+
+   @Get('vital-in-mRId/:mRId')
+  async vitalInMRId(
+    @Param('mRId') mRId: string,
+  ) {
+    try {
+      const inputVitalData = await this.analyzeHealthcareDataService.vitalInMRId(mRId);
+      return inputVitalData;
+    } catch (error) {
+      console.error('Error input Vital:', error);
       throw error;
     }
   }

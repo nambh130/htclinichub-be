@@ -279,4 +279,69 @@ export class MediaService {
         return 'raw';
     }
   }
+  async deleteMultipleFiles(
+    ids: string[],
+    currentUser: TokenPayload,
+  ): Promise<MediaDto[]> {
+    console.log('ids: ', ids);
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    console.log('objectIds: ', objectIds);
+
+    if (objectIds.length === 0) return [];
+
+    // Fetch media docs
+    const mediaDocs = await this.mediaRepository.find({
+      _id: { $in: objectIds },
+      isDeleted: { $ne: true },
+    });
+    console.log('mediaDocs: ', mediaDocs);
+
+    if (mediaDocs.length === 0) return [];
+
+    // Group publicIds by resourceType
+    const imagePublicIds = mediaDocs
+      .filter((doc) => this.getResourceType(doc.type) === 'image')
+      .map((doc) => doc.publicId);
+
+    const rawPublicIds = mediaDocs
+      .filter((doc) => this.getResourceType(doc.type) === 'raw')
+      .map((doc) => doc.publicId);
+
+    // Delete from Cloudinary
+    const deletePromises: Promise<any>[] = [];
+
+    if (imagePublicIds.length > 0) {
+      deletePromises.push(
+        this.cloudinaryClient.api.delete_resources(imagePublicIds, {
+          resource_type: 'image',
+        }),
+      );
+    }
+
+    if (rawPublicIds.length > 0) {
+      deletePromises.push(
+        this.cloudinaryClient.api.delete_resources(rawPublicIds, {
+          resource_type: 'raw',
+        }),
+      );
+    }
+
+    await Promise.all(deletePromises);
+
+    // Mark as deleted in DB
+    const updatedDocs: MediaDto[] = [];
+
+    for (const doc of mediaDocs) {
+      deleteAudit(doc, currentUser);
+      const updated = await this.mediaRepository.findOneAndUpdate(
+        { _id: doc._id },
+        { $set: doc },
+      );
+      if (updated) {
+        updatedDocs.push(this.mapToDto(updated));
+      }
+    }
+
+    return updatedDocs;
+  }
 }

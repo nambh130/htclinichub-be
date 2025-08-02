@@ -7,6 +7,7 @@ import { LoggerModule, MongoDatabaseModule } from '@app/common';
 import { CloudinaryProvider } from './cloudinary/cloudinary.provider';
 import { MediaDocument, MediaSchema } from './models/media.schema';
 import { MediaRepository } from './repository/media.repository';
+import { MediaEventController } from './media-event.controller';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { MediaRepository } from './repository/media.repository';
       'mediaService',
     ),
   ],
-  controllers: [MediaController],
+  controllers: [MediaController, MediaEventController],
   providers: [MediaService, MediaRepository, CloudinaryProvider],
 })
 export class MediaModule {}

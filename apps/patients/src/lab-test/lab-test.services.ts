@@ -17,7 +17,7 @@ export class LabTestService {
     private readonly labFieldRepo: LabFieldRepository,
     private readonly quantitativeTestRepo: QuantitativeTestRepository,
     private readonly labTestRepo: LabTestRepository,
-    private readonly imagingRepo: ImagingTestRepository
+    private readonly imagingRepo: ImagingTestRepository,
   ) { }
 
   // ==================================
@@ -104,7 +104,9 @@ export class LabTestService {
       .limit(limit)
       .exec()
 
-    const total = await this.quantitativeTestRepo.count(query);
+    const total = await this.labTestRepo.count(query);
+    console.log('total: ', total)
+    console.log('data: ', results)
 
     return {
       data: results,
@@ -126,9 +128,6 @@ export class LabTestService {
   async getQuantitativeTestById(id: Types.ObjectId) {
     return await this.quantitativeTestRepo.quantitativeTestModel
       .findOne({ _id: id })
-      .populate({
-        path: 'template',
-      })
       .lean(true);
   }
 
@@ -164,14 +163,26 @@ export class LabTestService {
   }
 
   async createQuantitativeTest(test: CreateQuantitativeTestDto) {
+    const transformedTemplate = test.template?.map(field => ({
+      loincCode: field.loincCode,
+      name: field.name,
+      unit: field.unit,
+      referenceRange: {
+        low: field.referenceRange.low,
+        high: field.referenceRange.high,
+      },
+    }));
+
     return await this.quantitativeTestRepo.create({
       name: test.name,
       clinicId: test.clinicId,
       code: test.code,
-      template: test.template,
-      price: test.price
-    })
+      price: test.price,
+      template: transformedTemplate,
+    });
   }
+
+
 
   async updateQuantiativeTest(id: Types.ObjectId, dto: UpdateQuantitativeTestDto) {
     return await this.quantitativeTestRepo.findOneAndUpdate(id, dto);

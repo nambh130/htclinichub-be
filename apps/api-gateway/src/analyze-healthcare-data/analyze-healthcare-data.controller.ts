@@ -16,6 +16,7 @@ export class AnalyzeHealthcareDataController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
+      console.log("inputVitalDto", inputVitalDto)
       const analyzeHealthcareData = await this.analyzeHealthcareDataService.inputVital(inputVitalDto, user);
       return analyzeHealthcareData;
     } catch (error) {
@@ -54,7 +55,6 @@ export class AnalyzeHealthcareDataController {
     }
   }
 
-
   @Put('/update-vital-signs/:id')
   @UseGuards(JwtAuthGuard)
   async updateVital(
@@ -77,6 +77,21 @@ export class AnalyzeHealthcareDataController {
       // return updatedPatient;
     } catch (error) {
       console.error('Error update patient:', error);
+      throw error;
+    }
+  }
+
+   @Get('/vital-in-mRId/:mRId')
+  @UseGuards(JwtAuthGuard)
+  async vitalInMRId(
+    @Param('mRId') mRId: String,
+    @CurrentUser() user: TokenPayload,
+  ) {
+    try {
+      const analyzeHealthcareData = await this.analyzeHealthcareDataService.vitalInMRId(mRId, user);
+      return analyzeHealthcareData;
+    } catch (error) {
+      console.error('Error input Vital:', error);
       throw error;
     }
   }

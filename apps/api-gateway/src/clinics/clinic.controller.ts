@@ -14,7 +14,9 @@ import { CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
 import {
   AddClinicDto,
   ClinicDto,
+  CreateClinicScheduleRuleDto,
   UpdateClinicDto,
+  UpdateClinicScheduleRuleDto,
 } from '@app/common/dto/clinic';
 import { ClinicScheduleRuleApiService } from './clinic-schedule-rule/clinic-schedule-rule.service';
 
@@ -23,7 +25,7 @@ export class ClinicController {
   constructor(
     private readonly clinicService: ClinicService,
     private readonly clinicScheduleRuleApiService: ClinicScheduleRuleApiService,
-  ) {}
+  ) { }
 
   @Post('')
   @UseGuards(JwtAuthGuard)
@@ -114,6 +116,48 @@ export class ClinicController {
         await this.clinicScheduleRuleApiService.getClinicScheduleRuleByClinicId(
           clinicId,
           user.userId,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error fetching clinic schedule rule:', error);
+      throw error;
+    }
+  }
+
+  @Post('/create-schedule-rule/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async createClinicScheduleRuleByClinicId(
+    @Param('clinicId') clinicId: string,
+    @Body() dto: CreateClinicScheduleRuleDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const result =
+        await this.clinicScheduleRuleApiService.createClinicScheduleRuleByClinicId(
+          clinicId,
+          dto,
+          currentUser,
+        );
+      return result;
+    } catch (error) {
+      console.error('Error fetching clinic schedule rule:', error);
+      throw error;
+    }
+  }
+
+  @Put('/update-schedule-rule/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async updateClinicScheduleRuleByClinicId(
+    @Param('clinicId') clinicId: string,
+    @Body() dto: UpdateClinicScheduleRuleDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    try {
+      const result =
+        await this.clinicScheduleRuleApiService.updateClinicScheduleRuleByClinicId(
+          clinicId,
+          dto,
+          currentUser,
         );
       return result;
     } catch (error) {
