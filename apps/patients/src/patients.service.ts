@@ -4,10 +4,9 @@ import { UpdatePatientDto } from '@app/common/dto/patients/update-patient.dto';
 import { PatientRepository } from './patients.repository';
 import { CLINIC_SERVICE, PATIENT_SERVICE, TokenPayload } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { Patient, PatientAccount } from './models';
+import { PatientAccount } from './models';
 import { BadRequestException } from '@nestjs/common';
 import { PatientAccountRepository } from './repositories/patient-account.repositoty';
-import { PatientClinicLink } from './models/patient_clinic_link.entity';
 import { PatientClinicLinkRepository } from './repositories/patient-clinic-link.repository';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -15,12 +14,20 @@ import { CreateAppointmentDto } from '@app/common/dto/appointment';
 import { AppointmentRepository } from './repositories/appointment.repository';
 import { Appointment } from './models/appointment.entity';
 import { DataSource, In } from 'typeorm';
-import { PatientCreated } from '@app/common/events/auth/patient-created.event';
 import { ICDRepository } from './repositories/icd.repository';
 import { ManageMedicalRecordService } from './manage-medical-record/manage_medical_record.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PatientsService {
+  // Service hosts and ports
+  private readonly CLINIC_HOST: string;
+  private readonly CLINIC_PORT: string;
+  private readonly STAFF_HOST: string;
+  private readonly STAFF_PORT: string;
+  private readonly PATIENT_HOST: string;
+  private readonly PATIENT_PORT: string;
+
   constructor(
     private readonly dataSource: DataSource,
     private readonly patientsRepository: PatientRepository,
@@ -31,10 +38,19 @@ export class PatientsService {
 
     private readonly httpService: HttpService,
     private readonly manageMedicalRecordService: ManageMedicalRecordService,
+    private readonly configService: ConfigService,
     @Inject(PATIENT_SERVICE)
     private readonly PatientsClient: ClientKafka,
     @Inject(CLINIC_SERVICE) private readonly clinicsHttpService: HttpService,
-  ) {}
+  ) {
+    // Initialize service hosts and ports
+    this.CLINIC_HOST = this.configService.get('CLINIC_SERVICE_HOST');
+    this.CLINIC_PORT = this.configService.get('CLINIC_SERVICE_PORT');
+    this.STAFF_HOST = this.configService.get('STAFF_SERVICE_HOST');
+    this.STAFF_PORT = this.configService.get('STAFF_SERVICE_PORT');
+    this.PATIENT_HOST = this.configService.get('PATIENT_SERVICE_HOST');
+    this.PATIENT_PORT = this.configService.get('PATIENT_SERVICE_PORT');
+  }
 
   async createPatient(
     createPatientDto: Partial<CreatePatientDto>,
@@ -592,49 +608,45 @@ export class PatientsService {
       throw new NotFoundException('Invalid account ID');
     }
 
-    try {
-      const patients = await this.patientsRepository.find({
-        patient_account_id: account_id,
-      });
+    const patients = await this.patientsRepository.find({
+      patient_account_id: account_id,
+    });
 
-      if (!patients || patients.length === 0) {
-        throw new NotFoundException(
-          `No patient records found for account ID ${account_id}`,
-        );
-      }
-
-      return {
-        data: patients.map((patient) => ({
-          id: patient._id,
-          patient_account_id: patient.patient_account_id,
-          fullName: patient.fullname,
-          relation: patient.relation,
-          dOB: patient.dOB,
-          citizen_id: patient.citizen_id,
-          health_insurance_id: patient.health_insurance_id,
-          marital_status: patient.marital_status,
-          address1: patient.address1,
-          address2: patient.address2 || 'Trống',
-          phone: patient.phone,
-          gender:
-            typeof patient.gender === 'boolean'
-              ? patient.gender
-                ? 'Nam'
-                : 'Nữ'
-              : 'Không xác định',
-          nation: patient.nation,
-          work_address: patient.work_address,
-          medical_history: {
-            allergies: patient.medical_history?.allergies || [],
-            personal_history: patient.medical_history?.personal_history || [],
-            family_history: patient.medical_history?.family_history || [],
-          },
-          bloodGroup: patient.bloodGroup,
-        })),
-      };
-    } catch (error) {
-      throw error;
+    if (!patients || patients.length === 0) {
+      throw new NotFoundException(
+        `No patient records found for account ID ${account_id}`,
+      );
     }
+
+    return {
+      data: patients.map((patient) => ({
+        id: patient._id,
+        patient_account_id: patient.patient_account_id,
+        fullName: patient.fullname,
+        relation: patient.relation,
+        dOB: patient.dOB,
+        citizen_id: patient.citizen_id,
+        health_insurance_id: patient.health_insurance_id,
+        marital_status: patient.marital_status,
+        address1: patient.address1,
+        address2: patient.address2 || 'Trống',
+        phone: patient.phone,
+        gender:
+          typeof patient.gender === 'boolean'
+            ? patient.gender
+              ? 'Nam'
+              : 'Nữ'
+            : 'Không xác định',
+        nation: patient.nation,
+        work_address: patient.work_address,
+        medical_history: {
+          allergies: patient.medical_history?.allergies || [],
+          personal_history: patient.medical_history?.personal_history || [],
+          family_history: patient.medical_history?.family_history || [],
+        },
+        bloodGroup: patient.bloodGroup,
+      })),
+    };
   }
 
   async assignToClinic(patient_account_id: string, clinicId: string) {
@@ -730,25 +742,21 @@ export class PatientsService {
   }
 
   async getPatientsWithoutAccount(clinicId: string) {
-    try {
-      const patients = await this.patientsRepository.find({
-        patient_account_id: { $exists: false },
-        clinic_id: clinicId,
-      });
-      return patients;
-    } catch (error) {
-      throw error;
-    }
+    const patients = await this.patientsRepository.find({
+      patient_account_id: { $exists: false },
+      clinic_id: clinicId,
+    });
+    return patients;
   }
 
   async getShiftById(shiftId: string) {
-    const url = `http://staff:3003/manage-doctor-schedule/detail-working-shift/${shiftId}`;
+    const url = `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${shiftId}`;
     const response = await firstValueFrom(this.httpService.get(url));
     return response.data; // data từ staff service trả về
   }
   async updateShiftToFullyBook(shiftId: string) {
     console.log(shiftId);
-    const url = `http://staff:3003/manage-doctor-schedule/doctor/shift/${shiftId}/status/fully-booked`;
+    const url = `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/doctor/shift/${shiftId}/status/fully-booked`;
     const response = await firstValueFrom(this.httpService.put(url));
     return response.data; // data từ staff service trả về
   }
@@ -811,7 +819,7 @@ export class PatientsService {
         const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
           firstValueFrom(
             this.httpService.get(
-              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+              `http://${this.CLINIC_HOST}:${this.CLINIC_PORT}/clinics/clinic/${appointment.clinic_id}`,
             ),
           )
             .then((res) => {
@@ -824,7 +832,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
             ),
           )
             .then((res) => {
@@ -837,7 +845,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
             ),
           )
             .then((res) => {
@@ -850,7 +858,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://patient:3005/patient-service/get-patient-by-id/${appointment.patient_profile_id}`,
+              `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patient-by-id/${appointment.patient_profile_id}`,
             ),
           )
             .then((res) => {
@@ -892,55 +900,27 @@ export class PatientsService {
     const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
       firstValueFrom(
         this.httpService.get(
-          `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+          `http://${this.CLINIC_HOST}:${this.CLINIC_PORT}/clinics/clinic/${appointment.clinic_id}`,
         ),
-      )
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.error('Clinic API error:', err);
-          return null;
-        }),
+      ).then((res) => res.data),
 
       firstValueFrom(
         this.httpService.get(
-          `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+          `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
         ),
-      )
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.error('Doctor API error:', err);
-          return null;
-        }),
+      ).then((res) => res.data),
 
       firstValueFrom(
         this.httpService.get(
-          `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+          `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
         ),
-      )
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.error('Slot API error:', err);
-          return null;
-        }),
+      ).then((res) => res.data),
 
       firstValueFrom(
         this.httpService.get(
-          `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+          `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
         ),
-      )
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.error('Profile API error:', err);
-          return null;
-        }),
+      ).then((res) => res.data),
     ]);
 
     return {
@@ -1017,7 +997,7 @@ export class PatientsService {
         const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
           firstValueFrom(
             this.httpService.get(
-              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+              `http://${this.CLINIC_HOST}:${this.CLINIC_PORT}/clinics/clinic/${appointment.clinic_id}`,
             ),
           )
             .then((res) => {
@@ -1030,7 +1010,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
             ),
           )
             .then((res) => {
@@ -1043,7 +1023,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
             ),
           )
             .then((res) => {
@@ -1056,7 +1036,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+              `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
             ),
           )
             .then((res) => {
@@ -1099,7 +1079,7 @@ export class PatientsService {
         const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
           firstValueFrom(
             this.httpService.get(
-              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+              `http://${this.CLINIC_HOST}:${this.CLINIC_PORT}/clinics/clinic/${appointment.clinic_id}`,
             ),
           )
             .then((res) => {
@@ -1112,7 +1092,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
             ),
           )
             .then((res) => {
@@ -1125,7 +1105,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
             ),
           )
             .then((res) => {
@@ -1138,7 +1118,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+              `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
             ),
           )
             .then((res) => {
@@ -1177,7 +1157,7 @@ export class PatientsService {
         const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([
           firstValueFrom(
             this.httpService.get(
-              `http://clinics:3007/clinics/clinic/${appointment.clinic_id}`,
+              `http://${this.CLINIC_HOST}:${this.CLINIC_PORT}/clinics/clinic/${appointment.clinic_id}`,
             ),
           )
             .then((res) => {
@@ -1190,7 +1170,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/staff/doctor/details/${appointment.doctor_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
             ),
           )
             .then((res) => {
@@ -1203,7 +1183,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://staff:3003/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+              `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
             ),
           )
             .then((res) => {
@@ -1216,7 +1196,7 @@ export class PatientsService {
 
           firstValueFrom(
             this.httpService.get(
-              `http://patient:3005/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+              `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
             ),
           )
             .then((res) => {
