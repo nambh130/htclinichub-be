@@ -24,7 +24,7 @@ export class MediaService {
   constructor(
     @Inject(CLOUDINARY) private cloudinaryClient: typeof cloudinary,
     private readonly mediaRepository: MediaRepository,
-  ) { }
+  ) {}
 
   //   async getFileById(
   //     id: string | null | undefined,
@@ -41,7 +41,9 @@ export class MediaService {
   //     return media ?? null;
   //   }
 
-  async getFileById(id: string | null | undefined): Promise<MediaDocument | null> {
+  async getFileById(
+    id: string | null | undefined,
+  ): Promise<MediaDocument | null> {
     console.log('[MediaService] getFileById called with:', id);
     if (!id) return null;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -281,9 +283,9 @@ export class MediaService {
     ids: string[],
     currentUser: TokenPayload,
   ): Promise<MediaDto[]> {
-    console.log('ids: ', ids)
-    const objectIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
-    console.log('objectIds: ',objectIds)
+    console.log('ids: ', ids);
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    console.log('objectIds: ', objectIds);
 
     if (objectIds.length === 0) return [];
 
@@ -292,18 +294,18 @@ export class MediaService {
       _id: { $in: objectIds },
       isDeleted: { $ne: true },
     });
-    console.log('mediaDocs: ', mediaDocs)
+    console.log('mediaDocs: ', mediaDocs);
 
     if (mediaDocs.length === 0) return [];
 
     // Group publicIds by resourceType
     const imagePublicIds = mediaDocs
-      .filter(doc => this.getResourceType(doc.type) === 'image')
-      .map(doc => doc.publicId);
+      .filter((doc) => this.getResourceType(doc.type) === 'image')
+      .map((doc) => doc.publicId);
 
     const rawPublicIds = mediaDocs
-      .filter(doc => this.getResourceType(doc.type) === 'raw')
-      .map(doc => doc.publicId);
+      .filter((doc) => this.getResourceType(doc.type) === 'raw')
+      .map((doc) => doc.publicId);
 
     // Delete from Cloudinary
     const deletePromises: Promise<any>[] = [];
@@ -342,5 +344,4 @@ export class MediaService {
 
     return updatedDocs;
   }
-
 }

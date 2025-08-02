@@ -12,13 +12,17 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.enableCors({
-
     //8080: doctor, 8082: admin, 8081: patient
-    origin: ['http://localhost:8080', 'http://localhost:8000', 'http://localhost:8082', 'http://localhost:8081'], // allow requests from these origins
+    origin: [
+      'http://localhost:8080',
+      'http://localhost:8000',
+      'http://localhost:8082',
+      'http://localhost:8081',
+    ], // allow requests from these origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // allow cookies/auth headers
   });
-  
+
   // Get ConfigService and Logger
   const configService = app.get(ConfigService);
   app.useLogger(app.get(Logger));
@@ -52,7 +56,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // Start the app
-  const port = configService.get<number>('API_GATEWAY_PORT') as number;
+  const port = configService.get<number>('API_GATEWAY_PORT');
   await app.listen(port);
   app
     .get(Logger)

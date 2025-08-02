@@ -21,9 +21,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-          console.log(request?.cookies?.Authentication)
-          console.log(configService.get<string>('JWT_SECRET')!)
-          const token = request?.cookies?.Authentication || request?.headers?.authentication;
+          console.log(request?.cookies?.Authentication);
+          console.log(configService.get<string>('JWT_SECRET')!);
+          const token =
+            request?.cookies?.Authentication ||
+            request?.headers?.authentication;
           if (!token) {
             console.log('JWT not found');
           } else {
@@ -37,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: TokenPayload) {
-    console.log(payload)
+    console.log(payload);
     // JWT is already verified and decoded here
     return payload;
   }
