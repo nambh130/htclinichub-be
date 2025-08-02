@@ -2,9 +2,9 @@ import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post
 import { LabOrderService } from "./lab-order.service";
 import { Request } from "express";
 import { MediaService } from "@api-gateway/media/media.service";
-import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { FilesInterceptor } from "@nestjs/platform-express";
 import { CurrentUser, JwtAuthGuard, TokenPayload } from "@app/common";
-import { CreateImagingTestResultDto } from "apps/patients/src/lab-order/dtos/save-imaging-result.dto";
+import { CreateImagingTestResultDto } from "./dto/save-imaging-result.dto";
 
 @Controller('lab-order')
 export class LabOrderController {
