@@ -7,13 +7,22 @@ export class LabResultField {
   fieldName: string;
 
   @Prop({ required: true })
-  value: any;
+  value: number;
 
   @Prop()
   unit?: string;
 
-  @Prop()
-  referenceRange?: string;
+  @Prop({
+    type: {
+      low: Number,
+      high: Number,
+    },
+    required: true
+  })
+  referenceRange?: {
+    low: number;
+    high: number;
+  };
 
   @Prop()
   takenByMachine?: string;
@@ -32,5 +41,3 @@ export class QuantitativeTestResult extends LabTestResult {
 }
 
 export const QuantitativeTestResultSchema = SchemaFactory.createForClass(QuantitativeTestResult);
-
-

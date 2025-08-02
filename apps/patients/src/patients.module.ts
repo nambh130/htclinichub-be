@@ -47,6 +47,7 @@ import { PrescriptionModule } from './prescription_detail/prescription_detail.mo
 import { PrescriptionController } from './prescription_detail/prescription_detail.controller';
 import { PrescriptionService } from './prescription_detail/prescription_detail.service';
 import { PrescriptionRepository } from './prescription_detail/prescription_detail.repository';
+import { BarcodeCounterModule } from './barcode-counter/barcode-counter.module';
 
 @Module({
   imports: [
@@ -153,6 +154,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
     LabTestModule,
+    BarcodeCounterModule,
     forwardRef(() => PrescriptionModule),
   ],
   controllers: [

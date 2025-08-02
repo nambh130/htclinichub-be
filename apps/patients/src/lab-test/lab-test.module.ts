@@ -1,4 +1,4 @@
-import { MongoDatabaseModule } from '@app/common';
+import { MongoDatabaseModule, PATIENT_SERVICE } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ImagingTest, ImagingTestSchema, LabTest, LabTestSchema, QuantitativeTest, QuantitativeTestSchema, TestEnum } from './models/lab-test.schema';
 import { ImagingTemplate, ImagingTemplateSchema } from './models/imaging-template.schema';
@@ -15,6 +15,10 @@ import { LabOrderController } from '../lab-order/lab-order.controller';
 import { LabOrderRepository } from '../lab-order/repositories/lab-order.repository';
 import { LabOrderService } from '../lab-order/lab-order.service';
 import { LabOrderItemRepository } from '../lab-order/repositories/lab-order-item.repository';
+import { BarcodeCounterModule } from '../barcode-counter/barcode-counter.module';
+import { LabTestResultModule } from '../lab-test-result/lab-test-result.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -54,7 +58,28 @@ import { LabOrderItemRepository } from '../lab-order/repositories/lab-order-item
         },
       ],
       'patientService', // connectionName from forRoot
-    )
+    ),
+    ClientsModule.registerAsync([
+      {
+        name: PATIENT_SERVICE, // tương ứng 'patients'
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'patients-client',
+              brokers: [configService.get('KAFKA_BROKER')!],
+            },
+            consumer: {
+              groupId: 'patients-consumer',
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
+    BarcodeCounterModule,
+    LabTestResultModule
   ],
   controllers: [LabTestController, LabOrderController],
   providers: [LabTestService,

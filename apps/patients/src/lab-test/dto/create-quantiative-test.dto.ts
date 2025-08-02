@@ -1,23 +1,47 @@
-import { IsOptional, IsString, IsArray, IsMongoId, IsNumber, Min } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsString, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class CreateQuantitativeTestDto {
+class ReferenceRangeDto {
+  @IsNumber()
+  low: number;
+
+  @IsNumber()
+  high: number;
+}
+
+class LabFieldDto {
+  @IsOptional()
+  @IsString()
+  loincCode?: string;
+
   @IsString()
   name: string;
 
   @IsString()
+  unit: string;
+
+  @ValidateNested()
+  @Type(() => ReferenceRangeDto)
+  referenceRange: ReferenceRangeDto;
+}
+
+export class CreateQuantitativeTestDto {
+  @IsString()
   clinicId: string;
+
+  @IsString()
+  name: string;
+
+  @IsNumber()
+  price: number;
 
   @IsOptional()
   @IsString()
   code?: string;
 
-  @IsNumber()
-  @Min(0)
-  price: number
-
-  @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true })
-  template?: Types.ObjectId[];
+  @ValidateNested({ each: true })
+  @Type(() => LabFieldDto)
+  @IsOptional()
+  template?: LabFieldDto[];
 }

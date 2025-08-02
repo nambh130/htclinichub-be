@@ -1,8 +1,13 @@
 import { MongoAbstractRepository } from "@app/common";
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { FilterQuery, Model } from "mongoose";
 import { LabOrderItem } from "../models/lab-order-item.schema";
+import { LabTest } from "../../lab-test/models/lab-test.schema";
+
+type LabOrderItemWithTest = Omit<LabOrderItem, 'labTest'> & {
+  labTest: LabTest;
+};
 
 @Injectable()
 export class LabOrderItemRepository extends MongoAbstractRepository<LabOrderItem> {
@@ -13,6 +18,10 @@ export class LabOrderItemRepository extends MongoAbstractRepository<LabOrderItem
     readonly labOrderItemModel: Model<LabOrderItem>
   ) {
     super(labOrderItemModel)
+  }
+
+  async findOnePopulated(filterQuery: FilterQuery<LabOrderItem>): Promise<LabOrderItemWithTest | null> {
+    return this.labOrderItemModel.findOne(filterQuery).populate('labTest') as any;
   }
 }
 
