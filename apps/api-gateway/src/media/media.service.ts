@@ -108,10 +108,16 @@ export class MediaService {
   }
 
   async deleteFile(id: string, currentUser: TokenPayload): Promise<unknown> {
-    const payload = { id, currentUser };
-
     const response = await lastValueFrom(
-      this.mediaService.post(`/media/delete/${id}`, payload),
+      this.mediaService.post(
+        `/media/delete/${id}`,
+        {}, // body can be empty
+        {
+          headers: {
+            'x-current-user': JSON.stringify(currentUser),
+          },
+        },
+      ),
     );
     return response.data;
   }

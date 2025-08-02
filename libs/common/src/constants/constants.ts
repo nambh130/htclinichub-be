@@ -38,3 +38,6 @@ export const PATIENTS_STAFF_CONSUMER_GROUP = 'patients-staff-consumer';
 // Topic names
 export const GET_DOCTORS_BY_IDS = 'get-doctors-by-ids';
 export const GET_DOCTORS_BY_IDS_REPLY = 'get-doctors-by-ids.reply';
+
+// Payment provider
+export const PAYOS = 'payos';

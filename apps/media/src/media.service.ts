@@ -26,33 +26,35 @@ export class MediaService {
     private readonly mediaRepository: MediaRepository,
   ) {}
 
-//   async getFileById(
-//     id: string | null | undefined,
-//   ): Promise<MediaDocument | null> {
-//     if (!id) return null;
-// console.log('[MediaService] getFileById called with:', id);
-//     const media = await this.mediaRepository.findOne({
-//       _id: id,
-//       isDeleted: { $ne: true },
-//     });
+  //   async getFileById(
+  //     id: string | null | undefined,
+  //   ): Promise<MediaDocument | null> {
+  //     if (!id) return null;
+  // console.log('[MediaService] getFileById called with:', id);
+  //     const media = await this.mediaRepository.findOne({
+  //       _id: id,
+  //       isDeleted: { $ne: true },
+  //     });
 
-//     console.log('[MediaService] media called with:', media);
+  //     console.log('[MediaService] media called with:', media);
 
-//     return media ?? null;
-//   }
+  //     return media ?? null;
+  //   }
 
-async getFileById(id: string | null | undefined): Promise<MediaDocument | null> {
-  console.log('[MediaService] getFileById called with:', id);
-  if (!id) return null;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return null; // hoặc throw new BadRequestException('Invalid media ID');
+  async getFileById(
+    id: string | null | undefined,
+  ): Promise<MediaDocument | null> {
+    console.log('[MediaService] getFileById called with:', id);
+    if (!id) return null;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return null; // hoặc throw new BadRequestException('Invalid media ID');
+    }
+
+    return await this.mediaRepository.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    });
   }
-
-  return await this.mediaRepository.findOne({
-    _id: id,
-    isDeleted: { $ne: true },
-  });
-}
 
   async uploadFile(
     file: Express.Multer.File,
