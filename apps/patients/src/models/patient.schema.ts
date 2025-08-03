@@ -59,7 +59,7 @@ export class Patient extends MongoAbstractDocument {
   @Prop()
   address2: string;
 
-  @Prop({ unique: true })
+  @Prop()
   phone: string;
 
   @Prop()

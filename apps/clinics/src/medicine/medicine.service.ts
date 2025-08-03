@@ -7,7 +7,7 @@ import { ImportMedicineDto, UpdateMedicineDto } from '@app/common/dto/staffs/med
 import { plainToInstance } from 'class-transformer';
 import stripBomStream from 'strip-bom-stream';
 import { ClinicRepository } from '../clinic.repository';
-import { Brackets } from 'typeorm';
+import { Brackets, Not } from 'typeorm';
 import { Medicine } from '@clinics/models';
 @Injectable()
 export class MedicineService extends BaseService {
@@ -291,6 +291,16 @@ export class MedicineService extends BaseService {
       id: medicineId,
       clinic_id: { id: clinicId },
     };
+
+    const existCode = await this.medicineRepository.findOne({
+      code: dto.code,
+      clinic_id: { id: clinicId },
+      id: Not(medicineId),
+    });
+
+    if (existCode) {
+      throw new BadRequestException('Mã thuốc đã tồn tại'); // nên dùng BadRequest
+    }
 
     // 3. Cập nhật thuốc sử dụng hàm `findOneAndUpdate` tái sử dụng
     const updated = await this.medicineRepository.findOneAndUpdate(where, dto);
