@@ -9,8 +9,27 @@ export class ImagingResultData {
   @Prop()
   conclusion?: string;
 
-  @Prop({ type: [String] })
-  images?: string[];
+  @Prop({
+    type: [
+      {
+        id: { type: String },
+        url: { type: String },
+      },
+    ],
+    default: [],
+  })
+  images?: { id: string; url: string }[];
+
+  @Prop({
+    type: [
+      {
+        id: { type: String },
+        url: { type: String },
+      },
+    ],
+    default: [],
+  })
+  dicoms?: { id: string; url: string }[];
 }
 
 export const ImagingResultDataSchema = SchemaFactory.createForClass(ImagingResultData);
@@ -21,8 +40,8 @@ export const ImagingResultDataSchema = SchemaFactory.createForClass(ImagingResul
 
 @Schema()
 export class ImagingTestResult extends LabTestResult {
-  @Prop({ type: [ImagingResultDataSchema], default: [] })
-  result: ImagingResultData[];
+  @Prop({ type: ImagingResultDataSchema, default: [] })
+  result: ImagingResultData;
 }
 
 export const ImagingTestResultSchema = SchemaFactory.createForClass(ImagingTestResult);

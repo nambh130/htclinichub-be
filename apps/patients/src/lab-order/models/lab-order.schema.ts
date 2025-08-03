@@ -5,10 +5,16 @@ import { Types } from "mongoose";
 @Schema()
 export class LabOrder extends MongoAbstractDocument {
   @Prop()
+  clinicId: string
+
+  @Prop()
   orderDate: Date
 
+  @Prop({required: false})
+  barCode?: string
+
   @Prop({ type: Types.ObjectId, ref: 'MedicalRecord' })
-  medicalReport: Types.ObjectId
+  medicalRecord: Types.ObjectId
 
   @Prop()
   name: string

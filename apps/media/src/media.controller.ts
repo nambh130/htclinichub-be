@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Headers,
@@ -28,6 +29,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File,
     @Headers('x-current-user') currentUserRaw: string,
   ) {
+    console.log(currentUserRaw);
     const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
 
     return this.mediaService.uploadFile(file, 'image', currentUser);
@@ -50,9 +52,20 @@ export class MediaController {
     @Param('id') id: string,
     @Headers('x-current-user') currentUserRaw: string,
   ) {
+    console.log(currentUserRaw);
     const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
 
     return this.mediaService.deleteFile(id, currentUser);
+  }
+
+  @Post('delete-multiple')
+  async deleteMultipleFile(
+    @Body() body: {ids: string[]},
+    @Headers('x-current-user') currentUserRaw: string,
+  ) {
+    const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
+
+    return this.mediaService.deleteMultipleFiles(body.ids, currentUser);
   }
 
   @Post('upload-images')

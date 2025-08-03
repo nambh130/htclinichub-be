@@ -40,18 +40,29 @@ import { PatientEventController } from './patients-event.controller';
 import { LabTestModule } from './lab-test/lab-test.module';
 import { ICD } from './models/icd.entity';
 import { ICDRepository } from './repositories/icd.repository';
-import { MedicalRecord, MedicalRecordSchema } from './models/medical_record.schema';
+import {
+  MedicalRecord,
+  MedicalRecordSchema,
+} from './models/medical_record.schema';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
-import { PrescriptionDetail, PrescriptionDetailSchema } from './models/prescription_detail.schema';
+import {
+  PrescriptionDetail,
+  PrescriptionDetailSchema,
+} from './models/prescription_detail.schema';
 import { PrescriptionModule } from './prescription_detail/prescription_detail.module';
 import { PrescriptionController } from './prescription_detail/prescription_detail.controller';
 import { PrescriptionService } from './prescription_detail/prescription_detail.service';
 import { PrescriptionRepository } from './prescription_detail/prescription_detail.repository';
+import { BarcodeCounterModule } from './barcode-counter/barcode-counter.module';
 
 @Module({
   imports: [
-    HttpModule.register({
-      baseURL: 'http://clinic:3007',
+    HttpModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        baseURL: `http://${configService.get('CLINIC_SERVICE_HOST')}:${configService.get('CLINIC_SERVICE_PORT')}`,
+      }),
+      inject: [ConfigService],
     }),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -59,6 +70,12 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         PATIENT_SERVICE_URI: Joi.string().required(),
+        CLINIC_SERVICE_HOST: Joi.string().required(),
+        CLINIC_SERVICE_PORT: Joi.number().required(),
+        STAFF_SERVICE_HOST: Joi.string().required(),
+        STAFF_SERVICE_PORT: Joi.number().required(),
+        PATIENT_SERVICE_HOST: Joi.string().required(),
+        PATIENT_SERVICE_PORT: Joi.number().required(),
       }),
     }),
 
@@ -70,7 +87,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
         },
       }),
       inject: [ConfigService],
-      global: true
+      global: true,
     }),
 
     LoggerModule,
@@ -114,7 +131,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
           options: {
             client: {
               clientId: 'patients-client',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: 'patients-consumer',
@@ -134,7 +151,7 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
           options: {
             client: {
               clientId: PATIENTS_TO_STAFF_CLIENT,
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: PATIENTS_TO_STAFF_CONSUMER,
@@ -153,13 +170,14 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     FavouriteDoctorModule,
     ManageMedicalRecordModule,
     LabTestModule,
+    BarcodeCounterModule,
     forwardRef(() => PrescriptionModule),
   ],
   controllers: [
     PatientsController,
     FavouriteDoctorController,
     PatientEventController,
-    PrescriptionController
+    PrescriptionController,
   ],
   providers: [
     PatientsService,
@@ -178,7 +196,8 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     },
     AppointmentRepository,
     ICDRepository,
-    PrescriptionService, PrescriptionRepository
+    PrescriptionService,
+    PrescriptionRepository,
   ],
   exports: [
     PatientsService,
@@ -190,7 +209,8 @@ import { PrescriptionRepository } from './prescription_detail/prescription_detai
     PatientClinicLinkRepository,
     AppointmentRepository,
     ICDRepository,
-    PrescriptionService, PrescriptionRepository
+    PrescriptionService,
+    PrescriptionRepository,
   ],
 })
-export class PatientsModule { }
+export class PatientsModule {}
