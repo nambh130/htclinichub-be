@@ -30,6 +30,7 @@ export class LabOrderController {
   ) {
     return this.labOrderService.createLabOrder(
       {
+        testType: dto.testType,
         labTestIds: dto.labTest,
         medicalReportId: dto.medicalReport,
         name: dto.name,
@@ -44,9 +45,13 @@ export class LabOrderController {
     @Query() query: GetOrdersByRecordDto,
   ) {
     return this.labOrderService.getLabOrdersByReportId(
-      query.recordId,
-      query.page,
-      query.limit);
+      {
+        medicalReportId: query.recordId,
+        page: query.page,
+        limit: query.limit,
+        type: query.testType
+      }
+    );
   }
 
   @Get('by-clinic')
@@ -85,8 +90,12 @@ export class LabOrderController {
     @CurrentUser() user: TokenPayload
   ) {
     return this.labOrderService.updateOrderItemStatus(
-      id, dto.status,
-      { userId: user.userId, userType: user.actorType }
+      {
+        orderItemId: id,
+        status: dto.status,
+        clinicId: dto.clinicId,
+      },
+      { updatedById: user.userId, updatedByType: user.actorType }
     )
   }
 
@@ -113,7 +122,9 @@ export class LabOrderController {
     @CurrentUser() user: TokenPayload
   ) {
     return this.labOrderService.saveQuantitativeResult(
-      dto.orderItemId, dto.result, user.userId, dto.accept
+      dto.orderItemId, dto.result,
+      { userId: user.userId, userType: user.actorType },
+      dto.accept
     )
   }
 
@@ -124,7 +135,7 @@ export class LabOrderController {
     @CurrentUser() user: TokenPayload
   ) {
     const updateResult = await this.labOrderService.saveImagingResult(
-      dto.orderItemId, dto.result, user.userId, dto.accept
+      dto.orderItemId, dto.result, { userId: user.userId, userType: user.actorType }, dto.accept
     ) as ImagingTestResult & { deletedImageIds: string[] };
     if (updateResult.deletedImageIds.length > 0) {
       this.kafkaClient.emit('delete-multiple-files',

@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { ImagingResultRepository } from "./repositories/imaging-test-result.repository";
 import { ImagingResultData, ImagingTestResult } from "./models/imaging-test-result.schema";
 import { Injectable } from "@nestjs/common";
+import { ActorType } from "@app/common";
 
 @Injectable()
 export class TestResultService {
@@ -23,16 +24,17 @@ export class TestResultService {
   async createQuantitativeResult({
     orderId,
     result,
-    doctorId
+    createdBy,
   }: {
     orderId: Types.ObjectId;
     result: QuantitativeTestResult["result"];
-    doctorId: string;
+    createdBy: { userId: string, userType: ActorType },
   }) {
     return this.quantitativeResultRepo.create({
       orderId,
       result,
-      takenBy: { doctorId },
+      createdBy,
+      updatedBy: createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -42,18 +44,18 @@ export class TestResultService {
     id: string,
     updateData: Partial<{
       result: QuantitativeTestResult["result"];
-      //doctorId: string;
+      updatedBy: {
+        userId: string;
+        userType: ActorType;
+      }
     }>
   ) {
     const updatePayload: any = {};
 
-    if (updateData.result) {
-      updatePayload.result = updateData.result;
-    }
+    const { result, updatedBy } = updateData;
 
-    //if (updateData.doctorId) {
-    //  updatePayload.takenBy = { doctorId: updateData.doctorId };
-    //}
+    if (result) updatePayload.result = result;
+    if (updatedBy?.userId && updatedBy?.userType) updatePayload.updatedBy = updatedBy;
 
     if (Object.keys(updatePayload).length > 0) {
       updatePayload.updatedAt = new Date();
@@ -66,11 +68,11 @@ export class TestResultService {
   async upsertQuantitativeResult({
     orderId,
     result,
-    doctorId,
+    actor
   }: {
     orderId: Types.ObjectId | string;
     result: QuantitativeTestResult["result"];
-    doctorId: string;
+    actor: { userId: string; userType: ActorType };
   }) {
     const oid = typeof orderId === "string" ? new Types.ObjectId(orderId) : orderId;
 
@@ -79,12 +81,13 @@ export class TestResultService {
     if (existing) {
       return this.updateQuantitativeResult(existing._id.toString(), {
         result,
+        updatedBy: actor,
       });
     } else {
       return this.createQuantitativeResult({
         orderId: oid,
         result,
-        doctorId,
+        createdBy: actor,
       });
     }
   }
@@ -92,11 +95,11 @@ export class TestResultService {
   async upsertImagingResult({
     orderId,
     result,
-    doctorId
+    actor
   }: {
     orderId: string,
     result: ImagingResultData;
-    doctorId: string
+    actor: { userId: string; userType: ActorType };
   }) {
     const oid = typeof orderId === "string" ? new Types.ObjectId(orderId) : orderId;
     const existing = await this.imagingResultRepo.findByOrderId(oid);
@@ -114,13 +117,13 @@ export class TestResultService {
       }
 
       saveResult = await this.updateImagingResult(existing._id.toString(), {
-        result: result
+        result: result, updatedBy: actor
       })
     } else {
       saveResult = await this.createImagingResult({
         orderId: oid,
         result: result,
-        doctorId: doctorId
+        createdBy: actor,
       })
     }
     return { ...saveResult, deletedImageIds }
@@ -129,16 +132,17 @@ export class TestResultService {
   async createImagingResult({
     orderId,
     result,
-    doctorId,
+    createdBy,
   }: {
     orderId: Types.ObjectId;
     result: ImagingResultData;
-    doctorId: string;
+    createdBy: { userId: string; userType: ActorType };
   }) {
     return this.imagingResultRepo.create({
       orderId,
       result,
-      takenBy: { doctorId },
+      createdBy,
+      updatedBy: createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -149,7 +153,7 @@ export class TestResultService {
     payload: Partial<{
       orderId: Types.ObjectId;
       result: ImagingResultData;
-      doctorId: string;
+      updatedBy: { userId: string; userType: ActorType };
     }>
   ) {
     const updatePayload: any = {
@@ -162,10 +166,11 @@ export class TestResultService {
     if (payload.result) {
       updatePayload.result = payload.result;
     }
-    if (payload.doctorId) {
-      updatePayload.takenBy = { doctorId: payload.doctorId };
+    if (payload.updatedBy) {
+      updatePayload.updatedBy = payload.updatedBy;
     }
 
     return this.imagingResultRepo.updateById(id, updatePayload);
   }
+
 }

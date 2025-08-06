@@ -10,8 +10,8 @@ import { TestType } from "../lab-test/models/lab-test.schema";
 import { TestResultService } from "../lab-test-result/lab-test-result.service";
 import { QuantitativeTestResult } from "../lab-test-result/models/quantitative-lab-result.schema";
 import { Exception } from "handlebars";
-import { ActorEnum } from "@app/common/enum/actor-type";
 import { ImagingResultData, ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
+import { LabOrderItem } from "./models/lab-order-item.schema";
 
 @Injectable()
 export class LabOrderService {
@@ -27,6 +27,7 @@ export class LabOrderService {
     data: {
       medicalReportId: Types.ObjectId,
       labTestIds: Types.ObjectId[],
+      testType: TestType,
       name: string,
       clinicId: string
     },
@@ -54,10 +55,12 @@ export class LabOrderService {
 
     // 3. Create a single LabOrder containing all LabOrderItem IDs
     const labOrder = await this.labOrderRepo.create({
+      type: data.testType,
       medicalRecord: new Types.ObjectId(data.medicalReportId),
       orderDate: new Date(),
       name: data.name,
-      barCode: await this.barcodeCounterService.generateBarcode(BarcodeCounterName.LAB_ORDER),
+      barCode: await this.barcodeCounterService
+        .generateBarcode(BarcodeCounterName.LAB_ORDER, data.clinicId),
       orderItems: createdItems.map(item => item._id),
       createdById: createdBy.userId,
       createdByType: createdBy.userType,
@@ -75,15 +78,31 @@ export class LabOrderService {
   }
 
   async getLabOrdersByReportId(
-    medicalReportId: Types.ObjectId,
-    page = 1,
-    limit = 10,
+    {
+      medicalReportId,
+      type,
+      page = 1,
+      limit = 10,
+    }: {
+      medicalReportId: Types.ObjectId,
+      type?: TestType,
+      page: number,
+      limit: number,
+    }
   ) {
     const skip = (page - 1) * limit;
 
+    const filter: any = {
+      medicalRecord: new Types.ObjectId(medicalReportId),
+    };
+
+    if (type) {
+      filter.type = type;
+    }
+
     const [data, total] = await Promise.all([
       this.labOrderRepo.labOrderModel
-        .find({ medicalRecord: new Types.ObjectId(medicalReportId) })
+        .find(filter)
         .populate({
           path: 'orderItems',
           populate: {
@@ -96,7 +115,7 @@ export class LabOrderService {
         .limit(limit)
         .exec(),
 
-      this.labOrderRepo.labOrderModel.countDocuments({ medicalRecord: new Types.ObjectId(medicalReportId) }),
+      this.labOrderRepo.labOrderModel.countDocuments(filter),
     ]);
 
     return {
@@ -151,28 +170,51 @@ export class LabOrderService {
   }
 
   async updateOrderItemStatus(
-    orderItemId: string,
-    status: LabStatusType,
-    updatedBy: {
-      userType: ActorType,
-      userId: string
+    {
+      orderItemId,
+      status,
+      clinicId,
+    }:
+      {
+        orderItemId: string,
+        status: LabStatusType,
+        clinicId?: string,
+      },
+    {
+      updatedByType,
+      updatedById
+    }: {
+      updatedByType: ActorType,
+      updatedById: string
     }
   ) {
+    const updateData: Partial<LabOrderItem> = { updatedById, updatedByType, status }
     const item = await this.labOrderItemRepo.findOne({ _id: orderItemId });
     if (!item) {
       throw new BadRequestException("Item not found!");
     }
+
     if (item.status == LabStatusEnum.PENDING
       && !(status == LabStatusEnum.IN_PROCESS ||
         status == LabStatusEnum.DISPOSED)
     ) { throw new BadRequestException("Invalid state") }
 
+    // Generate barcode if the item is first process
+    if (!item.barcode && status == LabStatusEnum.IN_PROCESS) {
+      const barcode = await this.barcodeCounterService.generateBarcode(
+        BarcodeCounterName.LAB_ORDER_ITEM, clinicId
+      )
+      updateData.barcode = barcode;
+      updateData.sampleTakenAt = new Date();
+      updateData.sampleTakenBy = {userId: updatedById, userType: updatedByType};
+    }
+
+    //if (status === LabStatusEnum.DISPOSED) {
+    //  updateData.sampleTakenAt = null;
+    //}
+
     return await this.labOrderItemRepo.findOneAndUpdate({ _id: orderItemId },
-      {
-        status,
-        updatedByType: updatedBy.userType,
-        updatedById: updatedBy.userId
-      });
+      updateData);
   }
 
   async rejectOrderItem(
@@ -183,14 +225,15 @@ export class LabOrderService {
       throw new BadRequestException("Item not found!");
     }
 
-    return await this.labOrderItemRepo.findOneAndUpdate({ _id: orderItemId }, { status: LabStatusEnum.DISPOSED });
+    return await this.labOrderItemRepo.findOneAndUpdate({ _id: orderItemId },
+      { status: LabStatusEnum.DISPOSED });
   }
 
   async saveQuantitativeResult(
     orderItemId: string,
     result: QuantitativeTestResult["result"],
-    doctorId: string,
-    accept?: boolean //just save or save and accept
+    actor: { userId: string, userType: ActorType },
+    accept?: boolean //just save or save and complete
   ) {
     const orderItem = await this.labOrderItemRepo
       .findOnePopulated({ _id: orderItemId })
@@ -199,14 +242,18 @@ export class LabOrderService {
     }
     const updateResult = await
       this.testResultService.upsertQuantitativeResult({
-        orderId: orderItemId, result, doctorId
+        orderId: orderItemId, result, actor
       });
     if (!updateResult) {
       throw new Exception('Something gone wrong')
     }
     if (accept) {
-      this.updateOrderItemStatus(orderItemId, LabStatusEnum.COLLECTED,
-        { userType: ActorEnum.DOCTOR, userId: doctorId }
+      this.updateOrderItemStatus(
+        {
+          orderItemId,
+          status: LabStatusEnum.COLLECTED,
+        },
+        { updatedByType: actor.userType, updatedById: actor.userId }
       )
     }
     return updateResult
@@ -215,7 +262,7 @@ export class LabOrderService {
   async saveImagingResult(
     orderItemId: string,
     result: ImagingResultData,
-    doctorId: string,
+    actor: { userId: string, userType: ActorType },
     accept?: boolean //just save or save and accept
   ): Promise<ImagingTestResult & { deletedImageIds: string[] } | Error> {
     const orderItem = await this.labOrderItemRepo
@@ -228,14 +275,18 @@ export class LabOrderService {
       this.testResultService.upsertImagingResult({
         orderId: orderItemId,
         result,
-        doctorId
+        actor
       });
     if (!updateResult) {
       throw new Exception('Something gone wrong')
     }
     if (accept) {
-      this.updateOrderItemStatus(orderItemId, LabStatusEnum.COLLECTED,
-        { userType: ActorEnum.DOCTOR, userId: doctorId }
+      this.updateOrderItemStatus(
+        {
+          orderItemId,
+          status: LabStatusEnum.COLLECTED,
+        },
+        { updatedByType: actor.userType, updatedById: actor.userType }
       )
     }
     return updateResult
