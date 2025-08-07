@@ -27,7 +27,7 @@ export class ManageMedicalRecordService {
     private readonly patientRepository: PatientRepository,
     @Inject(PATIENTS_TO_STAFF_SERVICE)
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
   async getGroupedMedicalRecordsByUserId(userId: string) {
     try {
       // 1. Tìm tất cả hồ sơ bệnh nhân thuộc user
@@ -101,6 +101,7 @@ export class ManageMedicalRecordService {
       const result = {
         _id: record._id.toString(),
         patient_id: record.patient_id.toString(),
+        appointment_id: record.appointment_id,
         patient_name: patient?.fullname || null,
         gender: patient?.gender,
         dOB: patient?.dOB || null,
@@ -108,6 +109,11 @@ export class ManageMedicalRecordService {
         symptoms: record.symptoms,
         diagnosis: record.diagnosis,
         next_appoint: record.next_appoint,
+        icd: {
+          code: record.icd?.code,
+          name: record.icd?.name,
+        },
+        treatmentDirection: record.treatmentDirection,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
       };

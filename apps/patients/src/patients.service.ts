@@ -194,15 +194,15 @@ export class PatientsService {
       }
 
       // ❌ Muốn cập nhật thành hồ sơ phụ nhưng không có hồ sơ Chính chủ nào
-      if (
-        updatePatientDto.relation !== 'Chính chủ' &&
-        !hasAnyMainProfile &&
-        !isCurrentProfileMain
-      ) {
-        throw new BadRequestException(
-          'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
-        );
-      }
+      // if (
+      //   updatePatientDto.relation !== 'Chính chủ' &&
+      //   !hasAnyMainProfile &&
+      //   !isCurrentProfileMain
+      // ) {
+      //   throw new BadRequestException(
+      //     'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
+      //   );
+      // }
 
       if (
         currentProfile.relation === 'Chính chủ' &&
