@@ -6,7 +6,7 @@ export class BarcodeCounterService {
   constructor(
     @InjectModel(BarcodeCounter.name, 'patientService')
     private readonly barcodeCounter: Model<BarcodeCounter>
-  ) {}
+  ) { }
 
   private getCurrentDateCode(): string {
     const now = new Date();
@@ -21,6 +21,7 @@ export class BarcodeCounterService {
     clinicId: string,
     dateCode: string,
   ): Promise<number> {
+    console.log(name, clinicId, dateCode)
     const result = await this.barcodeCounter.findOneAndUpdate(
       { name, clinicId, date: dateCode },
       { $inc: { seq: 1 } },

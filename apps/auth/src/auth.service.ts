@@ -43,7 +43,7 @@ export class AuthService implements OnModuleInit {
     private readonly roleRepo: RoleRepository,
     @Inject(AUTH_SERVICE)
     private readonly kafkaClient: ClientKafka,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.kafkaClient.connect();
@@ -52,27 +52,28 @@ export class AuthService implements OnModuleInit {
   // ------------------------------ PATIENT ---------------------------------
   async patientLogin(phone: string) {
     let patient = await this.patientRepository.findOne({ phone }, {});
+
     if (!patient) {
       // Create a new patient account if the patient is not found
       const newPatient = new Patient({ phone });
       patient = await this.patientRepository.create(newPatient);
+
       if (patient) {
         // Emit an event that a new patient is added
         const patientSignupEvent = new PatientCreated(patient);
         this.kafkaClient.emit('patient-created', patientSignupEvent);
       }
     }
+
     const tokenPayload: TokenPayload = {
       userId: patient.id.toString(),
       actorType: ActorEnum.PATIENT,
     };
-    const expires = new Date();
-    const jwtExpiration = Number(
-      this.configService.get('JWT_EXPIRES_IN') ?? 3600,
-    );
-    expires.setSeconds(expires.getSeconds() + jwtExpiration);
+
+    //const jwtExpiration = Number(this.configService.get('JWT_EXPIRES_IN') ?? 3600); // seconds
+
     const token = await this.jwtService.signAsync(tokenPayload, {
-      expiresIn: 60 * 60 * 24,
+      expiresIn: '100y',
     });
 
     return { user: patient, token };

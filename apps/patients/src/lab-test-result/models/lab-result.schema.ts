@@ -10,7 +10,6 @@ export enum ResultFileEnum {
   PDF = 'pdf',
 }
 
-
 @Schema({ discriminatorKey: 'type', timestamps: true }) // `type` determines sub-type
 export class LabTestResult {
   @Prop({ type: Types.ObjectId, ref: 'LabOrderItem', required: true, unique: true })
@@ -55,17 +54,15 @@ export class LabTestResult {
     type: [
       {
         url: { type: String, required: true },
-        fileType: {
-          type: String,
-          enum: Object.values(ResultFileEnum),
-          required: true,
-        },
+        id: String,
+        name: String
       },
     ],
   })
   uploadedResult?: {
     url: string;
-    fileType: ResultFileType;
+    id: string;
+    name: string;
   }[];
 
 }

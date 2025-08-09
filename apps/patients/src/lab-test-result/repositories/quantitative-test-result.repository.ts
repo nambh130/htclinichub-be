@@ -1,6 +1,6 @@
 import { InjectModel } from "@nestjs/mongoose";
 import { QuantitativeTestResult } from "../models/quantitative-lab-result.schema";
-import { Model, Types } from "mongoose";
+import { Model, Types, UpdateQuery } from "mongoose";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
@@ -36,7 +36,7 @@ export class QuantitativeResultRepository {
   }
 
   // Update by orderId
-  async updateByOrderId(orderId: Types.ObjectId, update: Partial<QuantitativeTestResult>) {
+  async updateByOrderId(orderId: Types.ObjectId, update: UpdateQuery<QuantitativeTestResult>) {
     console.log(await this.quantitativeTestModel.findOne({ orderId }))
     return this.quantitativeTestModel.findOneAndUpdate({ orderId }, update, { new: true }).exec();
   }

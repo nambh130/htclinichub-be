@@ -1,5 +1,5 @@
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
+import { Model, Types, UpdateQuery } from "mongoose";
 import { ImagingTestResult } from "../models/imaging-test-result.schema";
 import { Injectable } from "@nestjs/common";
 import { LabTestResult } from "../models/lab-result.schema";
@@ -30,6 +30,10 @@ export class LabTestResultRepository {
 
   async updateById(id: string, update: Partial<ImagingTestResult>) {
     return this.LabTestResultModel.findByIdAndUpdate(id, update, { new: true }).exec();
+  }
+
+  async updateByOrderId(orderId: string, update: UpdateQuery<ImagingTestResult>) {
+    return this.LabTestResultModel.findOneAndUpdate({ orderId: new Types.ObjectId(orderId) }, update, { new: true }).exec();
   }
 
   async deleteById(id: string) {

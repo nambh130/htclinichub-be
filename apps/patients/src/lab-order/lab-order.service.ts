@@ -6,12 +6,13 @@ import { LabOrderItemRepository } from "./repositories/lab-order-item.repository
 import { LabOrderRepository } from "./repositories/lab-order.repository";
 import { BarcodeCounterService } from "../barcode-counter/barcode-counter.service";
 import { BarcodeCounterName } from "../barcode-counter/models/barcode.schema";
-import { TestType } from "../lab-test/models/lab-test.schema";
+import { TestEnum, TestType } from "../lab-test/models/lab-test.schema";
 import { TestResultService } from "../lab-test-result/lab-test-result.service";
 import { QuantitativeTestResult } from "../lab-test-result/models/quantitative-lab-result.schema";
 import { Exception } from "handlebars";
 import { ImagingResultData, ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
 import { LabOrderItem } from "./models/lab-order-item.schema";
+import { LabTestResult } from "../lab-test-result/models/lab-result.schema";
 
 @Injectable()
 export class LabOrderService {
@@ -170,51 +171,63 @@ export class LabOrderService {
   }
 
   async updateOrderItemStatus(
-    {
-      orderItemId,
-      status,
-      clinicId,
-    }:
-      {
-        orderItemId: string,
-        status: LabStatusType,
-        clinicId?: string,
-      },
-    {
-      updatedByType,
-      updatedById
-    }: {
-      updatedByType: ActorType,
-      updatedById: string
-    }
+    { orderItemId, status, clinicId }: { orderItemId: string; status: LabStatusType; clinicId?: string },
+    { updatedByType, updatedById }: { updatedByType: ActorType; updatedById: string }
   ) {
-    const updateData: Partial<LabOrderItem> = { updatedById, updatedByType, status }
-    const item = await this.labOrderItemRepo.findOne({ _id: orderItemId });
-    if (!item) {
-      throw new BadRequestException("Item not found!");
+    const item = await this.labOrderItemRepo.findOnePopulated({ _id: orderItemId });
+    if (!item) throw new BadRequestException("Item not found!");
+
+    // Validate transition
+    if (item.status == LabStatusEnum.PENDING
+      && !(status == LabStatusEnum.IN_PROCESS || status == LabStatusEnum.DISPOSED)) {
+      throw new BadRequestException("Invalid state transition");
     }
 
-    if (item.status == LabStatusEnum.PENDING
-      && !(status == LabStatusEnum.IN_PROCESS ||
-        status == LabStatusEnum.DISPOSED)
-    ) { throw new BadRequestException("Invalid state") }
+    const updateData: Partial<LabOrderItem> = {
+      updatedById,
+      updatedByType,
+      status,
+    };
 
-    // Generate barcode if the item is first process
-    if (!item.barcode && status == LabStatusEnum.IN_PROCESS) {
+    // First time process, generate barcode
+    if (!item.barcode && status === LabStatusEnum.IN_PROCESS) {
+      const finalClinicId = clinicId;
       const barcode = await this.barcodeCounterService.generateBarcode(
-        BarcodeCounterName.LAB_ORDER_ITEM, clinicId
-      )
+        BarcodeCounterName.LAB_ORDER_ITEM,
+        finalClinicId
+      );
+
+      if (item.labTest.testType === TestEnum.LAB) {
+        await this.testResultService.upsertQuantitativeResult({
+          actor: { userId: updatedById, userType: updatedByType },
+          orderId: new Types.ObjectId(orderItemId),
+        });
+      } else if (item.labTest.testType === TestEnum.IMAGE) {
+        await this.testResultService.upsertImagingResult({
+          actor: { userId: updatedById, userType: updatedByType },
+          orderId: orderItemId,
+        });
+      }
+
       updateData.barcode = barcode;
       updateData.sampleTakenAt = new Date();
-      updateData.sampleTakenBy = {userId: updatedById, userType: updatedByType};
+      updateData.sampleTakenBy = { userId: updatedById, userType: updatedByType };
     }
 
-    //if (status === LabStatusEnum.DISPOSED) {
+    // reset on disposed
+    if (status === LabStatusEnum.DISPOSED) {
+      updateData.sampleTakenAt = null;
+      updateData.sampleTakenBy = null;
+    }
+    //if (status !== LabStatusEnum.PENDING && item.status !== LabStatusEnum.DISPOSED) {
     //  updateData.sampleTakenAt = null;
+    //  updateData.sampleTakenBy = null;
     //}
 
-    return await this.labOrderItemRepo.findOneAndUpdate({ _id: orderItemId },
-      updateData);
+    return await this.labOrderItemRepo.findOneAndUpdate(
+      { _id: orderItemId },
+      updateData
+    );
   }
 
   async rejectOrderItem(
@@ -230,23 +243,35 @@ export class LabOrderService {
   }
 
   async saveQuantitativeResult(
-    orderItemId: string,
-    result: QuantitativeTestResult["result"],
-    actor: { userId: string, userType: ActorType },
-    accept?: boolean //just save or save and complete
-  ) {
+    {
+      orderItemId,
+      result,
+      actor,
+      uploadedResult,
+      accept
+    }: {
+      orderItemId: string,
+      result: QuantitativeTestResult["result"],
+      actor: { userId: string, userType: ActorType },
+      uploadedResult?: LabTestResult["uploadedResult"],
+      accept?: boolean //just save or save and complete
+    }
+  ): Promise<QuantitativeTestResult & { deletedResultFiles: string[] }> {
     const orderItem = await this.labOrderItemRepo
       .findOnePopulated({ _id: orderItemId })
-    if (!orderItem || orderItem.labTest?.testType != 'LAB') {
-      return new BadRequestException()
+    if (!orderItem || !orderItem.labTest || orderItem.labTest.testType !== 'LAB') {
+      throw new BadRequestException('Invalid order item or not a LAB test');
     }
+
     const updateResult = await
       this.testResultService.upsertQuantitativeResult({
-        orderId: orderItemId, result, actor
+        orderId: orderItemId,
+        result,
+        uploadedResult,
+        actor
       });
-    if (!updateResult) {
-      throw new Exception('Something gone wrong')
-    }
+
+    // If the status is updated to "completed"
     if (accept) {
       this.updateOrderItemStatus(
         {
@@ -259,36 +284,47 @@ export class LabOrderService {
     return updateResult
   }
 
-  async saveImagingResult(
-    orderItemId: string,
-    result: ImagingResultData,
-    actor: { userId: string, userType: ActorType },
-    accept?: boolean //just save or save and accept
-  ): Promise<ImagingTestResult & { deletedImageIds: string[] } | Error> {
-    const orderItem = await this.labOrderItemRepo
-      .findOnePopulated({ _id: orderItemId })
-    if (!orderItem || orderItem.labTest?.testType != 'IMAGING') {
-      return new BadRequestException()
+  async saveImagingResult({
+    orderItemId,
+    result,
+    actor,
+    uploadedResult,
+    accept
+  }: {
+    orderItemId: string;
+    result: ImagingResultData;
+    actor: { userId: string; userType: ActorType };
+    uploadedResult?: LabTestResult["uploadedResult"];
+    accept?: boolean;
+  }): Promise<ImagingTestResult & { deletedImageIds: string[]; deletedResultFiles: string[] }> {
+
+    const orderItem = await this.labOrderItemRepo.findOnePopulated({ _id: orderItemId });
+
+    if (!orderItem || orderItem.labTest?.testType !== 'IMAGING') {
+      throw new BadRequestException('Invalid order item or not an IMAGING test');
     }
 
-    const updateResult = await
-      this.testResultService.upsertImagingResult({
-        orderId: orderItemId,
-        result,
-        actor
-      });
+    const updateResult = await this.testResultService.upsertImagingResult({
+      orderId: orderItemId,
+      result,
+      uploadedResult,
+      actor
+    });
+
     if (!updateResult) {
-      throw new Exception('Something gone wrong')
+      throw new Error('Something went wrong while saving imaging result');
     }
+
     if (accept) {
-      this.updateOrderItemStatus(
+      await this.updateOrderItemStatus(
         {
           orderItemId,
           status: LabStatusEnum.COLLECTED,
         },
-        { updatedByType: actor.userType, updatedById: actor.userType }
-      )
+        { updatedByType: actor.userType, updatedById: actor.userId }
+      );
     }
-    return updateResult
+
+    return updateResult;
   }
 }
