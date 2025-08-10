@@ -61,19 +61,16 @@ export class UpdateVitalDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Max(100)
-  min?: number;
+  height?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Max(100)
-  max?: number;
+  weight?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Max(100)
   bmi?: number;
 
   @IsOptional()
