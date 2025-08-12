@@ -8,3 +8,14 @@ export enum PaymentStatus {
   REFUNDED = 'REFUNDED',
   PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
 }
+
+export enum PaymentType {
+  APPOINTMENT_FEE = 'APPOINTMENT_FEE',
+  LAB_ORDER_ITEM = 'LAB_ORDER_ITEM',
+  OTHER = 'OTHER',
+}
+
+export enum PaymentMethod {
+  BANKING = 'banking',
+  CASH = 'cash',
+}

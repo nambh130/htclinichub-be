@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { AnalyzeHealthcareDataController } from './analyze-healthcare-data.controller';
 import { AnalyzeHealthcareDataService } from './analyze-healthcare-data.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { INPUT_VITAL_SIGNS_CONSUMER_GROUP, INPUT_VITAL_SIGNS_SERVICE } from '@app/common';
+import {
+  INPUT_VITAL_SIGNS_CONSUMER_GROUP,
+  INPUT_VITAL_SIGNS_SERVICE,
+} from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { HttpModule } from '@nestjs/axios';
@@ -12,7 +15,7 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
   imports: [
     ConfigModule,
 
- HttpModules.registerAsync([
+    HttpModules.registerAsync([
       httpClientConfig(
         INPUT_VITAL_SIGNS_SERVICE,
         'VITAL_SERVICE_HOST',
@@ -29,7 +32,7 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
           options: {
             client: {
               clientId: 'analyze-healthcare-data',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: INPUT_VITAL_SIGNS_CONSUMER_GROUP,
@@ -37,12 +40,12 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
           },
         }),
         inject: [ConfigService],
-      }
+      },
     ]),
-    AuthModule
+    AuthModule,
   ],
   controllers: [AnalyzeHealthcareDataController],
   providers: [AnalyzeHealthcareDataService],
-  exports: [AnalyzeHealthcareDataService]
+  exports: [AnalyzeHealthcareDataService],
 })
 export class AnalyzeHealthcareDataModule {}

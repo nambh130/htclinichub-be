@@ -1,17 +1,32 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
-import { LabOrderService } from "./lab-order.service";
-import { Request } from "express";
-import { MediaService } from "@api-gateway/media/media.service";
-import { FilesInterceptor } from "@nestjs/platform-express";
-import { CurrentUser, JwtAuthGuard, TokenPayload } from "@app/common";
-import { CreateImagingTestResultDto } from "./dto/save-imaging-result.dto";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { LabOrderService } from './lab-order.service';
+import { Request } from 'express';
+import { MediaService } from '@api-gateway/media/media.service';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
+import { CreateImagingTestResultDto } from './dto/save-imaging-result.dto';
 
 @Controller('lab-order')
 export class LabOrderController {
   constructor(
     private readonly labOrderService: LabOrderService,
-    private readonly mediaService: MediaService
-  ) { }
+    private readonly mediaService: MediaService,
+  ) {}
 
   @Post('/')
   createLabOrder(@Req() req: Request) {
@@ -21,42 +36,33 @@ export class LabOrderController {
   @Get('/')
   getLabOrderByReportId(
     @Req() req: Request,
-    @Query() query: Record<string, any>
+    @Query() query: Record<string, any>,
   ) {
     return this.labOrderService.getLabOrderByReportId(query, req);
   }
 
   @Get('item/:id')
-  getOrderItemById(
-    @Req() req: Request,
-    @Param('id') id: string
-  ) {
+  getOrderItemById(@Req() req: Request, @Param('id') id: string) {
     return this.labOrderService.getOrderItemById(req, id);
   }
 
   @Get('by-clinic')
   getLabOrderByClinicId(
     @Req() req: Request,
-    @Query() query: Record<string, any>
+    @Query() query: Record<string, any>,
   ) {
     return this.labOrderService.getLabOrderByClinictId(query, req);
   }
 
   // controller.ts
   @Patch('item/:id/status')
-  async updateOrderItemStatus(
-    @Param('id') id: string,
-    @Req() req: Request,
-  ) {
+  async updateOrderItemStatus(@Param('id') id: string, @Req() req: Request) {
     return this.labOrderService.updateOrderItemStatus(req, id);
   }
 
   @Get('/item/:id/quantitative-result')
-  async getOrderItemQuantResult(
-    @Req() req: Request,
-    @Param('id') id: string,
-  ) {
-    return this.labOrderService.getOrderItemQuantResult(req, id)
+  async getOrderItemQuantResult(@Req() req: Request, @Param('id') id: string) {
+    return this.labOrderService.getOrderItemQuantResult(req, id);
   }
 
   @Get('/item/:id/imaging-result')
@@ -64,14 +70,12 @@ export class LabOrderController {
     @Req() req: Request,
     @Param('id') id: string,
   ) {
-    return this.labOrderService.getOrderItemImagingResult(req, id)
+    return this.labOrderService.getOrderItemImagingResult(req, id);
   }
 
   @Post('/item/quantitative-result')
-  async saveQuantitativeResult(
-    @Req() req: Request
-  ) {
-    return this.labOrderService.saveQuantitativeResult(req)
+  async saveQuantitativeResult(@Req() req: Request) {
+    return this.labOrderService.saveQuantitativeResult(req);
   }
 
   @Post('/item/imaging-result')
@@ -82,18 +86,24 @@ export class LabOrderController {
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    const { orderItemId, accept, description, conclusion, existingImages } = req.body;
-    console.log('existingImages: ', existingImages)
+    const { orderItemId, accept, description, conclusion, existingImages } =
+      req.body;
+    console.log('existingImages: ', existingImages);
 
     let parsedExistingImages: { id: string; url: string }[] = [];
     try {
-      parsedExistingImages = typeof existingImages === 'string'
-        ? JSON.parse(existingImages)
-        : existingImages || [];
+      parsedExistingImages =
+        typeof existingImages === 'string'
+          ? JSON.parse(existingImages)
+          : existingImages || [];
     } catch (e) {
       parsedExistingImages = [];
     }
-    console.log('check images 11: ', parsedExistingImages, parsedExistingImages?.[0])
+    console.log(
+      'check images 11: ',
+      parsedExistingImages,
+      parsedExistingImages?.[0],
+    );
 
     const payload: CreateImagingTestResultDto = {
       orderItemId,
@@ -115,24 +125,25 @@ export class LabOrderController {
           currentUser,
         );
 
-        uploadedImageObjects = uploadResult.map(item => ({
+        uploadedImageObjects = uploadResult.map((item) => ({
           id: item._id,
           url: item.url,
         }));
 
-        payload.result.images = [...payload.result.images, ...uploadedImageObjects];
+        payload.result.images = [
+          ...payload.result.images,
+          ...uploadedImageObjects,
+        ];
       }
 
       return await this.labOrderService.saveImagingResult(req, payload);
-
     } catch (error) {
       // Clean up uploaded files in case of failure
       if (uploadedImageObjects.length > 0) {
-        const uploadedImageIds = uploadedImageObjects.map(image => image.id)
-        this.mediaService.deleteMultipleFiles(uploadedImageIds, currentUser)
+        const uploadedImageIds = uploadedImageObjects.map((image) => image.id);
+        this.mediaService.deleteMultipleFiles(uploadedImageIds, currentUser);
       }
       throw error;
     }
   }
-
 }

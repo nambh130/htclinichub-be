@@ -30,7 +30,7 @@ export class PatientsController {
     private readonly patientsService: PatientsService,
     private readonly favouriteDoctorService: FavouriteDoctorService,
     // private readonly downLoadMedicalReportService: DownLoadMedicalReportService,
-  ) { }
+  ) {}
 
   @Post('create-patient')
   async createPatient(
@@ -319,7 +319,8 @@ export class PatientsController {
 
   @Get('get-patient-offline/:clinicId')
   async getPatientOffline(@Param('clinicId') clinicId: string) {
-    const patient = await this.patientsService.getPatientsWithoutAccount(clinicId);
+    const patient =
+      await this.patientsService.getPatientsWithoutAccount(clinicId);
     if (!patient) {
       return {
         message: 'Không có hồ sơ bệnh nhân',
@@ -359,6 +360,20 @@ export class PatientsController {
     );
   }
 
+  @Get('appointment/clinic-id')
+  async getAppointmentByClinicId(
+    @Query('clinic_id') clinicId: string,
+    @Query('doctor_id') doctorId?: string,
+    @Query('doctor_name') doctorName?: string,
+    @Query('patient_name') patientName?: string,
+  ) {
+    return await this.patientsService.getAppointmentByClinicId(clinicId, {
+      doctorId,
+      doctorName,
+      patientName,
+    });
+  }
+
   @Get('appointment/:id')
   async getAppointment(@Param('id') id: string) {
     const result = await this.patientsService.getAppointment(id);
@@ -382,7 +397,6 @@ export class PatientsController {
     const result = await this.patientsService.doneAppointment(id);
     return result;
   }
-
 
   @Get('appointments/pending/:patientAccountId')
   async getPendingAppointments(
@@ -414,7 +428,8 @@ export class PatientsController {
   @Get('check-profile/:accountId')
   async checkProfileByAccountId(@Param('accountId') accountId: string) {
     try {
-      const patient = await this.patientsService.checkProfileByAccountId(accountId);
+      const patient =
+        await this.patientsService.checkProfileByAccountId(accountId);
       return patient;
     } catch (error) {
       console.error('Error in getPatientById:', error);

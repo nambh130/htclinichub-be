@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PayOSService } from './providers/payos/payos.service';
 import { StorePayOSCredentialsDto } from './dtos/store-credentials.dto';
 import { CreatePaymentLinkDto } from './dtos/create-payment-link.dto';
+import { CreateCashPaymentDto } from './dtos/create-cash-payment.dto';
 import { WebhookType } from '@payos/node/lib/type';
 import { Payment } from './entities/payment.entity';
 import { PaymentTransaction } from './entities/payment-transaction.entity';
@@ -12,6 +13,8 @@ import { GetTransactionsDto } from './dtos/get-transactions.dto';
 import { GetPaymentStatisticsDto } from './dtos/get-statistics.dto';
 import { TokenPayload } from '@app/common';
 import { PaymentConfig } from './entities/payment-config.entity';
+import { PaymentMethod, PaymentStatus } from './enums/payment-status.enum';
+import { setAudit } from '@app/common';
 
 @Injectable()
 export class PaymentService {
@@ -149,9 +152,156 @@ export class PaymentService {
     return this.payosService.createPaymentLink(dto, currentUser);
   }
 
+  /**
+   * Cancel - Cancel a PayOS payment link
+   */
+  async cancelPayOSPayment(paymentId: string, reason: string): Promise<void> {
+    return this.payosService.cancelPayment(paymentId, reason);
+  }
+
+  /**
+   * Create - Create a new cash payment record
+   */
+  async createCashPayment(
+    dto: CreateCashPaymentDto,
+    currentUser: TokenPayload,
+  ): Promise<Payment> {
+    const payment = new Payment();
+    payment.clinicId = dto.clinicId;
+    payment.appointmentId = dto.appointmentId;
+    payment.amount = dto.amount;
+    payment.currency = 'VND';
+    payment.status = PaymentStatus.PENDING;
+    payment.paymentMethod = PaymentMethod.CASH;
+    payment.metadata = {
+      patientName: dto.buyerName,
+      patientEmail: dto.buyerEmail,
+      patientPhone: dto.buyerPhone,
+      description: dto.description,
+      items: dto.items,
+      customFields: dto.notes ? { notes: dto.notes } : undefined,
+    };
+
+    setAudit(payment, currentUser);
+    const savedPayment = await this.paymentRepository.save(payment);
+
+    this.logger.log(
+      `Cash payment created successfully: paymentId=${savedPayment.id}, clinicId=${dto.clinicId}`,
+    );
+
+    return savedPayment;
+  }
+
+  /**
+   * Update - Mark cash payment as paid
+   */
+  async markCashPaymentAsPaid(
+    paymentId: string,
+    currentUser: TokenPayload,
+  ): Promise<Payment> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new Error(`Payment with ID ${paymentId} not found`);
+    }
+
+    if (payment.paymentMethod !== PaymentMethod.CASH) {
+      throw new Error(`Payment ${paymentId} is not a cash payment`);
+    }
+
+    if (payment.status === PaymentStatus.PAID) {
+      throw new Error(`Payment ${paymentId} is already marked as paid`);
+    }
+
+    if (
+      payment.status === PaymentStatus.CANCELLED ||
+      payment.status === PaymentStatus.FAILED
+    ) {
+      throw new Error(
+        `Cannot mark ${payment.status.toLowerCase()} payment as paid`,
+      );
+    }
+
+    // Update payment status and completion time
+    payment.status = PaymentStatus.PAID;
+    payment.completedAt = new Date();
+
+    // Update audit fields
+    setAudit(payment, currentUser);
+
+    const updatedPayment = await this.paymentRepository.save(payment);
+
+    this.logger.log(
+      `Cash payment marked as paid: paymentId=${paymentId}, clinicId=${payment.clinicId}`,
+    );
+
+    return updatedPayment;
+  }
+
+  /**
+   * Update - Cancel cash payment and mark as failed
+   */
+  async cancelCashPayment(
+    paymentId: string,
+    reason: string,
+    currentUser: TokenPayload,
+  ): Promise<Payment> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new Error(`Payment ${paymentId} not found`);
+    }
+
+    if (payment.paymentMethod !== PaymentMethod.CASH) {
+      throw new Error(`Payment ${paymentId} is not a cash payment`);
+    }
+
+    if (
+      payment.status === PaymentStatus.CANCELLED ||
+      payment.status === PaymentStatus.FAILED
+    ) {
+      throw new Error(
+        `Payment ${paymentId} is already ${payment.status.toLowerCase()}`,
+      );
+    }
+
+    if (payment.status === PaymentStatus.PAID) {
+      throw new Error(`Cannot cancel already paid payment ${paymentId}`);
+    }
+
+    // Update payment status and add failure reason
+    payment.status = PaymentStatus.FAILED;
+    payment.failureReason = reason;
+
+    // Update audit fields
+    setAudit(payment, currentUser);
+
+    const updatedPayment = await this.paymentRepository.save(payment);
+
+    this.logger.log(
+      `Cash payment cancelled: paymentId=${paymentId}, clinicId=${payment.clinicId}, reason=${reason}`,
+    );
+
+    return updatedPayment;
+  }
+
   // ========================================
   // 🔄 WEBHOOK PROCESSING
   // ========================================
+
+  /**
+   * Configure - Register webhook URL with PayOS for a clinic
+   */
+  async configurePayOSWebhook(
+    clinicId: string,
+    webhookUrl: string,
+  ): Promise<string> {
+    return this.payosService.configureWebhook(clinicId, webhookUrl);
+  }
 
   /**
    * Process - Handle incoming webhooks from PayOS
@@ -497,5 +647,157 @@ export class PaymentService {
       totalRevenue: parseFloat(totalRevenueResult?.total || '0'),
       averageAmount: parseFloat(averageAmountResult?.average || '0'),
     };
+  }
+
+  /**
+   * Read - Get payment by ID for a specific clinic
+   * @param clinicId - The clinic ID
+   * @param paymentId - The payment ID
+   * @returns Payment with related data or null if not found
+   */
+  async getPaymentById(
+    clinicId: string,
+    paymentId: string,
+  ): Promise<Payment | null> {
+    try {
+      const payment = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.credential', 'credential')
+        .leftJoinAndSelect('payment.transactions', 'transactions')
+        .leftJoinAndSelect('payment.webhookEvents', 'webhookEvents')
+        .where('payment.id = :paymentId', { paymentId })
+        .andWhere('payment.clinicId = :clinicId', { clinicId })
+        .getOne();
+
+      if (!payment) {
+        this.logger.warn(
+          `Payment not found: paymentId=${paymentId}, clinicId=${clinicId}`,
+        );
+        return null;
+      }
+
+      this.logger.log(
+        `Payment retrieved successfully: paymentId=${paymentId}, clinicId=${clinicId}`,
+      );
+      return payment;
+    } catch (error) {
+      this.logger.error(
+        `Error retrieving payment by ID: paymentId=${paymentId}, clinicId=${clinicId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Read - Get payment by appointment ID for a specific clinic
+   * @param clinicId - The clinic ID
+   * @param appointmentId - The appointment ID
+   * @returns Payment with related data or null if not found
+   */
+  async getPaymentByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<Payment | null> {
+    try {
+      const payment = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.credential', 'credential')
+        .leftJoinAndSelect('payment.transactions', 'transactions')
+        .leftJoinAndSelect('payment.webhookEvents', 'webhookEvents')
+        .where('payment.appointmentId = :appointmentId', { appointmentId })
+        .andWhere('payment.clinicId = :clinicId', { clinicId })
+        .orderBy('payment.createdAt', 'DESC')
+        .getOne();
+
+      if (!payment) {
+        this.logger.warn(
+          `Payment not found: appointmentId=${appointmentId}, clinicId=${clinicId}`,
+        );
+        return null;
+      }
+
+      this.logger.log(
+        `Payment retrieved successfully: appointmentId=${appointmentId}, clinicId=${clinicId}`,
+      );
+      return payment;
+    } catch (error) {
+      this.logger.error(
+        `Error retrieving payment by appointment ID: appointmentId=${appointmentId}, clinicId=${clinicId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Read - Get ALL payments for a specific clinic and appointment
+   * @param clinicId - The clinic ID
+   * @param appointmentId - The appointment ID
+   * @returns Array of payments with related data
+   */
+  async getAllPaymentsByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<Payment[]> {
+    try {
+      const payments = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.credential', 'credential')
+        .leftJoinAndSelect('payment.transactions', 'transactions')
+        .leftJoinAndSelect('payment.webhookEvents', 'webhookEvents')
+        .where('payment.appointmentId = :appointmentId', { appointmentId })
+        .andWhere('payment.clinicId = :clinicId', { clinicId })
+        .orderBy('payment.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.log(
+        `Found ${payments.length} payments for appointment ${appointmentId} in clinic ${clinicId}`,
+      );
+
+      return payments;
+    } catch (error) {
+      this.logger.error(
+        `Error getting payments by appointment ID: appointmentId=${appointmentId}, clinicId=${clinicId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Read - Get all PAID payments for a specific clinic and appointment
+   * @param clinicId - The clinic ID
+   * @param appointmentId - The appointment ID
+   * @returns Array of PAID payments with related data
+   */
+  async getPaidPaymentsByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<Payment[]> {
+    try {
+      const payments = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.credential', 'credential')
+        .leftJoinAndSelect('payment.transactions', 'transactions')
+        .leftJoinAndSelect('payment.webhookEvents', 'webhookEvents')
+        .where('payment.appointmentId = :appointmentId', { appointmentId })
+        .andWhere('payment.clinicId = :clinicId', { clinicId })
+        .andWhere('payment.status = :status', { status: PaymentStatus.PAID })
+        .orderBy('payment.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.log(
+        `Found ${payments.length} PAID payments for appointment ${appointmentId} in clinic ${clinicId}`,
+      );
+
+      return payments;
+    } catch (error) {
+      this.logger.error(
+        `Error getting PAID payments by appointment ID: appointmentId=${appointmentId}, clinicId=${clinicId}`,
+        error,
+      );
+      throw error;
+    }
   }
 }

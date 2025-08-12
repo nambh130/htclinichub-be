@@ -1,24 +1,25 @@
-import { LabStatusEnum, LabStatusType, MongoAbstractDocument } from "@app/common";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Types } from "mongoose";
+import {
+  LabStatusEnum,
+  LabStatusType,
+  MongoAbstractDocument,
+} from '@app/common';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 
 @Schema()
 export class LabOrderItem extends MongoAbstractDocument {
-
   @Prop()
-  price: number
+  price: number;
 
   @Prop({
     type: String,
     enum: Object.values(LabStatusEnum),
-    default: LabStatusEnum.PENDING
+    default: LabStatusEnum.PENDING,
   })
-  status: LabStatusType
+  status: LabStatusType;
 
   @Prop({ type: Types.ObjectId, ref: 'LabTest' })
-  labTest: Types.ObjectId
-
+  labTest: Types.ObjectId;
 }
 
 export const LabOrderItemSchema = SchemaFactory.createForClass(LabOrderItem);
-

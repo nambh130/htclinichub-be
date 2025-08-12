@@ -456,4 +456,13 @@ export class DoctorController {
       throw error;
     }
   }
+
+  @Get('get-doctor-clinic-exam-fee/:doctorId/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async getDoctorClinicExamFee(
+    @Param('doctorId') doctorId: string,
+    @Param('clinicId') clinicId: string,
+  ) {
+    return this.doctorService.getDoctorClinicExamFee(doctorId, clinicId);
+  }
 }

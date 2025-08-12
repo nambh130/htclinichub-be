@@ -1258,4 +1258,210 @@ export class PatientsService {
       return 1;
     }
   }
+
+  async getAppointmentByClinicId(
+    clinicId: string,
+    searchParams?: {
+      doctorId?: string;
+      doctorName?: string;
+      patientName?: string;
+    },
+  ) {
+    try {
+      // Build query conditions
+      const queryConditions: any = {
+        clinic_id: clinicId,
+      };
+
+      // Add doctor_id filter if provided
+      if (searchParams?.doctorId) {
+        queryConditions.doctor_id = searchParams.doctorId;
+      }
+
+      // Get appointments with filters
+      const appointments =
+        await this.appointmentRepository.find(queryConditions);
+
+      if (!appointments || appointments.length === 0) {
+        return [];
+      }
+
+      // Enrich appointments with additional details from other services
+      const enrichedAppointments = await Promise.all(
+        appointments.map(async (appointment) => {
+          const [doctorRes, slotRes, profileRes] = await Promise.all([
+            firstValueFrom(
+              this.httpService.get(
+                `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
+              ),
+            )
+              .then((res) => {
+                return res.data;
+              })
+              .catch((err) => {
+                console.error('Doctor API error:', err);
+                return null;
+              }),
+
+            firstValueFrom(
+              this.httpService.get(
+                `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/detail-working-shift/${appointment.slot_id}`,
+              ),
+            )
+              .then((res) => {
+                return res.data;
+              })
+              .catch((err) => {
+                console.error('Slot API error:', err);
+                return null;
+              }),
+
+            firstValueFrom(
+              this.httpService.get(
+                `http://${this.PATIENT_HOST}:${this.PATIENT_PORT}/patient-service/get-patientProfile-by-id/${appointment.patient_profile_id}`,
+              ),
+            )
+              .then((res) => {
+                return res.data;
+              })
+              .catch((err) => {
+                console.error('Profile API error:', err);
+                return null;
+              }),
+          ]);
+
+          return {
+            id: appointment.id,
+            reason: appointment.reason,
+            symptoms: appointment.symptoms,
+            status: appointment.status,
+            note: appointment.note,
+            examFee: appointment.examFee,
+            createdAt: appointment.createdAt,
+            doctor: doctorRes
+              ? {
+                  account: {
+                    id: doctorRes.account?.id,
+                    email: doctorRes.account?.email,
+                    is_locked: doctorRes.account?.is_locked,
+                    staffInfo: doctorRes.account?.staffInfo
+                      ? {
+                          id: doctorRes.account.staffInfo.id,
+                          full_name: doctorRes.account.staffInfo.full_name,
+                          dob: doctorRes.account.staffInfo.dob,
+                          phone: doctorRes.account.staffInfo.phone,
+                          gender: doctorRes.account.staffInfo.gender,
+                          position: doctorRes.account.staffInfo.position,
+                          staff_type: doctorRes.account.staffInfo.staff_type,
+                          profile_img_id:
+                            doctorRes.account.staffInfo.profile_img_id,
+                          createdAt: doctorRes.account.staffInfo.createdAt,
+                          updatedAt: doctorRes.account.staffInfo.updatedAt,
+                          createdById: doctorRes.account.staffInfo.createdById,
+                          updatedById: doctorRes.account.staffInfo.updatedById,
+                          deletedAt: doctorRes.account.staffInfo.deletedAt,
+                          degrees: doctorRes.account.staffInfo.degrees,
+                          specializes: doctorRes.account.staffInfo.specializes,
+                        }
+                      : null,
+                  },
+                }
+              : null,
+            slot: slotRes
+              ? {
+                  shiftId: slotRes.shiftId,
+                  startTime: slotRes.startTime,
+                  duration: slotRes.duration,
+                  clinicName: slotRes.clinicName,
+                  space: slotRes.space,
+                  status: slotRes.status,
+                  doctor: slotRes.doctor
+                    ? {
+                        id: slotRes.doctor.id,
+                        email: slotRes.doctor.email,
+                        fullName: slotRes.doctor.fullName,
+                        dob: slotRes.doctor.dob,
+                        gender: slotRes.doctor.gender,
+                        phone: slotRes.doctor.phone,
+                        specialize: slotRes.doctor.specialize,
+                        degree: slotRes.doctor.degree,
+                        position: slotRes.doctor.position,
+                        profilePicture: slotRes.doctor.profilePicture,
+                      }
+                    : null,
+                }
+              : null,
+            profile: profileRes
+              ? {
+                  data: profileRes.data
+                    ? {
+                        id: profileRes.data.id,
+                        fullName: profileRes.data.fullName,
+                        relation: profileRes.data.relation,
+                        dOB: profileRes.data.dOB,
+                        citizen_id: profileRes.data.citizen_id,
+                        health_insurance_id:
+                          profileRes.data.health_insurance_id,
+                        ethnicity: profileRes.data.ethnicity,
+                        marital_status: profileRes.data.marital_status,
+                        address1: profileRes.data.address1,
+                        address2: profileRes.data.address2,
+                        phone: profileRes.data.phone,
+                        gender: profileRes.data.gender,
+                        nation: profileRes.data.nation,
+                        work_address: profileRes.data.work_address,
+                        medical_history: profileRes.data.medical_history,
+                        bloodGroup: profileRes.data.bloodGroup,
+                      }
+                    : null,
+                }
+              : null,
+          };
+        }),
+      );
+
+      // Apply additional filters for doctor name and patient name
+      let filteredAppointments = enrichedAppointments;
+
+      // Filter by doctor name if provided
+      if (searchParams?.doctorName) {
+        filteredAppointments = filteredAppointments.filter((appointment) => {
+          const doctorName =
+            appointment.doctor?.account?.staffInfo?.full_name ||
+            appointment.slot?.doctor?.fullName;
+          return (
+            doctorName &&
+            doctorName
+              .toLowerCase()
+              .includes(searchParams.doctorName.toLowerCase())
+          );
+        });
+      }
+
+      // Filter by patient name if provided
+      if (searchParams?.patientName) {
+        filteredAppointments = filteredAppointments.filter((appointment) => {
+          const patientName = appointment.profile?.data?.fullName;
+          return (
+            patientName &&
+            patientName
+              .toLowerCase()
+              .includes(searchParams.patientName.toLowerCase())
+          );
+        });
+      }
+
+      // Sort by createdAt in descending order (newest first)
+      filteredAppointments.sort((a, b) => {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+
+      return filteredAppointments;
+    } catch (error) {
+      console.error('Error in getAppointmentByClinicId:', error);
+      throw new BadRequestException('Failed to get appointments by clinic ID');
+    }
+  }
 }

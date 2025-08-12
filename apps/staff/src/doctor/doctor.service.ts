@@ -1363,4 +1363,43 @@ export class DoctorService extends BaseService {
       );
     }
   }
+
+  async getDoctorClinicExamFee(
+    doctorId: string,
+    clinicId: string,
+  ): Promise<{ doctorId: string; clinicId: string; examFee: number | null }> {
+    try {
+      if (!doctorId || !doctorId.trim() || !clinicId || !clinicId.trim()) {
+        throw new BadRequestException('doctorId and clinicId are required');
+      }
+
+      const link = await this.doctorClinicRepo.findOne({
+        doctor: { id: doctorId },
+        clinic: { id: clinicId },
+        status: DoctorClinicStatus.ACTIVE,
+      });
+
+      if (!link) {
+        throw new NotFoundException(
+          `Doctor ${doctorId} is not active in clinic ${clinicId}`,
+        );
+      }
+
+      return {
+        doctorId,
+        clinicId,
+        examFee: link.examFee ?? null,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to get doctor clinic exam fee',
+      );
+    }
+  }
 }

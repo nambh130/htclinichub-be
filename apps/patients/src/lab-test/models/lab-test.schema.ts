@@ -1,9 +1,15 @@
-import { MongoAbstractDocument } from "@app/common";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ImagingTemplate, ImagingTemplateSchema } from "./imaging-template.schema";
+import { MongoAbstractDocument } from '@app/common';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import {
+  ImagingTemplate,
+  ImagingTemplateSchema,
+} from './imaging-template.schema';
 
-export type TestType = 'LAB' | 'IMAGING'
-export enum TestEnum { LAB = 'LAB', IMAGE = 'IMAGING' }
+export type TestType = 'LAB' | 'IMAGING';
+export enum TestEnum {
+  LAB = 'LAB',
+  IMAGE = 'IMAGING',
+}
 
 //Base template
 @Schema({ timestamps: true, discriminatorKey: 'testType' })
@@ -21,10 +27,10 @@ export class LabTest extends MongoAbstractDocument {
   code?: string;
 
   @Prop({ required: true })
-  price: number
+  price: number;
 }
 
-export const LabTestSchema = SchemaFactory.createForClass(LabTest)
+export const LabTestSchema = SchemaFactory.createForClass(LabTest);
 
 @Schema()
 export class LabField {
@@ -42,7 +48,7 @@ export class LabField {
       low: Number,
       high: Number,
     },
-    required: true
+    required: true,
   })
   referenceRange?: {
     low: number;
@@ -56,11 +62,12 @@ export class QuantitativeTest extends LabTest {
   @Prop({ type: [LabFieldSchema], required: false })
   template?: LabField[];
 }
-export const QuantitativeTestSchema = SchemaFactory.createForClass(QuantitativeTest)
+export const QuantitativeTestSchema =
+  SchemaFactory.createForClass(QuantitativeTest);
 
 @Schema()
 export class ImagingTest extends LabTest {
   @Prop({ type: ImagingTemplateSchema, required: false })
   template?: ImagingTemplate;
 }
-export const ImagingTestSchema = SchemaFactory.createForClass(ImagingTest)
+export const ImagingTestSchema = SchemaFactory.createForClass(ImagingTest);
