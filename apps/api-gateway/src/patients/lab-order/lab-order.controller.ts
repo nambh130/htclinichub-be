@@ -81,52 +81,11 @@ export class LabOrderController {
     return this.labOrderService.getManyQuantResultByOrderItems(req, id);
   }
 
-  @Get('/:id/quantitative-result')
-  async getManyQuantResultByOrderItems(
-    @Req() req: Request,
-    @Param('id') id: string,
-  ) {
-    return this.labOrderService.getManyQuantResultByOrderItems(req, id);
-  }
-
   @Post('/item/quantitative-result')
   async saveQuantitativeResult(@Req() req: Request) {
     return this.labOrderService.saveQuantitativeResult(req);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('resultFile'))
-  @Post('/item/result-file/add')
-  async updateQuantitativeUploadedResult(
-    @Req() req: Request,
-    @UploadedFile() resultFile: Express.Multer.File,
-    @Body() body: { orderItemId: string },
-    @CurrentUser() currentUser: TokenPayload,
-  ) {
-    console.log(body);
-    const { orderItemId } = body;
-    if (!resultFile) {
-      throw new BadRequestException('No file uploaded');
-    }
-
-    const uploadResult = await this.mediaService.uploadSingleFile(
-      'upload-pdf',
-      resultFile,
-      currentUser,
-    );
-
-    const payload = {
-      orderItemId,
-      uploadedResult: {
-        id: uploadResult._id,
-        url: uploadResult.url,
-        name: uploadResult.originalName,
-      },
-    };
-
-    return this.labOrderService.addResultFile(req, payload);
-  }
-
   @Post('/item/result-file/remove')
   async removeQuantitativeUploadedResult(@Req() req: Request) {
     return this.labOrderService.removeResultFile(req);
@@ -163,11 +122,6 @@ export class LabOrderController {
     };
 
     return this.labOrderService.addResultFile(req, payload);
-  }
-
-  @Post('/item/result-file/remove')
-  async removeQuantitativeUploadedResult(@Req() req: Request) {
-    return this.labOrderService.removeResultFile(req);
   }
 
   @Post('/item/imaging-result')
