@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { LabFieldRepository } from "./repositories/quantiative-template.repository";
 import { LabField } from "./models/lab-field.schema";
 import { Types } from "mongoose";
@@ -92,6 +92,7 @@ export class LabTestService {
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
+    query.isDeleted = false
 
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
@@ -118,7 +119,7 @@ export class LabTestService {
   }
 
   async deleteLabTest(id: Types.ObjectId) {
-    return await this.labTestRepo.findOneAndDelete(id);
+    return await this.labTestRepo.findOneAndUpdate({ _id: id }, { isDeleted: true });
   }
 
   // ==================================
@@ -140,6 +141,7 @@ export class LabTestService {
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
+    query.isDeleted = false
 
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
@@ -163,6 +165,16 @@ export class LabTestService {
   }
 
   async createQuantitativeTest(test: CreateQuantitativeTestDto) {
+    const testName = test.name.trim().toLowerCase()
+    let checkExists = false
+    try {
+      await this.quantitativeTestRepo.findOne({ name: testName, isDeleted: false })
+      checkExists = true
+    } catch (error) {
+      checkExists = false
+    }
+    if (checkExists)
+      throw new BadRequestException({ ERR_CODE: "ITEM_EXISTS", message: "Item with this name already exists." })
     const transformedTemplate = test.template?.map(field => ({
       loincCode: field.loincCode,
       name: field.name,
@@ -196,6 +208,16 @@ export class LabTestService {
   //  IMAGING TESTS
   // ==================================
   async createImagingTest(test: CreateImagingTestDto) {
+    const testName = test.name.trim().toLowerCase()
+    let checkExists = false
+    try {
+      await this.imagingRepo.findOne({ name: testName, isDeleted: false })
+      checkExists = true
+    } catch (error) {
+      checkExists = false
+    }
+    if (checkExists)
+      throw new BadRequestException({ ERR_CODE: "ITEM_EXISTS", message: "Item with this name already exists." })
     const template = { description: test.description, conclusion: test.conclusion }
     return await this.imagingRepo.create({
       clinicId: test.clinicId,
@@ -220,6 +242,7 @@ export class LabTestService {
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
+    query.isDeleted = false
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
     if (code) query.code = { $regex: code, $options: 'i' };

@@ -129,6 +129,33 @@ export class LabTestService {
     return response.data;
   }
 
+  async deleteTest(id: string, req: Request) {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+
+    const response = await firstValueFrom(
+      this.httpService
+        .delete(
+          `/lab-test/${id}`,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true, // optional but doesn't hurt
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+
   // ==================================
   //  QUANTITATIVE TESTS
   // ==================================
