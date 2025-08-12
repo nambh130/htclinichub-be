@@ -14,7 +14,7 @@ export class ClinicUsersService {
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
     private readonly roleRepository: RoleRepository,
-  ) {}
+  ) { }
 
   async createUser(createUserDto: CreateUserDto) {
     const { role: roleId, clinic: clinicId, actorType } = createUserDto;
@@ -94,6 +94,23 @@ export class ClinicUsersService {
   async updateUser(email: string, updateData: Partial<User>): Promise<User> {
     return await this.userRepository.create(new User(updateData));
   }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<User> {
+    const user = await this.userRepository.findOne({ id: userId });
+
+    if (!user) {
+      throw new BadRequestException({ ERR_CODE: 'USER_NOT_FOUND', message: 'User does not exist' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException({ ERR_CODE: 'INVALID_PASSWORD', message: 'Old password is incorrect' });
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+    return await this.userRepository.update(user, { password: hashedPassword });
+  }
+
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 12;

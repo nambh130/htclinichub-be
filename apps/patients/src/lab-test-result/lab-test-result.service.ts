@@ -24,6 +24,13 @@ export class TestResultService {
     return await this.imagingResultRepo.findByOrderId(new Types.ObjectId(orderId));
   }
 
+  async findManyQuantResultByOrderItems(ids: Types.ObjectId[]) {
+    return await this.quantitativeResultRepo.find({
+      orderId: { $in: ids },
+    });
+  }
+
+
   async createQuantitativeResult({
     orderId,
     result,

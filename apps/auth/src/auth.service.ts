@@ -307,6 +307,14 @@ export class AuthService implements OnModuleInit {
     });
     return createdAcc;
   }
+
+  async changePassword({ userId, oldPassword, newPassword }:
+    { userId: string, oldPassword: string, newPassword: string }) {
+    const update = await this.clinicUserService.changePassword(userId, oldPassword, newPassword)
+    if (update)
+      return { success: true }
+    return { success: false }
+  }
   // ------------------------------ UTILITIES ---------------------------------
   async createJWT(payload: TokenPayload) {
     const jwtExpirationMin = Number(

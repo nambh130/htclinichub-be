@@ -46,6 +46,7 @@ import AuthResponse from '@app/common/dto/auth/login-response.dto';
 import { CreateDoctorAccount } from './dto/create-doctor-account.dto';
 import { ClinicUserCreated } from '@app/common/events/auth/clinic-user-created.event';
 import { CreateEmployeeAccount } from './dto/create-clinic-employee.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -59,7 +60,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
     @Inject(AUTH_SERVICE)
     private readonly messageBroker: ClientKafka,
-  ) {}
+  ) { }
 
   // ------------------------------ PATIENT ------------------------------
   //Patient request an otp to login
@@ -105,6 +106,21 @@ export class AuthController {
   }
 
   // ------------------------------ STAFF AND DOCTOR ------------------------------
+  @Post('/change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @CurrentUser() user: TokenPayload
+  ) {
+    const result = await this.authService.changePassword({
+      newPassword: dto.newPassword,
+      oldPassword: dto.oldPassword,
+      userId: user.userId
+    })
+    console.log(result)
+    return result
+  }
+
   @Post('/doctor')
   async createDoctorAccount(@Body() account: CreateDoctorAccount) {
     const { email, password } = account;

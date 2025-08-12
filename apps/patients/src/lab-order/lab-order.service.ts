@@ -326,4 +326,15 @@ export class LabOrderService {
 
     return updateResult;
   }
+
+  async getQuantResultsFromOrderId(orderId: string): Promise<QuantitativeTestResult["result"]> {
+    const objectId = new Types.ObjectId(orderId);
+    const order = await this.labOrderRepo.findOne({ _id: objectId });
+    const orderItems = await this.labOrderItemRepo.find({
+      _id: { $in: order.orderItems }, status: LabStatusEnum.COLLECTED
+    });
+    const itemIds = orderItems.map(item => item._id)
+    const results = await this.testResultService.findManyQuantResultByOrderItems(itemIds);
+    return results.flatMap(result => result.result);
+  }
 }

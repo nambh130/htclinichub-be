@@ -189,7 +189,7 @@ export class LabOrderService {
   }
 
   // RESULT FILE
-  
+
   async addResultFile(req: Request, payload: any) {
     const cookie = req.headers.cookie;
 
@@ -241,6 +241,18 @@ export class LabOrderService {
           }),
         ),
     );
+    return response.data;
+  }
+  async getManyQuantResultByOrderItems(req: Request, id: string) {
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/${id}/quantitative-result`, {
+        headers: {
+          Cookie: req.headers.cookie || '',
+        },
+        withCredentials: true,
+      }),
+    );
+
     return response.data;
   }
 }

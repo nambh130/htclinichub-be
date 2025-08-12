@@ -10,7 +10,6 @@ import { CreateQuantitativeResultDto } from "../lab-test-result/dtos/create-quan
 import { TestResultService } from "../lab-test-result/lab-test-result.service";
 import { CreateImagingTestResultDto } from "./dtos/save-imaging-result.dto";
 import { ClientKafka } from "@nestjs/microservices";
-import { ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
 import { DeleteMultipleFilesEvent } from "@app/common/events/media";
 import { AddUploadedFileDto } from "./dtos/upload-result-file.dto";
 import { RemoveResultFileDto } from "./dtos/remove-result-file.dto";
@@ -83,6 +82,15 @@ export class LabOrderController {
     return this.labOrderService.getOrderItemById(id)
   }
 
+  @Get('/:id/quantitative-result')
+  @UseGuards(JwtAuthGuard)
+  async getManyQuantResultByOrderItems(@Param('id') orderId: string) {
+    if (!isValidObjectId(orderId)) {
+      throw new BadRequestException("Invalid order id!");
+    }
+    return this.labOrderService.getQuantResultsFromOrderId(orderId);
+  }
+
 
   @Patch('/item/:id/status')
   @UseGuards(JwtAuthGuard)
@@ -102,7 +110,7 @@ export class LabOrderController {
   }
 
   @Get('item/:id/quantitative-result')
-  async getQuantResultByOrder(
+  async getQuantResultByOrderItem(
     @Param('id') id: string
   ) {
     const response = await this.resultService.findQuantitativeResultByOrder(id);

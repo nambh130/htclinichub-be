@@ -67,6 +67,14 @@ export class LabOrderController {
     return this.labOrderService.getOrderItemImagingResult(req, id)
   }
 
+  @Get('/:id/quantitative-result')
+  async getManyQuantResultByOrderItems(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ) {
+    return this.labOrderService.getManyQuantResultByOrderItems(req, id)
+  }
+
   @Post('/item/quantitative-result')
   async saveQuantitativeResult(
     @Req() req: Request
@@ -174,5 +182,6 @@ export class LabOrderController {
       throw error;
     }
   }
+
 
 }
