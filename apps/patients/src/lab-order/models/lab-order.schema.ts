@@ -1,35 +1,34 @@
-import { MongoAbstractDocument } from "@app/common";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Types } from "mongoose";
-import { TestEnum, TestType } from "../../lab-test/models/lab-test.schema";
+import { MongoAbstractDocument } from '@app/common';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
+import { TestEnum, TestType } from '../../lab-test/models/lab-test.schema';
 
 @Schema()
 export class LabOrder extends MongoAbstractDocument {
   @Prop()
-  clinicId: string
+  clinicId: string;
 
   @Prop()
-  orderDate: Date
+  orderDate: Date;
 
   @Prop({ required: false })
-  barCode?: string
+  barCode?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'MedicalRecord' })
-  medicalRecord: Types.ObjectId
+  medicalRecord: Types.ObjectId;
 
   @Prop({
     type: String,
     enum: Object.values(TestEnum),
-    required: true
+    required: true,
   })
-  type: TestType
+  type: TestType;
 
   @Prop()
-  name: string
+  name: string;
 
   @Prop({ type: [Types.ObjectId], ref: 'LabOrderItem' })
-  orderItems: Types.ObjectId[]
+  orderItems: Types.ObjectId[];
 }
 
 export const LabOrderSchema = SchemaFactory.createForClass(LabOrder);
-

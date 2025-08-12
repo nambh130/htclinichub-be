@@ -1,3 +1,5 @@
+import { PaymentType } from '../../enums/payment-status.enum';
+
 export interface PayOSCredentials {
   clientId: string;
   apiKey: string;
@@ -11,9 +13,14 @@ export interface PayOSCreatePaymentRequest {
   cancelUrl: string;
   returnUrl: string;
   items?: Array<{
+    id: string;
     name: string;
     quantity: number;
     price: number;
+    type: PaymentType;
+    appointmentId?: string;
+    labOrderItemId?: string;
+    labOrderId?: string;
   }>;
   buyerName?: string;
   buyerEmail?: string;

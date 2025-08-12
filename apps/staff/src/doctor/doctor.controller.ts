@@ -46,6 +46,14 @@ export class DoctorController {
     return this.doctorService.getStaffInfoByDoctorId(doctorId);
   }
 
+  @Get('get-doctor-clinic-exam-fee')
+  getDoctorClinicExamFee(
+    @Query('doctorId') doctorId: string,
+    @Query('clinicId') clinicId: string,
+  ) {
+    return this.doctorService.getDoctorClinicExamFee(doctorId, clinicId);
+  }
+
   //khanh
   @Get('doctor-by-clinic/:clinicId')
   getDoctorByClinic(@Param('clinicId') clinicId: string) {

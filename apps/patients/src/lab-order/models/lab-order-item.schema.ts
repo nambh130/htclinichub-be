@@ -1,28 +1,33 @@
-import { ActorType, LabStatusEnum, LabStatusType, MongoAbstractDocument } from "@app/common";
-import { ActorEnum } from "@app/common/enum/actor-type";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Types } from "mongoose";
+import {
+  ActorType,
+  LabStatusEnum,
+  LabStatusType,
+  MongoAbstractDocument,
+} from '@app/common';
+import { ActorEnum } from '@app/common/enum/actor-type';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 
 @Schema()
 export class LabOrderItem extends MongoAbstractDocument {
   @Prop({ required: false })
-  barcode: string
+  barcode: string;
 
   @Prop()
-  price: number
+  price: number;
 
   @Prop({
     type: String,
     enum: Object.values(LabStatusEnum),
-    default: LabStatusEnum.PENDING
+    default: LabStatusEnum.PENDING,
   })
-  status: LabStatusType
+  status: LabStatusType;
 
   @Prop({ type: Types.ObjectId, ref: 'LabTest' })
-  labTest: Types.ObjectId
+  labTest: Types.ObjectId;
 
   @Prop()
-  sampleTakenAt?: Date
+  sampleTakenAt?: Date;
 
   @Prop({
     type: {
@@ -37,8 +42,6 @@ export class LabOrderItem extends MongoAbstractDocument {
     userId: string;
     userType: ActorType;
   };
-
 }
 
 export const LabOrderItemSchema = SchemaFactory.createForClass(LabOrderItem);
-

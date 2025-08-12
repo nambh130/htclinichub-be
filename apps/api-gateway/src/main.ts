@@ -18,6 +18,8 @@ async function bootstrap() {
       'http://localhost:8000',
       'http://localhost:8082',
       'http://localhost:8081',
+      // Allow LocalTunnel domains for webhook testing
+      /.*\.loca\.lt$/,
     ], // allow requests from these origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // allow cookies/auth headers

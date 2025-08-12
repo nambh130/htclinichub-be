@@ -2,8 +2,6 @@ import {
   Controller,
   Post,
   Body,
-  HttpCode,
-  HttpStatus,
   Get,
   Put,
   Delete,
@@ -15,6 +13,7 @@ import { PaymentService } from './payment.service';
 import {
   StorePayOSCredentialsDto,
   CreatePaymentLinkDto,
+  CreateCashPaymentDto,
   GetPaymentsDto,
   GetTransactionsDto,
   GetPaymentStatisticsDto,
@@ -151,16 +150,96 @@ export class PaymentController {
     return this.paymentService.createPayOSPaymentLink(dto, currentUser);
   }
 
+  /**
+   * Cancel - Cancel a PayOS payment link
+   */
+  @Put('payos/link/:paymentId/cancel')
+  @UseGuards(JwtAuthGuard)
+  async cancelPayOSPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() payload: { reason: string },
+    @CurrentUser() currentUser: TokenPayload,
+  ): Promise<{ message: string }> {
+    await this.paymentService.cancelPayOSPayment(
+      paymentId,
+      payload.reason,
+      currentUser,
+    );
+    return { message: 'PayOS payment cancelled successfully' };
+  }
+
+  /**
+   * Create - Create a new cash payment record
+   */
+  @Post('cash')
+  @UseGuards(JwtAuthGuard)
+  async createCashPayment(
+    @Body() dto: CreateCashPaymentDto,
+    @CurrentUser() currentUser: TokenPayload,
+  ): Promise<unknown> {
+    return this.paymentService.createCashPayment(dto, currentUser);
+  }
+
+  /**
+   * Update - Mark cash payment as paid
+   */
+  @Put('cash/:paymentId/paid')
+  @UseGuards(JwtAuthGuard)
+  async markCashPaymentAsPaid(
+    @Param('paymentId') paymentId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ): Promise<unknown> {
+    return await this.paymentService.markCashPaymentAsPaid(
+      paymentId,
+      currentUser,
+    );
+  }
+
+  /**
+   * Update - Cancel cash payment and mark as failed
+   */
+  @Put('cash/:paymentId/cancel')
+  @UseGuards(JwtAuthGuard)
+  async cancelCashPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() payload: { reason: string },
+    @CurrentUser() currentUser: TokenPayload,
+  ): Promise<unknown> {
+    return await this.paymentService.cancelCashPayment(
+      paymentId,
+      payload.reason,
+      currentUser,
+    );
+  }
+
   // ========================================
   // 🔄 WEBHOOK PROCESSING
   // ========================================
 
   /**
-   * Process - Handle incoming webhooks from PayOS
+   * Configure - Register webhook URL with PayOS for a clinic
    */
-  @Post('payos/webhook')
-  @HttpCode(HttpStatus.OK)
+  @Post('payos/webhook/configure')
   @UseGuards(JwtAuthGuard)
+  async configurePayOSWebhook(
+    @Body() dto: { clinicId: string; webhookUrl: string },
+  ): Promise<{ message: string; result: unknown }> {
+    const result = await this.paymentService.configurePayOSWebhook(
+      dto.clinicId,
+      dto.webhookUrl,
+    );
+    return {
+      message: 'Webhook URL configured successfully',
+      result,
+    };
+  }
+
+  /**
+   * Process - Handle incoming webhooks from PayOS
+   * Note: No authentication guard because PayOS webhooks don't include JWT tokens
+   * Security is handled via signature verification in the service layer
+   */
+  @Post('payos/webhook-url')
   async processPayOSWebhook(
     @Body() webhookData: WebhookType,
   ): Promise<unknown> {
@@ -175,7 +254,7 @@ export class PaymentController {
    * Read - Get all payment configurations for a clinic (provider-agnostic)
    */
   @Get('clinic/:clinicId/configs')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async getAllPaymentConfigs(
     @Param('clinicId') clinicId: string,
   ): Promise<unknown> {
@@ -192,6 +271,63 @@ export class PaymentController {
     @Query() query: GetPaymentsDto,
   ): Promise<unknown> {
     return this.paymentService.getPaymentsByClinic(clinicId, query);
+  }
+
+  /**
+   * Read - Get a specific payment by ID for a clinic
+   */
+  @Get('clinic/:clinicId/payment/:paymentId')
+  @UseGuards(JwtAuthGuard)
+  async getPaymentById(
+    @Param('clinicId') clinicId: string,
+    @Param('paymentId') paymentId: string,
+  ): Promise<unknown> {
+    return this.paymentService.getPaymentById(clinicId, paymentId);
+  }
+
+  /**
+   * Read - Get payment by appointment ID for a specific clinic
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId')
+  @UseGuards(JwtAuthGuard)
+  async getPaymentByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ): Promise<unknown> {
+    return this.paymentService.getPaymentByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
+  }
+
+  /**
+   * Read - Get ALL payments for a specific clinic and appointment
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId/all')
+  @UseGuards(JwtAuthGuard)
+  async getAllPaymentsByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ): Promise<unknown> {
+    return this.paymentService.getAllPaymentsByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
+  }
+
+  /**
+   * Read - Get all PAID payments for a specific clinic and appointment
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId/paid')
+  @UseGuards(JwtAuthGuard)
+  async getPaidPaymentsByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ): Promise<unknown> {
+    return this.paymentService.getPaidPaymentsByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
   }
 
   /**

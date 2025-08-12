@@ -1,15 +1,15 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { LabFieldRepository } from "./repositories/quantiative-template.repository";
-import { LabField } from "./models/lab-field.schema";
-import { Types } from "mongoose";
-import { CreateQuantitativeTestDto } from "./dto/create-quantiative-test.dto";
-import { QuantitativeTestRepository } from "./repositories/quantiative-test.repository";
-import { UpdateQuantitativeTestDto } from "./dto/update-quantiative-tes.dto";
-import { UpdateLabFieldDto } from "./dto/update-lab-field.dto";
-import { LabTestRepository } from "./repositories/lab-test.repoository";
-import { ImagingTestRepository } from "./repositories/imaging-test.repository";
-import { CreateImagingTestDto } from "./dto/create-imaging-test.dto";
-import { UpdateImagingTestDto } from "./dto/update-imaging-test.dto";
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { LabFieldRepository } from './repositories/quantiative-template.repository';
+import { LabField } from './models/lab-field.schema';
+import { Types } from 'mongoose';
+import { CreateQuantitativeTestDto } from './dto/create-quantiative-test.dto';
+import { QuantitativeTestRepository } from './repositories/quantiative-test.repository';
+import { UpdateQuantitativeTestDto } from './dto/update-quantiative-tes.dto';
+import { UpdateLabFieldDto } from './dto/update-lab-field.dto';
+import { LabTestRepository } from './repositories/lab-test.repoository';
+import { ImagingTestRepository } from './repositories/imaging-test.repository';
+import { CreateImagingTestDto } from './dto/create-imaging-test.dto';
+import { UpdateImagingTestDto } from './dto/update-imaging-test.dto';
 
 @Injectable()
 export class LabTestService {
@@ -18,7 +18,7 @@ export class LabTestService {
     private readonly quantitativeTestRepo: QuantitativeTestRepository,
     private readonly labTestRepo: LabTestRepository,
     private readonly imagingRepo: ImagingTestRepository,
-  ) { }
+  ) {}
 
   // ==================================
   //  LAB FIELDS FOR QUANTITATIVE TESTS
@@ -30,7 +30,7 @@ export class LabTestService {
       loincCode: labField?.loincCode,
       unit: labField.unit,
       referenceRange: labField.referenceRange,
-      clinicId: labField.clinicId
+      clinicId: labField.clinicId,
     });
   }
 
@@ -43,7 +43,7 @@ export class LabTestService {
     options: {
       page?: number;
       limit?: number;
-    } = {}
+    } = {},
   ) {
     const { clinicId, loincCode, name } = filter;
     const { page = 1, limit = 10 } = options;
@@ -58,7 +58,7 @@ export class LabTestService {
       .find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .exec()
+      .exec();
 
     const total = await this.labFieldRepo.count(query);
 
@@ -83,31 +83,34 @@ export class LabTestService {
   //  ALL TESTS
   // ==================================
 
-  async findLabTest(filter: {
-    clinicId: string, name?: string, code?: string
-  },
-    options: { page?: number, limit?: number }
+  async findLabTest(
+    filter: {
+      clinicId: string;
+      name?: string;
+      code?: string;
+    },
+    options: { page?: number; limit?: number },
   ) {
     const { clinicId, name, code } = filter;
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
-    query.isDeleted = false
+    query.isDeleted = false;
 
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
     if (code) query.code = { $regex: code, $options: 'i' };
 
-    console.log(query)
+    console.log(query);
     const results = await this.labTestRepo.labTestModel
       .find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .exec()
+      .exec();
 
     const total = await this.labTestRepo.count(query);
-    console.log('total: ', total)
-    console.log('data: ', results)
+    console.log('total: ', total);
+    console.log('data: ', results);
 
     return {
       data: results,
@@ -119,7 +122,10 @@ export class LabTestService {
   }
 
   async deleteLabTest(id: Types.ObjectId) {
-    return await this.labTestRepo.findOneAndUpdate({ _id: id }, { isDeleted: true });
+    return await this.labTestRepo.findOneAndUpdate(
+      { _id: id },
+      { isDeleted: true },
+    );
   }
 
   // ==================================
@@ -132,16 +138,19 @@ export class LabTestService {
       .lean(true);
   }
 
-  async findQuantitativeTest(filter: {
-    clinicId: string, name?: string, code?: string
-  },
-    options: { page?: number, limit?: number }
+  async findQuantitativeTest(
+    filter: {
+      clinicId: string;
+      name?: string;
+      code?: string;
+    },
+    options: { page?: number; limit?: number },
   ) {
     const { clinicId, name, code } = filter;
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
-    query.isDeleted = false
+    query.isDeleted = false;
 
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
@@ -151,7 +160,7 @@ export class LabTestService {
       .find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .exec()
+      .exec();
 
     const total = await this.quantitativeTestRepo.count(query);
 
@@ -165,17 +174,23 @@ export class LabTestService {
   }
 
   async createQuantitativeTest(test: CreateQuantitativeTestDto) {
-    const testName = test.name.trim().toLowerCase()
-    let checkExists = false
+    const testName = test.name.trim().toLowerCase();
+    let checkExists = false;
     try {
-      await this.quantitativeTestRepo.findOne({ name: testName, isDeleted: false })
-      checkExists = true
+      await this.quantitativeTestRepo.findOne({
+        name: testName,
+        isDeleted: false,
+      });
+      checkExists = true;
     } catch (error) {
-      checkExists = false
+      checkExists = false;
     }
     if (checkExists)
-      throw new BadRequestException({ ERR_CODE: "ITEM_EXISTS", message: "Item with this name already exists." })
-    const transformedTemplate = test.template?.map(field => ({
+      throw new BadRequestException({
+        ERR_CODE: 'ITEM_EXISTS',
+        message: 'Item with this name already exists.',
+      });
+    const transformedTemplate = test.template?.map((field) => ({
       loincCode: field.loincCode,
       name: field.name,
       unit: field.unit,
@@ -194,9 +209,10 @@ export class LabTestService {
     });
   }
 
-
-
-  async updateQuantiativeTest(id: Types.ObjectId, dto: UpdateQuantitativeTestDto) {
+  async updateQuantiativeTest(
+    id: Types.ObjectId,
+    dto: UpdateQuantitativeTestDto,
+  ) {
     return await this.quantitativeTestRepo.findOneAndUpdate(id, dto);
   }
 
@@ -208,24 +224,30 @@ export class LabTestService {
   //  IMAGING TESTS
   // ==================================
   async createImagingTest(test: CreateImagingTestDto) {
-    const testName = test.name.trim().toLowerCase()
-    let checkExists = false
+    const testName = test.name.trim().toLowerCase();
+    let checkExists = false;
     try {
-      await this.imagingRepo.findOne({ name: testName, isDeleted: false })
-      checkExists = true
+      await this.imagingRepo.findOne({ name: testName, isDeleted: false });
+      checkExists = true;
     } catch (error) {
-      checkExists = false
+      checkExists = false;
     }
     if (checkExists)
-      throw new BadRequestException({ ERR_CODE: "ITEM_EXISTS", message: "Item with this name already exists." })
-    const template = { description: test.description, conclusion: test.conclusion }
+      throw new BadRequestException({
+        ERR_CODE: 'ITEM_EXISTS',
+        message: 'Item with this name already exists.',
+      });
+    const template = {
+      description: test.description,
+      conclusion: test.conclusion,
+    };
     return await this.imagingRepo.create({
       clinicId: test.clinicId,
       name: test.name,
       price: test.price,
       code: test.code,
-      template
-    })
+      template,
+    });
   }
 
   async getImagingTestById(id: Types.ObjectId) {
@@ -242,7 +264,7 @@ export class LabTestService {
     const { page = 1, limit = 10 } = options;
 
     const query: Record<string, any> = {};
-    query.isDeleted = false
+    query.isDeleted = false;
     if (clinicId) query.clinicId = clinicId;
     if (name) query.name = { $regex: name, $options: 'i' };
     if (code) query.code = { $regex: code, $options: 'i' };
@@ -264,10 +286,7 @@ export class LabTestService {
     };
   }
 
-  async updateImagingTest(
-    id: Types.ObjectId,
-    dto: UpdateImagingTestDto,
-  ) {
+  async updateImagingTest(id: Types.ObjectId, dto: UpdateImagingTestDto) {
     if (dto.description || dto.conclusion) {
       dto.template = {
         description: dto.description,

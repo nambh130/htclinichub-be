@@ -5,7 +5,7 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/reservations/tsconfig.app.json"
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "projects": {
     "analyze-healthcare-data": {
@@ -93,15 +93,6 @@
       "sourceRoot": "apps/payment/src",
       "compilerOptions": {
         "tsConfigPath": "apps/payment/tsconfig.app.json"
-      }
-    },
-    "reservations": {
-      "type": "application",
-      "root": "apps/reservations",
-      "entryFile": "main",
-      "sourceRoot": "apps/reservations/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/reservations/tsconfig.app.json"
       }
     },
     "staff": {

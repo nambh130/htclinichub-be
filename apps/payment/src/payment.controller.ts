@@ -14,6 +14,7 @@ import {
 import { PaymentService } from './payment.service';
 import { StorePayOSCredentialsDto } from './dtos/store-credentials.dto';
 import { CreatePaymentLinkDto } from './dtos/create-payment-link.dto';
+import { CreateCashPaymentDto } from './dtos/create-cash-payment.dto';
 import { WebhookType } from '@payos/node/lib/type';
 import { GetPaymentsDto } from './dtos/get-payments.dto';
 import { GetTransactionsDto } from './dtos/get-transactions.dto';
@@ -175,9 +176,80 @@ export class PaymentController {
     );
   }
 
+  /**
+   * Cancel - Cancel a PayOS payment link
+   */
+  @Put('payos/link/:paymentId/cancel')
+  async cancelPayOSPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() payload: { reason: string },
+  ) {
+    await this.paymentService.cancelPayOSPayment(paymentId, payload.reason);
+    return { message: 'PayOS payment cancelled successfully' };
+  }
+
+  /**
+   * Create - Create a new cash payment record
+   */
+  @Post('cash')
+  async createCashPayment(
+    @Body() payload: { dto: CreateCashPaymentDto; currentUser: TokenPayload },
+  ) {
+    return this.paymentService.createCashPayment(
+      payload.dto,
+      payload.currentUser,
+    );
+  }
+
+  /**
+   * Update - Mark cash payment as paid
+   */
+  @Put('cash/:paymentId/paid')
+  async markCashPaymentAsPaid(
+    @Param('paymentId') paymentId: string,
+    @Body() payload: { currentUser: TokenPayload },
+  ) {
+    return this.paymentService.markCashPaymentAsPaid(
+      paymentId,
+      payload.currentUser,
+    );
+  }
+
+  /**
+   * Update - Cancel cash payment and mark as failed
+   */
+  @Put('cash/:paymentId/cancel')
+  async cancelCashPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() payload: { reason: string; currentUser: TokenPayload },
+  ) {
+    return this.paymentService.cancelCashPayment(
+      paymentId,
+      payload.reason,
+      payload.currentUser,
+    );
+  }
+
   // ========================================
   // 🔄 WEBHOOK PROCESSING
   // ========================================
+
+  /**
+   * Configure - Register webhook URL with PayOS for a clinic
+   */
+  @Post('payos/webhook/configure')
+  async configurePayOSWebhook(
+    @Body() payload: { clinicId: string; webhookUrl: string },
+  ): Promise<{ message: string; result: string }> {
+    const result = await this.paymentService.configurePayOSWebhook(
+      payload.clinicId,
+      payload.webhookUrl,
+    );
+    return {
+      message: 'Webhook URL configured successfully with PayOS',
+      result,
+    };
+  }
 
   /**
    * Process - Handle incoming webhooks from PayOS
@@ -214,6 +286,59 @@ export class PaymentController {
     @Query() dto: GetPaymentsDto,
   ) {
     return this.paymentService.getPaymentsByClinic(clinicId, dto);
+  }
+
+  /**
+   * Read - Get payment by id
+   */
+  @Get('clinic/:clinicId/payment/:paymentId')
+  async getPaymentById(
+    @Param('clinicId') clinicId: string,
+    @Param('paymentId') paymentId: string,
+  ) {
+    return this.paymentService.getPaymentById(clinicId, paymentId);
+  }
+
+  /**
+   * Read - Get payment by appointment id for a specific clinic
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId')
+  async getPaymentByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    return this.paymentService.getPaymentByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
+  }
+
+  /**
+   * Read - Get ALL payments for a specific clinic and appointment
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId/all')
+  async getAllPaymentsByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    return this.paymentService.getAllPaymentsByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
+  }
+
+  /**
+   * Read - Get all PAID payments for a specific clinic and appointment
+   */
+  @Get('clinic/:clinicId/appointment/:appointmentId/paid')
+  async getPaidPaymentsByAppointmentId(
+    @Param('clinicId') clinicId: string,
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    return await this.paymentService.getPaidPaymentsByAppointmentId(
+      clinicId,
+      appointmentId,
+    );
   }
 
   /**

@@ -1,10 +1,10 @@
-import { MongoAbstractDocument } from "@app/common";
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { MongoAbstractDocument } from '@app/common';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
-export class LabField extends MongoAbstractDocument{
-  @Prop({required: true})
-  clinicId: string
+export class LabField extends MongoAbstractDocument {
+  @Prop({ required: true })
+  clinicId: string;
 
   @Prop({ required: false })
   loincCode?: string;
@@ -20,7 +20,7 @@ export class LabField extends MongoAbstractDocument{
       low: Number,
       high: Number,
     },
-    required: true
+    required: true,
   })
   referenceRange?: {
     low: number;

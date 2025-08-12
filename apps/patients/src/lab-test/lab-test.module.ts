@@ -1,7 +1,18 @@
 import { MongoDatabaseModule, PATIENT_SERVICE } from '@app/common';
 import { Module } from '@nestjs/common';
-import { ImagingTest, ImagingTestSchema, LabTest, LabTestSchema, QuantitativeTest, QuantitativeTestSchema, TestEnum } from './models/lab-test.schema';
-import { ImagingTemplate, ImagingTemplateSchema } from './models/imaging-template.schema';
+import {
+  ImagingTest,
+  ImagingTestSchema,
+  LabTest,
+  LabTestSchema,
+  QuantitativeTest,
+  QuantitativeTestSchema,
+  TestEnum,
+} from './models/lab-test.schema';
+import {
+  ImagingTemplate,
+  ImagingTemplateSchema,
+} from './models/imaging-template.schema';
 import { LabTestController } from './lab-test.controller';
 import { LabTestService } from './lab-test.services';
 import { LabFieldRepository } from './repositories/quantiative-template.repository';
@@ -10,7 +21,10 @@ import { QuantitativeTestRepository } from './repositories/quantiative-test.repo
 import { LabTestRepository } from './repositories/lab-test.repoository';
 import { ImagingTestRepository } from './repositories/imaging-test.repository';
 import { LabOrder, LabOrderSchema } from '../lab-order/models/lab-order.schema';
-import { LabOrderItem, LabOrderItemSchema } from '../lab-order/models/lab-order-item.schema';
+import {
+  LabOrderItem,
+  LabOrderItemSchema,
+} from '../lab-order/models/lab-order-item.schema';
 import { LabOrderController } from '../lab-order/lab-order.controller';
 import { LabOrderRepository } from '../lab-order/repositories/lab-order.repository';
 import { LabOrderService } from '../lab-order/lab-order.service';
@@ -37,16 +51,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
               name: ImagingTest.name,
               schema: ImagingTestSchema,
               value: TestEnum.IMAGE,
-            }
-          ]
+            },
+          ],
         },
         {
           name: ImagingTemplate.name,
-          schema: ImagingTemplateSchema
+          schema: ImagingTemplateSchema,
         },
         {
           name: LabField.name,
-          schema: LabFieldSchema
+          schema: LabFieldSchema,
         },
         {
           name: LabOrder.name,
@@ -68,7 +82,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           options: {
             client: {
               clientId: 'patients-client',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: 'patients-consumer',
@@ -79,10 +93,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       },
     ]),
     BarcodeCounterModule,
-    LabTestResultModule
+    LabTestResultModule,
   ],
   controllers: [LabTestController, LabOrderController],
-  providers: [LabTestService,
+  providers: [
+    LabTestService,
     LabFieldRepository,
     QuantitativeTestRepository,
     LabTestRepository,
@@ -90,8 +105,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
     LabOrderRepository,
     LabOrderService,
-    LabOrderItemRepository
+    LabOrderItemRepository,
   ],
-  exports: [LabTestRepository, LabTestService]
+  exports: [LabTestRepository, LabTestService],
 })
-export class LabTestModule { }
+export class LabTestModule {}

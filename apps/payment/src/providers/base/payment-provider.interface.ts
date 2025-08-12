@@ -1,4 +1,5 @@
 import { TokenPayload } from '@app/common';
+import { PaymentType } from '../../enums/payment-status.enum';
 
 export interface PaymentConfig {
   [key: string]: string;
@@ -7,15 +8,20 @@ export interface PaymentConfig {
 export interface CreatePaymentLinkRequest {
   clinicId: string;
   appointmentId?: string;
-  orderCode: string;
+  orderCode?: string;
   amount: number;
   description: string;
   returnUrl: string;
   cancelUrl: string;
   items?: Array<{
+    id: string;
     name: string;
     quantity: number;
     price: number;
+    type: PaymentType;
+    appointmentId?: string;
+    labOrderItemId?: string;
+    labOrderId?: string;
   }>;
   buyerName?: string;
   buyerEmail?: string;
@@ -53,7 +59,7 @@ export interface PaymentData {
   amount: number;
   currency: string;
   status: string;
-  orderCode: string;
+  orderCode?: string;
   providerPaymentId?: string;
   paymentUrl?: string;
   metadata?: Record<string, any>;

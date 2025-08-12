@@ -39,7 +39,7 @@ class PaymentItemDto {
   labOrderId?: string;
 }
 
-export class CreatePaymentLinkDto {
+export class CreateCashPaymentDto {
   @IsUUID()
   clinicId: string;
 
@@ -47,21 +47,11 @@ export class CreatePaymentLinkDto {
   @IsUUID()
   appointmentId?: string;
 
-  @IsOptional()
-  @IsString()
-  orderCode?: string;
-
   @IsNumber()
   amount: number;
 
   @IsString()
   description: string;
-
-  @IsString()
-  returnUrl: string;
-
-  @IsString()
-  cancelUrl: string;
 
   @IsOptional()
   @IsArray()
@@ -86,6 +76,6 @@ export class CreatePaymentLinkDto {
   buyerAddress?: string;
 
   @IsOptional()
-  @IsNumber()
-  expiredAt?: number;
+  @IsString()
+  notes?: string;
 }

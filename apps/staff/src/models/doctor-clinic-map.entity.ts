@@ -30,6 +30,7 @@ export class DoctorClinicMap extends PostgresAbstractEntity<DoctorClinicMap> {
     nullable: true,
   })
   examFee: number;
+
   @Column({
     type: 'enum',
     enum: DoctorClinicStatus,

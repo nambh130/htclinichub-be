@@ -1,14 +1,14 @@
-import { LAB_TEST_SERVICE, PATIENT_SERVICE } from "@app/common";
-import { HttpService } from "@nestjs/axios";
-import { HttpException, Inject, Injectable } from "@nestjs/common";
-import { Request } from "express";
-import { catchError, firstValueFrom } from "rxjs";
+import { LAB_TEST_SERVICE, PATIENT_SERVICE } from '@app/common';
+import { HttpService } from '@nestjs/axios';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Request } from 'express';
+import { catchError, firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class LabTestService {
   constructor(
     @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   // ==================================
   //  LAB FIELDS FOR QUANTITATIVE TESTS
@@ -18,16 +18,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-test/lab-field`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .post(`/lab-test/lab-field`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -46,16 +42,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .patch(
-          `/lab-test/lab-field/${id}`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .patch(`/lab-test/lab-field/${id}`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -74,15 +66,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .delete(
-          `/lab-test/lab-field/${id}`,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .delete(`/lab-test/lab-field/${id}`, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -159,7 +148,11 @@ export class LabTestService {
   // ==================================
   //  QUANTITATIVE TESTS
   // ==================================
-  async getQuantitativeById(id: string, query: Record<string, any>, req: Request) {
+  async getQuantitativeById(
+    id: string,
+    query: Record<string, any>,
+    req: Request,
+  ) {
     const queryString = new URLSearchParams(query).toString();
 
     const response = await firstValueFrom(
@@ -179,16 +172,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-test/quantitative`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .post(`/lab-test/quantitative`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -207,16 +196,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .patch(
-          `/lab-test/quantitative/${id}`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .patch(`/lab-test/quantitative/${id}`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -235,15 +220,12 @@ export class LabTestService {
 
     const response = await firstValueFrom(
       this.httpService
-        .delete(
-          `/lab-test/quantitative/${id}`,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
-            withCredentials: true, // optional but doesn't hurt
+        .delete(`/lab-test/quantitative/${id}`, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+          withCredentials: true, // optional but doesn't hurt
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
