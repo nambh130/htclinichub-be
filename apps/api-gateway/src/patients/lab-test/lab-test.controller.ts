@@ -48,6 +48,13 @@ export class LabTestController {
     return this.labTestService.findLabTest(query, req)
   }
 
+  @Delete('/:id')
+  deleteLabTest(
+    @Param('id') id: string,
+    @Req() req: Request
+  ) {
+    return this.labTestService.deleteTest(id, req)
+  }
   // ==================================
   //  QUANTITATIVE TESTS
   // ==================================

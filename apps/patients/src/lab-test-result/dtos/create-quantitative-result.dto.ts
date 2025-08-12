@@ -9,6 +9,14 @@ class ReferenceRangeDto {
   high: number;
 }
 
+class FileObjectDto {
+  @IsString()
+  id: string;
+
+  @IsString()
+  url: string;
+}
+
 class LabResultFieldDto {
   @IsString()
   @IsNotEmpty()
@@ -45,4 +53,10 @@ export class CreateQuantitativeResultDto {
   @IsBoolean()
   @IsOptional()
   accept?: boolean
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FileObjectDto)
+  uploadedResult?: FileObjectDto[];
 }

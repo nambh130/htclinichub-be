@@ -1,3 +1,5 @@
+import { ActorType } from "@app/common";
+import { ActorEnum } from "@app/common/enum/actor-type";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types } from "mongoose";
 
@@ -8,14 +10,10 @@ export enum ResultFileEnum {
   PDF = 'pdf',
 }
 
-
 @Schema({ discriminatorKey: 'type', timestamps: true }) // `type` determines sub-type
 export class LabTestResult {
   @Prop({ type: Types.ObjectId, ref: 'LabOrderItem', required: true, unique: true })
   orderId: Types.ObjectId;
-
-  //@Prop({ default: Date.now })
-  //completedAt: Date;
 
   @Prop({ default: Date.now })
   createdAt: Date;
@@ -25,29 +23,47 @@ export class LabTestResult {
 
   @Prop({
     type: {
-      doctorId: String,
-      doctorName: String,
-    },
-  })
-  takenBy: {
-    doctorId: string;
-    doctorName?: string;
-  };
-
-  @Prop({
-    type: {
-      url: { type: String, required: true },
-      fileType: {
+      userId: String,
+      userType: {
         type: String,
-        enum: Object.values(ResultFileEnum),
-        required: true,
+        enum: Object.values(ActorEnum),
       },
     },
   })
+  createdBy: {
+    userId: string;
+    userType: ActorType;
+  };
+
+
+  @Prop({
+    type: {
+      userId: String,
+      userType: {
+        type: String,
+        enum: Object.values(ActorEnum),
+      },
+    },
+  })
+  updatedBy: {
+    userId: string;
+    userType: ActorType;
+  };
+
+  @Prop({
+    type: [
+      {
+        url: { type: String, required: true },
+        id: String,
+        name: String
+      },
+    ],
+  })
   uploadedResult?: {
     url: string;
-    fileType: ResultFileType;
-  };
+    id: string;
+    name: string;
+  }[];
 
 }
 
