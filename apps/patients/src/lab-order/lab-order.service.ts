@@ -9,7 +9,6 @@ import { BarcodeCounterName } from "../barcode-counter/models/barcode.schema";
 import { TestEnum, TestType } from "../lab-test/models/lab-test.schema";
 import { TestResultService } from "../lab-test-result/lab-test-result.service";
 import { QuantitativeTestResult } from "../lab-test-result/models/quantitative-lab-result.schema";
-import { Exception } from "handlebars";
 import { ImagingResultData, ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
 import { LabOrderItem } from "./models/lab-order-item.schema";
 import { LabTestResult } from "../lab-test-result/models/lab-result.schema";
