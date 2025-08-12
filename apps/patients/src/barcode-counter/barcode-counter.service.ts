@@ -5,21 +5,40 @@ import { Model } from "mongoose";
 export class BarcodeCounterService {
   constructor(
     @InjectModel(BarcodeCounter.name, 'patientService')
-    readonly barcodeCounter: Model<BarcodeCounter>
+    private readonly barcodeCounter: Model<BarcodeCounter>
   ) { }
-  // counter.service.ts or inside labOrder.service.ts
-  private async getNextSequence(name: BarcodeConunterType): Promise<number> {
+
+  private getCurrentDateCode(): string {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yy}${mm}${dd}`;
+  }
+
+  private async getNextSequence(
+    name: BarcodeConunterType,
+    clinicId: string,
+    dateCode: string,
+  ): Promise<number> {
+    console.log(name, clinicId, dateCode)
     const result = await this.barcodeCounter.findOneAndUpdate(
-      { name },
+      { name, clinicId, date: dateCode },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      { new: true, upsert: true }
     );
     return result.seq;
   }
 
-  async generateBarcode(barcodeName: BarcodeConunterType): Promise<string> {
-    const nextSeq = await this.getNextSequence(barcodeName);
-    return nextSeq.toString().padStart(12, '0');
-  }
+  async generateBarcode(
+    barcodeName: BarcodeConunterType,
+    clinicId: string,
+  ): Promise<string> {
+    const dateCode = this.getCurrentDateCode();
+    const seq = await this.getNextSequence(barcodeName, clinicId, dateCode);
 
+    const paddedSeq = seq.toString().padStart(6, '0');
+
+    return `${dateCode}-${paddedSeq}`; // LO-250805-000001
+  }
 }

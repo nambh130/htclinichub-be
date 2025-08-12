@@ -51,4 +51,10 @@ export class CreateImagingTestResultDto {
   @IsBoolean()
   @IsOptional()
   accept?: boolean
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FileObjectDto)
+  uploadedResult?: FileObjectDto[];
 }

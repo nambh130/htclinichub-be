@@ -16,9 +16,7 @@ import { LoginOtpRequestDto } from './dto/login-otp-request.dto';
 import { ClinicUserLoginDto } from './dto/clinic-user-login.dto';
 import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { EventPattern, Payload } from '@nestjs/microservices';
 import { ClinicService } from '../clinics/clinic.service';
-import { P } from 'pino';
 import { ActorEnum } from '@app/common/enum/actor-type';
 
 @ApiTags('auth')
@@ -27,7 +25,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly clinicService: ClinicService,
-  ) {}
+  ) { }
 
   @Post('/doctor')
   async createDoctor(@Req() req: Request, @Res() res: Response) {
@@ -108,6 +106,13 @@ export class AuthController {
   async adminLogin(@Req() req: Request, @Res() res: Response) {
     const response = await this.authService.adminLogin(req, res);
     return response;
+  }
+
+
+  @Post('change-password')
+  async changePassowrd(@Req() req: Request) {
+    const response = await this.authService.changePassword(req);
+    return response
   }
 
   // ------------------------------INVITATION ------------------------------

@@ -7,6 +7,7 @@ import { ImagingTestResult, ImagingTestResultSchema } from './models/imaging-tes
 import { ImagingResultRepository } from './repositories/imaging-test-result.repository';
 import { QuantitativeResultRepository } from './repositories/quantitative-test-result.repository';
 import { TestResultService } from './lab-test-result.service';
+import { LabTestResultRepository } from './repositories/test-result.respository';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { TestResultService } from './lab-test-result.service';
 
   ],
   controllers: [],
-  providers: [ImagingResultRepository, QuantitativeResultRepository, TestResultService],
+  providers: [ImagingResultRepository, QuantitativeResultRepository, TestResultService, LabTestResultRepository],
   exports: [ImagingResultRepository, QuantitativeResultRepository, TestResultService]
 })
 export class LabTestResultModule { }

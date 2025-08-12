@@ -2,9 +2,11 @@ import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Validat
 import { Type } from 'class-transformer';
 
 class ReferenceRangeDto {
+  @Type(() => Number)
   @IsNumber()
   low: number;
 
+  @Type(() => Number)
   @IsNumber()
   high: number;
 }

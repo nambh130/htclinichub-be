@@ -59,7 +59,7 @@ export class CreatePatientDto {
   @IsOptional()
   @Matches(/^\d+$/, { message: 'BHYT must contain only numbers' })
   @Length(15, 15, { message: 'BHYT must be exactly 15 digits' })
-  health_insurance_id: string
+  health_insurance_id?: string
 
   @IsString()
   //@IsOptional()

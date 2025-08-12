@@ -282,6 +282,36 @@ export class AuthService implements OnModuleInit {
 
     return res.status(response.status).send(response.data);
   }
+
+  async changePassword(
+    req: Request,
+  ): Promise<any> {
+    const cookie = req.headers.cookie; // Grab incoming cookies
+
+    const response = await firstValueFrom(
+      this.http
+        .post(
+          `${this.configService.get('AUTH_SERVICE_URL')}/auth/change-password`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie, // Forward the original cookie
+            },
+            withCredentials: true, // optional but doesn't hurt
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
   // ------------------- INVITATIONS -------------------
 
   async createInvitation(

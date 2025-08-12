@@ -3,7 +3,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, PipelineStage, Types } from "mongoose";
 import { LabOrder } from "../models/lab-order.schema";
-import { TestType } from "../../lab-test/models/lab-test.schema";
 
 @Injectable()
 export class LabOrderRepository extends MongoAbstractRepository<LabOrder> {
@@ -122,6 +121,7 @@ export class LabOrderRepository extends MongoAbstractRepository<LabOrder> {
                     _id: '$patient._id',
                     name: '$patient.fullname',
                     dob: '$patient.dOB',
+                    gender: '$patient.gender',
                   }
                 }
               }

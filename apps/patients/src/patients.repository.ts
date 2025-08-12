@@ -41,6 +41,7 @@ export class PatientRepository extends MongoAbstractRepository<PatientDocument> 
     return existPhone;
   }
 
+
   async findCitizenId(citizen_id: string) {
     const existCitizenId = await this.model.findOne({ citizen_id });
     if (!existCitizenId) {

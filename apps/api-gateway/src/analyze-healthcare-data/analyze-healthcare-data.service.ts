@@ -76,7 +76,7 @@ export class AnalyzeHealthcareDataService {
       };
       const result = await firstValueFrom(
         this.httpService.put(
-          `/analyze-healthcare/update-vital-signs-data/:${id}`,
+          `/analyze-healthcare/update-vital-signs-data/${id}`,
           payload,
         ),
       );

@@ -98,7 +98,7 @@ export class LabTestController {
     }
   }
 
-  @Delete('quantitative/:id')
+  @Delete('/:id')
   async deleteLabTest(@Param('id') id: string) {
     if (!isValidObjectId(id)) throw new BadRequestException('Invalid id');
     return this.labTestService.deleteLabTest(new Types.ObjectId(id));

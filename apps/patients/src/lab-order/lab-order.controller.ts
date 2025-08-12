@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { LabOrderService } from "./lab-order.service";
 import { CreateManyLabOrderDto } from "./dtos/create-lab-order.dto";
 import { CurrentUser, JwtAuthGuard, MEDIA_SERVICE, PATIENT_SERVICE, TokenPayload } from "@app/common";
@@ -10,8 +10,9 @@ import { CreateQuantitativeResultDto } from "../lab-test-result/dtos/create-quan
 import { TestResultService } from "../lab-test-result/lab-test-result.service";
 import { CreateImagingTestResultDto } from "./dtos/save-imaging-result.dto";
 import { ClientKafka } from "@nestjs/microservices";
-import { ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
 import { DeleteMultipleFilesEvent } from "@app/common/events/media";
+import { AddUploadedFileDto } from "./dtos/upload-result-file.dto";
+import { RemoveResultFileDto } from "./dtos/remove-result-file.dto";
 
 @Controller('lab-order')
 export class LabOrderController {
@@ -30,6 +31,7 @@ export class LabOrderController {
   ) {
     return this.labOrderService.createLabOrder(
       {
+        testType: dto.testType,
         labTestIds: dto.labTest,
         medicalReportId: dto.medicalReport,
         name: dto.name,
@@ -44,9 +46,13 @@ export class LabOrderController {
     @Query() query: GetOrdersByRecordDto,
   ) {
     return this.labOrderService.getLabOrdersByReportId(
-      query.recordId,
-      query.page,
-      query.limit);
+      {
+        medicalReportId: query.recordId,
+        page: query.page,
+        limit: query.limit,
+        type: query.testType
+      }
+    );
   }
 
   @Get('by-clinic')
@@ -76,6 +82,15 @@ export class LabOrderController {
     return this.labOrderService.getOrderItemById(id)
   }
 
+  @Get('/:id/quantitative-result')
+  @UseGuards(JwtAuthGuard)
+  async getManyQuantResultByOrderItems(@Param('id') orderId: string) {
+    if (!isValidObjectId(orderId)) {
+      throw new BadRequestException("Invalid order id!");
+    }
+    return this.labOrderService.getQuantResultsFromOrderId(orderId);
+  }
+
 
   @Patch('/item/:id/status')
   @UseGuards(JwtAuthGuard)
@@ -85,13 +100,17 @@ export class LabOrderController {
     @CurrentUser() user: TokenPayload
   ) {
     return this.labOrderService.updateOrderItemStatus(
-      id, dto.status,
-      { userId: user.userId, userType: user.actorType }
+      {
+        orderItemId: id,
+        status: dto.status,
+        clinicId: dto.clinicId,
+      },
+      { updatedById: user.userId, updatedByType: user.actorType }
     )
   }
 
   @Get('item/:id/quantitative-result')
-  async getQuantResultByOrder(
+  async getQuantResultByOrderItem(
     @Param('id') id: string
   ) {
     const response = await this.resultService.findQuantitativeResultByOrder(id);
@@ -112,9 +131,46 @@ export class LabOrderController {
     @Body() dto: CreateQuantitativeResultDto,
     @CurrentUser() user: TokenPayload
   ) {
-    return this.labOrderService.saveQuantitativeResult(
-      dto.orderItemId, dto.result, user.userId, dto.accept
+    const updateResult = await this.labOrderService.saveQuantitativeResult(
+      {
+        orderItemId: dto.orderItemId,
+        result: dto.result, actor: { userId: user.userId, userType: user.actorType },
+        //uploadedResult: dto.uploadedResult,
+        accept: dto.accept
+      }
     )
+
+    if (updateResult.deletedResultFiles) {
+      this.kafkaClient.emit('delete-multiple-files',
+        new DeleteMultipleFilesEvent({ currentUser: user, ids: updateResult.deletedResultFiles })
+      )
+    }
+  }
+
+  @Post('/item/result-file/add')
+  async addUploadedResultFile(
+    @Body() dto: AddUploadedFileDto
+  ) {
+    const updateResult = await this.resultService.addResultFile({
+      orderItemId: dto.orderItemId,
+      resultFile: dto.uploadedResult
+    })
+    return updateResult
+  }
+
+  @Post('/item/result-file/remove')
+  async removeUploadedResultFile(
+    @Body() dto: RemoveResultFileDto,
+    @CurrentUser() user: TokenPayload
+  ) {
+    const updateResult = await this.resultService.removeResultFile({
+      orderItemId: dto.orderItemId,
+      resultFileId: dto.resultFileId
+    })
+    this.kafkaClient.emit('delete-multiple-files',
+      new DeleteMultipleFilesEvent({ currentUser: user, ids: [dto.orderItemId] })
+    )
+    return updateResult
   }
 
   @Post('/item/imaging-result')
@@ -123,14 +179,29 @@ export class LabOrderController {
     @Body() dto: CreateImagingTestResultDto,
     @CurrentUser() user: TokenPayload
   ) {
+    const { accept, result, orderItemId, uploadedResult } = dto
+
     const updateResult = await this.labOrderService.saveImagingResult(
-      dto.orderItemId, dto.result, user.userId, dto.accept
-    ) as ImagingTestResult & { deletedImageIds: string[] };
-    if (updateResult.deletedImageIds.length > 0) {
+      {
+        orderItemId,
+        result,
+        //uploadedResult,
+        actor: { userId: user.userId, userType: user.actorType },
+        accept
+      }
+    );
+
+    const deletedFiles = []
+    if (updateResult.deletedImageIds?.length > 0) {
+      updateResult.deletedImageIds.map(item => deletedFiles.push(item))
+    }
+    if (updateResult.deletedResultFiles?.length > 0) {
+      updateResult.deletedResultFiles.map(item => deletedFiles.push(item))
+    }
+    if (deletedFiles.length > 0)
       this.kafkaClient.emit('delete-multiple-files',
         new DeleteMultipleFilesEvent({ currentUser: user, ids: updateResult.deletedImageIds })
       )
-    }
     return updateResult
   }
 }

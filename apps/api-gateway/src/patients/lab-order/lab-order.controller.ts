@@ -17,7 +17,7 @@ import {
 import { LabOrderService } from './lab-order.service';
 import { Request } from 'express';
 import { MediaService } from '@api-gateway/media/media.service';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser, JwtAuthGuard, TokenPayload } from '@app/common';
 import { CreateImagingTestResultDto } from './dto/save-imaging-result.dto';
 
@@ -73,17 +73,109 @@ export class LabOrderController {
     return this.labOrderService.getOrderItemImagingResult(req, id);
   }
 
+  @Get('/:id/quantitative-result')
+  async getManyQuantResultByOrderItems(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ) {
+    return this.labOrderService.getManyQuantResultByOrderItems(req, id);
+  }
+
+  @Get('/:id/quantitative-result')
+  async getManyQuantResultByOrderItems(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ) {
+    return this.labOrderService.getManyQuantResultByOrderItems(req, id);
+  }
+
   @Post('/item/quantitative-result')
   async saveQuantitativeResult(@Req() req: Request) {
     return this.labOrderService.saveQuantitativeResult(req);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('resultFile'))
+  @Post('/item/result-file/add')
+  async updateQuantitativeUploadedResult(
+    @Req() req: Request,
+    @UploadedFile() resultFile: Express.Multer.File,
+    @Body() body: { orderItemId: string },
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    console.log(body);
+    const { orderItemId } = body;
+    if (!resultFile) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const uploadResult = await this.mediaService.uploadSingleFile(
+      'upload-pdf',
+      resultFile,
+      currentUser,
+    );
+
+    const payload = {
+      orderItemId,
+      uploadedResult: {
+        id: uploadResult._id,
+        url: uploadResult.url,
+        name: uploadResult.originalName,
+      },
+    };
+
+    return this.labOrderService.addResultFile(req, payload);
+  }
+
+  @Post('/item/result-file/remove')
+  async removeQuantitativeUploadedResult(@Req() req: Request) {
+    return this.labOrderService.removeResultFile(req);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('resultFile'))
+  @Post('/item/result-file/add')
+  async updateQuantitativeUploadedResult(
+    @Req() req: Request,
+    @UploadedFile() resultFile: Express.Multer.File,
+    @Body() body: { orderItemId: string },
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    console.log(body);
+    const { orderItemId } = body;
+    if (!resultFile) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const uploadResult = await this.mediaService.uploadSingleFile(
+      'upload-pdf',
+      resultFile,
+      currentUser,
+    );
+
+    const payload = {
+      orderItemId,
+      uploadedResult: {
+        id: uploadResult._id,
+        url: uploadResult.url,
+        name: uploadResult.originalName,
+      },
+    };
+
+    return this.labOrderService.addResultFile(req, payload);
+  }
+
+  @Post('/item/result-file/remove')
+  async removeQuantitativeUploadedResult(@Req() req: Request) {
+    return this.labOrderService.removeResultFile(req);
+  }
+
   @Post('/item/imaging-result')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FilesInterceptor('files', 3))
+  @UseInterceptors(FilesInterceptor('imageFiles', 10))
   async saveImagingResult(
     @Req() req: Request,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() imageFiles: Express.Multer.File[],
     @CurrentUser() currentUser: TokenPayload,
   ) {
     const { orderItemId, accept, description, conclusion, existingImages } =
@@ -118,10 +210,10 @@ export class LabOrderController {
     let uploadedImageObjects: { id: string; url: string }[] = [];
 
     try {
-      if (files.length > 0) {
+      if (imageFiles.length > 0) {
         const uploadResult = await this.mediaService.uploadMultipleFiles(
           'upload-images',
-          files,
+          imageFiles,
           currentUser,
         );
 

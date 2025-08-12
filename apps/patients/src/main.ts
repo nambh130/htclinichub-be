@@ -18,7 +18,7 @@ async function bootstrap() {
     throw new Error('KAFKA_BROKER environment variable is not set');
   }
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useLogger(logger);
   app.use(cookieParser());
 

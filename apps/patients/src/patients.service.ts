@@ -69,19 +69,19 @@ export class PatientsService {
       );
     }
 
-    if (createPatientDto.relation !== 'Chính chủ' && !hasMainProfile) {
-      throw new BadRequestException(
-        'Bạn cần tạo hồ sơ "Chính chủ" trước khi thêm hồ sơ phụ.',
-      );
-    }
+    // if (createPatientDto.relation !== 'Chính chủ' && !hasMainProfile) {
+    //   throw new BadRequestException(
+    //     'Bạn cần tạo hồ sơ "Chính chủ" trước khi thêm hồ sơ phụ.',
+    //   );
+    // }
 
-    // Kiểm tra số điện thoại
-    const existedPhone = await this.patientsRepository.findByPhone(
-      createPatientDto.phone,
-    );
-    if (existedPhone) {
-      throw new BadRequestException('Số điện thoại đã tồn tại!');
-    }
+    // // Kiểm tra số điện thoại
+    // const existedPhone = await this.patientsRepository.findByPhone(
+    //   createPatientDto.phone,
+    // );
+    // if (existedPhone) {
+    //   throw new BadRequestException('Số điện thoại đã tồn tại!');
+    // }
 
     // Kiểm tra CCCD
     const existedCitizenId = await this.patientsRepository.findCitizenId(
@@ -92,12 +92,14 @@ export class PatientsService {
     }
 
     // Kiểm tra BHYT
-    const existedHealthInsuranceId =
-      await this.patientsRepository.findHealthInsuranceId(
-        createPatientDto.health_insurance_id,
-      );
-    if (existedHealthInsuranceId) {
-      throw new BadRequestException('BHYT đã tồn tại!');
+    if (createPatientDto.health_insurance_id) {
+      const existedHealthInsuranceId =
+        await this.patientsRepository.findHealthInsuranceId(
+          createPatientDto.health_insurance_id,
+        );
+      if (existedHealthInsuranceId) {
+        throw new BadRequestException('BHYT đã tồn tại!');
+      }
     }
 
     // Tạo dữ liệu bệnh nhân
@@ -192,15 +194,15 @@ export class PatientsService {
       }
 
       // ❌ Muốn cập nhật thành hồ sơ phụ nhưng không có hồ sơ Chính chủ nào
-      if (
-        updatePatientDto.relation !== 'Chính chủ' &&
-        !hasAnyMainProfile &&
-        !isCurrentProfileMain
-      ) {
-        throw new BadRequestException(
-          'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
-        );
-      }
+      // if (
+      //   updatePatientDto.relation !== 'Chính chủ' &&
+      //   !hasAnyMainProfile &&
+      //   !isCurrentProfileMain
+      // ) {
+      //   throw new BadRequestException(
+      //     'Tài khoản chưa có hồ sơ "Chính chủ", không thể cập nhật hồ sơ phụ.',
+      //   );
+      // }
 
       if (
         currentProfile.relation === 'Chính chủ' &&
@@ -213,17 +215,17 @@ export class PatientsService {
       }
 
       // Kiểm tra số điện thoại
-      if (updatePatientDto.phone) {
-        const existedPhone = await this.patientsRepository.findByPhone(
-          updatePatientDto.phone,
-        );
-        if (
-          existedPhone &&
-          existedPhone._id.toString() !== currentProfile._id.toString()
-        ) {
-          throw new BadRequestException('Số điện thoại đã tồn tại!');
-        }
-      }
+      // if (updatePatientDto.phone) {
+      //   const existedPhone = await this.patientsRepository.findByPhone(
+      //     updatePatientDto.phone,
+      //   );
+      //   if (
+      //     existedPhone &&
+      //     existedPhone._id.toString() !== currentProfile._id.toString()
+      //   ) {
+      //     throw new BadRequestException('Số điện thoại đã tồn tại!');
+      //   }
+      // }
 
       // Kiểm tra CCCD
       if (updatePatientDto.citizen_id) {
