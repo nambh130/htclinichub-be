@@ -6,7 +6,11 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { PaymentStatus } from '../enums/payment-status.enum';
+import {
+  PaymentMethod,
+  PaymentStatus,
+  PaymentType,
+} from '../enums/payment-status.enum';
 import { PaymentConfig } from './payment-config.entity';
 import { PaymentTransaction } from './payment-transaction.entity';
 import { WebhookEvent } from './webhook-event.entity';
@@ -38,13 +42,20 @@ export class Payment extends PostgresAbstractEntity<Payment> {
   status: PaymentStatus;
 
   @Column({ nullable: true })
-  paymentUrl: string;
+  paymentUrl?: string;
 
   @Column({ nullable: true })
-  providerPaymentId: string; // PayOS paymentLinkId
+  providerPaymentId?: string; // PayOS paymentLinkId
 
-  @Column({ type: 'varchar', length: 100 })
-  orderCode: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  orderCode?: string;
+
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    default: PaymentMethod.BANKING,
+  })
+  paymentMethod: PaymentMethod;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: {
@@ -54,38 +65,43 @@ export class Payment extends PostgresAbstractEntity<Payment> {
     patientPhone?: string;
     description?: string;
     items?: Array<{
+      id: string;
       name: string;
       quantity: number;
       price: number;
+      type: PaymentType;
+      appointmentId?: string;
+      labOrderItemId?: string;
+      labOrderId?: string;
     }>;
     customFields?: Record<string, any>;
   };
 
   @Column({ type: 'jsonb', nullable: true })
-  providerResponse: Record<string, any>;
+  providerResponse?: Record<string, any>;
 
   @Column({ nullable: true })
-  failureReason: string;
+  failureReason?: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  refundedAmount: number;
+  refundedAmount?: number;
 
   @Column({ nullable: true })
-  expiresAt: Date;
+  expiresAt?: Date;
 
   @ManyToOne(() => PaymentConfig, (credential) => credential.payments)
   @JoinColumn({ name: 'credentialId' })
-  credential: PaymentConfig;
+  credential?: PaymentConfig;
 
-  @Column({ type: 'uuid' })
-  credentialId: string;
+  @Column({ type: 'uuid', nullable: true })
+  credentialId?: string;
 
   @OneToMany(() => PaymentTransaction, (transaction) => transaction.payment)
-  transactions: PaymentTransaction[];
+  transactions?: PaymentTransaction[];
 
   @OneToMany(() => WebhookEvent, (event) => event.payment)
-  webhookEvents: WebhookEvent[];
+  webhookEvents?: WebhookEvent[];
 
   @Column({ nullable: true })
-  completedAt: Date;
+  completedAt?: Date;
 }

@@ -18,7 +18,7 @@ async function bootstrap() {
     throw new Error('KAFKA_BROKER environment variable is not set');
   }
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useLogger(logger);
   app.use(cookieParser());
 
@@ -38,7 +38,7 @@ async function bootstrap() {
   // Use Kafka exception filter for Kafka context only
   // app.useGlobalFilters(new KafkaExceptionFilter());
 
-  const port = configService.get<number>('PATIENT_SERVICE_PORT') as number;
+  const port = configService.get<number>('PATIENT_SERVICE_PORT');
 
   // Start both HTTP and Kafka servers
   await app.startAllMicroservices();
@@ -49,4 +49,3 @@ async function bootstrap() {
   );
 }
 void bootstrap();
-

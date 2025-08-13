@@ -2,9 +2,11 @@ import { IsString, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-v
 import { Type } from 'class-transformer';
 
 class ReferenceRangeDto {
+  @Type(() => Number)
   @IsNumber()
   low: number;
 
+  @Type(() => Number)
   @IsNumber()
   high: number;
 }

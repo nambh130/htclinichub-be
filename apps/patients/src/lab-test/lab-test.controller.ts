@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CreateLabFieldDto } from './dto/create-lab-field.dto';
 import { LabTestService } from './lab-test.services';
 import { GetLabFieldDto } from './dto/get-lab-field.dto';
@@ -13,9 +23,7 @@ import { UpdateImagingTestDto } from './dto/update-imaging-test.dto';
 
 @Controller('lab-test')
 export class LabTestController {
-  constructor(
-    private readonly labTestService: LabTestService
-  ) { }
+  constructor(private readonly labTestService: LabTestService) {}
 
   // ==================================
   //  LAB FIELDS FOR QUANTITATIVE TESTS
@@ -23,43 +31,47 @@ export class LabTestController {
 
   @Post('lab-field')
   async createLabField(@Body() dto: CreateLabFieldDto) {
-    const { name, unit, loincCode, clinicId,
-      lowReferenceRange, highReferenceRange } = dto;
+    const {
+      name,
+      unit,
+      loincCode,
+      clinicId,
+      lowReferenceRange,
+      highReferenceRange,
+    } = dto;
     return await this.labTestService.createLabField({
       name,
       unit,
       loincCode,
       referenceRange: {
         low: lowReferenceRange,
-        high: highReferenceRange
+        high: highReferenceRange,
       },
-      clinicId
-    })
+      clinicId,
+    });
   }
 
   @Patch('lab-field/:id')
   async updateLabField(
     @Body() dto: UpdateLabFieldDto,
-    @Param('id') id: Types.ObjectId
+    @Param('id') id: Types.ObjectId,
   ) {
     return this.labTestService.updateLabFields(id, dto);
   }
 
   @Delete('lab-field/:id')
   async deleteLabField(@Param('id') id: string) {
-    if (!isValidObjectId(id))
-      throw new BadRequestException("Invalid id")
+    if (!isValidObjectId(id)) throw new BadRequestException('Invalid id');
     return this.labTestService.deleteLabFields(new Types.ObjectId(id));
   }
 
   @Get('lab-field')
-  getLabField(
-    @Query() query: GetLabFieldDto
-  ) {
-    const { clinicId, loincCode, name, limit, page } = query
+  getLabField(@Query() query: GetLabFieldDto) {
+    const { clinicId, loincCode, name, limit, page } = query;
     return this.labTestService.findLabFields(
-      { clinicId, loincCode, name }, { limit, page }
-    )
+      { clinicId, loincCode, name },
+      { limit, page },
+    );
   }
 
   // ==================================
@@ -67,25 +79,28 @@ export class LabTestController {
   // ==================================
 
   @Get()
-  async getAllTest(
-    @Query() query: FindLabTestDto
-  ) {
-    console.log(query)
-    const { page, limit, testType, ...filter } = query
+  async getAllTest(@Query() query: FindLabTestDto) {
+    console.log(query);
+    const { page, limit, testType, ...filter } = query;
     switch (testType) {
       case TestEnum.LAB:
-        return await this.labTestService.findQuantitativeTest(filter, { page, limit });
+        return await this.labTestService.findQuantitativeTest(filter, {
+          page,
+          limit,
+        });
       case TestEnum.IMAGE:
-        return await this.labTestService.findImagingTest(filter, { page, limit });
+        return await this.labTestService.findImagingTest(filter, {
+          page,
+          limit,
+        });
       default:
         return await this.labTestService.findLabTest(filter, { page, limit });
     }
   }
 
-  @Delete('quantitative/:id')
+  @Delete('/:id')
   async deleteLabTest(@Param('id') id: string) {
-    if (!isValidObjectId(id))
-      throw new BadRequestException("Invalid id")
+    if (!isValidObjectId(id)) throw new BadRequestException('Invalid id');
     return this.labTestService.deleteLabTest(new Types.ObjectId(id));
   }
 
@@ -95,38 +110,41 @@ export class LabTestController {
 
   @Get('quantitative/:id')
   async getQuantiativeById(@Param('id') id: Types.ObjectId) {
-    if (!isValidObjectId(id))
-      throw new BadRequestException("Invalid id")
+    if (!isValidObjectId(id)) throw new BadRequestException('Invalid id');
     return await this.labTestService.getQuantitativeTestById(id);
   }
 
   @Post('quantitative')
   async createQuantiativeTest(@Body() dto: CreateQuantitativeTestDto) {
     const uniqueObjectIds = Array.from(
-      new Map(dto.template.map(id => [id.toString(), id])).values()
+      new Map(dto.template.map((id) => [id.toString(), id])).values(),
     );
 
-    return this.labTestService.createQuantitativeTest({ template: uniqueObjectIds, ...dto });
+    return this.labTestService.createQuantitativeTest({
+      template: uniqueObjectIds,
+      ...dto,
+    });
   }
 
   @Patch('quantitative/:id')
   async updateQuantiativeTest(
     @Body() dto: UpdateQuantitativeTestDto,
-    @Param('id') id: Types.ObjectId
+    @Param('id') id: Types.ObjectId,
   ) {
-    if (!isValidObjectId(id))
-      throw new BadRequestException("Invalidd id")
+    if (!isValidObjectId(id)) throw new BadRequestException('Invalidd id');
 
     const uniqueObjectIds = Array.from(
-      new Map(dto.template.map(id => [id.toString(), id])).values()
+      new Map(dto.template.map((id) => [id.toString(), id])).values(),
     );
-    return this.labTestService.updateQuantiativeTest(new Types.ObjectId(id), { template: uniqueObjectIds, ...dto });
+    return this.labTestService.updateQuantiativeTest(new Types.ObjectId(id), {
+      template: uniqueObjectIds,
+      ...dto,
+    });
   }
 
   @Delete('quantitative/:id')
   async deleteQuantitativeTest(@Param('id') id: string) {
-    if (!isValidObjectId(id))
-      throw new BadRequestException("Invalid id")
+    if (!isValidObjectId(id)) throw new BadRequestException('Invalid id');
     return this.labTestService.deleteQuantitativeTest(new Types.ObjectId(id));
   }
 

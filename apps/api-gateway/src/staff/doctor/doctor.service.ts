@@ -381,6 +381,20 @@ export class DoctorService {
     return response.data;
   }
 
+  async getDoctorClinicExamFee(
+    doctorId: string,
+    clinicId: string,
+  ): Promise<{ doctorId: string; clinicId: string; examFee: number | null }> {
+    console.log('doctorId: ', doctorId);
+    console.log('clinicId: ', clinicId);
+    const response = await firstValueFrom(
+      this.staffService.get(`/staff/doctor/get-doctor-clinic-exam-fee`, {
+        params: { doctorId, clinicId },
+      }),
+    );
+    return response.data;
+  }
+
   // ============================================================================
   // DOCTOR CLINIC ASSIGNMENT
   // ============================================================================

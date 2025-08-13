@@ -39,7 +39,7 @@ export class PatientsController {
     private readonly appointmentService: AppointmentService,
     private readonly ICDService: ICDService,
     private readonly prescriptionService: PrescriptionService,
-  ) { }
+  ) {}
 
   // Patient routes
   @Post('/create-patient')
@@ -60,12 +60,12 @@ export class PatientsController {
       // Nếu là BadRequestException, ta truyền nguyên message lên
       const message =
         error?.response?.data?.message || // Khi dùng HttpException
-        error?.message ||                // Lỗi thường
+        error?.message || // Lỗi thường
         'Unknown error';
 
       return {
         success: false,
-        message,           // ✅ truyền đúng nội dung lỗi cho FE
+        message, // ✅ truyền đúng nội dung lỗi cho FE
         error: message,
       };
     }
@@ -91,12 +91,12 @@ export class PatientsController {
       // Nếu là BadRequestException, ta truyền nguyên message lên
       const message =
         error?.response?.data?.message || // Khi dùng HttpException
-        error?.message ||                // Lỗi thường
+        error?.message || // Lỗi thường
         'Unknown error';
 
       return {
         success: false,
-        message,           // ✅ truyền đúng nội dung lỗi cho FE
+        message, // ✅ truyền đúng nội dung lỗi cho FE
         error: message,
       };
     }
@@ -139,7 +139,10 @@ export class PatientsController {
     @CurrentUser() user: TokenPayload,
   ) {
     try {
-      const patient = await this.patientService.getPatientOffline(clinicId, user);
+      const patient = await this.patientService.getPatientOffline(
+        clinicId,
+        user,
+      );
       return patient;
     } catch (error) {
       console.error('Error retrieving patient:', error);
@@ -611,14 +614,10 @@ export class PatientsController {
   //prescription_detail
   @Get('/get-prescriptions-by-mRId/:mRId')
   @UseGuards(JwtAuthGuard)
-  async getPrescriptionsByMRId(
-    @Param('mRId') mRId: string,
-  ) {
+  async getPrescriptionsByMRId(@Param('mRId') mRId: string) {
     try {
       const result =
-        await this.prescriptionService.getPrescriptionsByMRId(
-          mRId,
-        );
+        await this.prescriptionService.getPrescriptionsByMRId(mRId);
       return result;
     } catch (error) {
       console.error('Error retrieving medical records:', error);
@@ -648,17 +647,39 @@ export class PatientsController {
 
   @Get('/check-profile/:accountId')
   @UseGuards(JwtAuthGuard)
-  async checkProfileByAccountId(
-    @Param('accountId') accountId: string,
-  ) {
+  async checkProfileByAccountId(@Param('accountId') accountId: string) {
     try {
       const result =
-        await this.patientService.checkProfileByAccountId(
-          accountId,
-        );
+        await this.patientService.checkProfileByAccountId(accountId);
       return result;
     } catch (error) {
       console.error('Error retrieving medical records:', error);
+      throw error;
+    }
+  }
+
+  @Get('/get-appointments-by-clinic-id')
+  @UseGuards(JwtAuthGuard)
+  async getAppointmentsByClinicId(
+    @Query('clinic_id') clinicId: string,
+    @CurrentUser() user: TokenPayload,
+    @Query('doctor_name') doctorName?: string,
+    @Query('patient_name') patientName?: string,
+    @Query('doctor_id') doctorId?: string,
+  ) {
+    try {
+      const result = await this.patientService.getAppointmentsByClinicId(
+        clinicId,
+        user,
+        {
+          doctorName,
+          patientName,
+          doctorId,
+        },
+      );
+      return result;
+    } catch (error) {
+      console.error('Error retrieving appointments by clinic id:', error);
       throw error;
     }
   }

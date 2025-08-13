@@ -6,7 +6,12 @@ import {
   TokenPayload,
 } from '@app/common';
 import { HttpService } from '@nestjs/axios';
-import { HttpException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
@@ -14,7 +19,7 @@ import { firstValueFrom } from 'rxjs';
 export class PatientService {
   constructor(
     @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   // Patient-related methods
   async createPatient(
@@ -53,7 +58,7 @@ export class PatientService {
           message,
           statusCode: status,
         },
-        status
+        status,
       );
     }
   }
@@ -102,7 +107,7 @@ export class PatientService {
           message,
           statusCode: status,
         },
-        status
+        status,
       );
     }
   }
@@ -137,7 +142,9 @@ export class PatientService {
   async getPatientOffline(clinicId: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-offline/${clinicId}`),
+        this.httpService.get(
+          `/patient-service/get-patient-offline/${clinicId}`,
+        ),
       );
       return result.data;
     } catch (error) {
@@ -268,7 +275,9 @@ export class PatientService {
   async getPatientByAccountId(id: string) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patient-by-account-id/${id}`),
+        this.httpService.get(
+          `/patient-service/get-patient-by-account-id/${id}`,
+        ),
       );
       return result.data;
     } catch (error) {
@@ -283,7 +292,9 @@ export class PatientService {
   ) {
     try {
       const result = await firstValueFrom(
-        this.httpService.get(`/patient-service/get-patientProfile-by-account_id/${account_id}`)
+        this.httpService.get(
+          `/patient-service/get-patientProfile-by-account_id/${account_id}`,
+        ),
       );
       return result.data;
     } catch (error) {
@@ -300,6 +311,40 @@ export class PatientService {
       return result.data;
     } catch (error) {
       console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
+  async getAppointmentsByClinicId(
+    clinicId: string,
+    currentUser: TokenPayload,
+    searchParams?: {
+      doctorName?: string;
+      patientName?: string;
+      doctorId?: string;
+    },
+  ) {
+    try {
+      const params: any = { clinic_id: clinicId };
+
+      if (searchParams?.doctorName) {
+        params.doctor_name = searchParams.doctorName;
+      }
+      if (searchParams?.patientName) {
+        params.patient_name = searchParams.patientName;
+      }
+      if (searchParams?.doctorId) {
+        params.doctor_id = searchParams.doctorId;
+      }
+
+      const result = await firstValueFrom(
+        this.httpService.get(`/patient-service/appointment/clinic-id`, {
+          params,
+        }),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving appointments by clinic id:', error);
       throw error;
     }
   }

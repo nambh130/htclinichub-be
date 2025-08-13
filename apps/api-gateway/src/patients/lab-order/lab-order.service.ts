@@ -187,4 +187,72 @@ export class LabOrderService {
     );
     return response.data;
   }
+
+  // RESULT FILE
+
+  async addResultFile(req: Request, payload: any) {
+    const cookie = req.headers.cookie;
+
+    const response = await firstValueFrom(
+      this.httpService
+        .post(
+          `/lab-order/item/result-file/add`,
+          payload,
+          {
+            headers: {
+              Cookie: cookie,
+            },
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+
+  async removeResultFile(req: Request) {
+    const cookie = req.headers.cookie;
+
+    const response = await firstValueFrom(
+      this.httpService
+        .post(
+          `/lab-order/item/result-file/remove`,
+          req.body,
+          {
+            headers: {
+              Cookie: cookie,
+            },
+          },
+        )
+        .pipe(
+          catchError((error) => {
+            const e = error.response;
+            throw new HttpException(
+              e?.data || 'Upstream error',
+              e?.status || 500,
+            );
+          }),
+        ),
+    );
+    return response.data;
+  }
+  async getManyQuantResultByOrderItems(req: Request, id: string) {
+    const response = await firstValueFrom(
+      this.httpService.get(`/lab-order/${id}/quantitative-result`, {
+        headers: {
+          Cookie: req.headers.cookie || '',
+        },
+        withCredentials: true,
+      }),
+    );
+
+    return response.data;
+  }
 }

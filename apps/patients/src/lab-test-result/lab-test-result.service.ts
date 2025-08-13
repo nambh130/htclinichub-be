@@ -2,14 +2,18 @@ import { QuantitativeResultRepository } from "./repositories/quantitative-test-r
 import { QuantitativeTestResult } from "./models/quantitative-lab-result.schema";
 import { Types } from "mongoose";
 import { ImagingResultRepository } from "./repositories/imaging-test-result.repository";
-import { ImagingResultData, ImagingTestResult } from "./models/imaging-test-result.schema";
+import { ImagingResultData } from "./models/imaging-test-result.schema";
 import { Injectable } from "@nestjs/common";
+import { ActorType } from "@app/common";
+import { LabTestResult } from "./models/lab-result.schema";
+import { LabTestResultRepository } from "./repositories/test-result.respository";
 
 @Injectable()
 export class TestResultService {
   constructor(
     private readonly quantitativeResultRepo: QuantitativeResultRepository,
     private readonly imagingResultRepo: ImagingResultRepository,
+    private readonly resultRepo: LabTestResultRepository,
   ) { }
 
   async findQuantitativeResultByOrder(orderId: string) {
@@ -20,19 +24,30 @@ export class TestResultService {
     return await this.imagingResultRepo.findByOrderId(new Types.ObjectId(orderId));
   }
 
+  async findManyQuantResultByOrderItems(ids: Types.ObjectId[]) {
+    return await this.quantitativeResultRepo.find({
+      orderId: { $in: ids },
+    });
+  }
+
+
   async createQuantitativeResult({
     orderId,
     result,
-    doctorId
+    createdBy,
+    uploadedResult
   }: {
     orderId: Types.ObjectId;
-    result: QuantitativeTestResult["result"];
-    doctorId: string;
+    result?: QuantitativeTestResult["result"];
+    createdBy: { userId: string, userType: ActorType },
+    uploadedResult?: LabTestResult["uploadedResult"];
   }) {
     return this.quantitativeResultRepo.create({
       orderId,
       result,
-      takenBy: { doctorId },
+      createdBy,
+      uploadedResult,
+      updatedBy: createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -42,103 +57,140 @@ export class TestResultService {
     id: string,
     updateData: Partial<{
       result: QuantitativeTestResult["result"];
-      //doctorId: string;
+      updatedBy: {
+        userId: string;
+        userType: ActorType;
+      },
+      uploadedResult?: LabTestResult["uploadedResult"];
     }>
   ) {
-    const updatePayload: any = {};
+    const updatePayload: Partial<QuantitativeTestResult> = {};
+    const { result, updatedBy, uploadedResult } = updateData;
 
-    if (updateData.result) {
-      updatePayload.result = updateData.result;
-    }
+    if (result) updatePayload.result = result;
+    if (updatedBy?.userId && updatedBy?.userType) updatePayload.updatedBy = updatedBy;
+    if (uploadedResult?.length) updatePayload.uploadedResult = uploadedResult;
 
-    //if (updateData.doctorId) {
-    //  updatePayload.takenBy = { doctorId: updateData.doctorId };
-    //}
+    if (Object.keys(updatePayload).length === 0) return null;
 
-    if (Object.keys(updatePayload).length > 0) {
-      updatePayload.updatedAt = new Date();
-    }
+    updatePayload.updatedAt = new Date();
 
-    return await this.quantitativeResultRepo.updateById(
-      id, updatePayload);
+    return await this.quantitativeResultRepo.updateById(id, updatePayload);
   }
 
   async upsertQuantitativeResult({
     orderId,
     result,
-    doctorId,
+    uploadedResult,
+    actor
   }: {
     orderId: Types.ObjectId | string;
-    result: QuantitativeTestResult["result"];
-    doctorId: string;
+    result?: QuantitativeTestResult["result"];
+    uploadedResult?: LabTestResult["uploadedResult"];
+    actor: { userId: string; userType: ActorType };
   }) {
     const oid = typeof orderId === "string" ? new Types.ObjectId(orderId) : orderId;
 
     const existing = await this.quantitativeResultRepo.findOne({ orderId: oid });
+    const deletedResultFiles = this.getDeletedUploadedFileIds(existing?.uploadedResult, uploadedResult);
 
-    if (existing) {
-      return this.updateQuantitativeResult(existing._id.toString(), {
+    const savedResult = existing ?
+      await this.updateQuantitativeResult(existing._id.toString(), {
         result,
-      });
-    } else {
-      return this.createQuantitativeResult({
+        updatedBy: actor,
+        uploadedResult
+      }) :
+      await this.createQuantitativeResult({
         orderId: oid,
         result,
-        doctorId,
-      });
-    }
+        createdBy: actor,
+        uploadedResult
+      })
+
+    return { ...savedResult, deletedResultFiles }
+  }
+
+  async addResultFile({
+    orderItemId,
+    resultFile
+  }: {
+    orderItemId: string,
+    resultFile: LabTestResult["uploadedResult"][number]
+  }) {
+    console.log('check: ', orderItemId, resultFile)
+    return this.resultRepo.updateByOrderId(
+      orderItemId,
+      { $push: { uploadedResult: resultFile } }
+    );
+  }
+
+  async removeResultFile({
+    orderItemId,
+    resultFileId
+  }: {
+    orderItemId: string,
+    resultFileId: string
+  }) {
+    return this.resultRepo.updateByOrderId(
+      orderItemId,
+      { $pull: { uploadedResult: { id: resultFileId } } }
+    );
   }
 
   async upsertImagingResult({
     orderId,
     result,
-    doctorId
+    actor,
+    uploadedResult
   }: {
     orderId: string,
-    result: ImagingResultData;
-    doctorId: string
+    result?: ImagingResultData;
+    actor: { userId: string; userType: ActorType };
+    uploadedResult?: LabTestResult["uploadedResult"];
   }) {
     const oid = typeof orderId === "string" ? new Types.ObjectId(orderId) : orderId;
+
     const existing = await this.imagingResultRepo.findByOrderId(oid);
 
-    let deletedImageIds: string[] = []
-    let saveResult: ImagingTestResult
-    if (existing) {
-      // Get deleted images
-      if (existing.result.images.length > 0 && result.images.length > 0) {
-        const newImageIds = result.images.map(item => item.id)
-        deletedImageIds = existing.result.images
-          .filter(image => !newImageIds.includes(image.id))
-          .map(image => image.id);
+    const deletedImageIds = this.getDeletedImageIds(existing?.result?.images, result?.images);
+    const deletedResultFiles = this.getDeletedUploadedFileIds(existing?.uploadedResult, uploadedResult);
 
-      }
-
-      saveResult = await this.updateImagingResult(existing._id.toString(), {
-        result: result
-      })
-    } else {
-      saveResult = await this.createImagingResult({
+    const savedResult = existing
+      ? await this.updateImagingResult(
+        existing._id.toString(),
+        {
+          orderId: oid,
+          result,
+          updatedBy: actor,
+          uploadedResult
+        })
+      : await this.createImagingResult({
         orderId: oid,
-        result: result,
-        doctorId: doctorId
-      })
-    }
-    return { ...saveResult, deletedImageIds }
+        result,
+        createdBy: actor,
+        uploadedResult
+      });
+
+    return { ...savedResult, deletedImageIds, deletedResultFiles };
   }
 
   async createImagingResult({
     orderId,
     result,
-    doctorId,
+    createdBy,
+    uploadedResult,
   }: {
     orderId: Types.ObjectId;
-    result: ImagingResultData;
-    doctorId: string;
+    result?: ImagingResultData;
+    createdBy: { userId: string; userType: ActorType };
+    uploadedResult?: LabTestResult["uploadedResult"];
   }) {
     return this.imagingResultRepo.create({
       orderId,
       result,
-      takenBy: { doctorId },
+      uploadedResult: uploadedResult ?? [],
+      createdBy,
+      updatedBy: createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -149,23 +201,40 @@ export class TestResultService {
     payload: Partial<{
       orderId: Types.ObjectId;
       result: ImagingResultData;
-      doctorId: string;
+      updatedBy: { userId: string; userType: ActorType };
+      uploadedResult: LabTestResult["uploadedResult"];
     }>
   ) {
     const updatePayload: any = {
       updatedAt: new Date(),
     };
 
-    if (payload.orderId) {
-      updatePayload.orderId = payload.orderId;
-    }
-    if (payload.result) {
-      updatePayload.result = payload.result;
-    }
-    if (payload.doctorId) {
-      updatePayload.takenBy = { doctorId: payload.doctorId };
-    }
+    if (payload.orderId) updatePayload.orderId = payload.orderId;
+    if (payload.result) updatePayload.result = payload.result;
+    if (payload.updatedBy) updatePayload.updatedBy = payload.updatedBy;
+    if (payload.uploadedResult) updatePayload.uploadedResult = payload.uploadedResult;
 
     return this.imagingResultRepo.updateById(id, updatePayload);
   }
+
+  // HELPER FUNCTIONS
+  private getDeletedImageIds(
+    oldImages?: { id: string }[],
+    newImages?: { id: string }[]
+  ): string[] {
+    if (!oldImages || !newImages) return [];
+    const newIds = newImages.map(img => img.id);
+    return oldImages.filter(img => !newIds.includes(img.id)).map(img => img.id);
+  }
+
+  private getDeletedUploadedFileIds(
+    oldFiles?: { id: string }[],
+    newFiles?: { id: string }[]
+  ): string[] {
+    if (!oldFiles || !newFiles) return [];
+    const newIds = newFiles.map(file => file.id);
+    return oldFiles.filter(file => !newIds.includes(file.id)).map(file => file.id);
+  }
+
+
 }

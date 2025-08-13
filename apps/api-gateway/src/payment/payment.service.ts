@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import {
   StorePayOSCredentialsDto,
   CreatePaymentLinkDto,
+  CreateCashPaymentDto,
   GetPaymentsDto,
   GetTransactionsDto,
   GetPaymentStatisticsDto,
@@ -162,9 +163,90 @@ export class PaymentService {
     return response.data;
   }
 
+  /**
+   * Cancel - Cancel a PayOS payment link
+   */
+  async cancelPayOSPayment(
+    paymentId: string,
+    reason: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.put(`/payments/payos/link/${paymentId}/cancel`, {
+        reason,
+        currentUser,
+      }),
+    );
+    return response.data;
+  }
+
+  /**
+   * Create - Create a new cash payment record
+   */
+  async createCashPayment(
+    dto: CreateCashPaymentDto,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.post('/payments/cash', {
+        dto,
+        currentUser,
+      }),
+    );
+    return response.data;
+  }
+
+  /**
+   * Update - Mark cash payment as paid
+   */
+  async markCashPaymentAsPaid(
+    paymentId: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.put(`/payments/cash/${paymentId}/paid`, {
+        currentUser,
+      }),
+    );
+    return response.data;
+  }
+
+  /**
+   * Update - Cancel cash payment and mark as failed
+   */
+  async cancelCashPayment(
+    paymentId: string,
+    reason: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.put(`/payments/cash/${paymentId}/cancel`, {
+        reason,
+        currentUser,
+      }),
+    );
+    return response.data;
+  }
+
   // ========================================
   // 🔄 WEBHOOK PROCESSING
   // ========================================
+
+  /**
+   * Configure - Register webhook URL with PayOS for a clinic
+   */
+  async configurePayOSWebhook(
+    clinicId: string,
+    webhookUrl: string,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.post('/payments/payos/webhook/configure', {
+        clinicId,
+        webhookUrl,
+      }),
+    );
+    return response.data;
+  }
 
   /**
    * Process - Handle incoming webhooks from PayOS
@@ -201,6 +283,63 @@ export class PaymentService {
       this.paymentHttpService.get(`/payments/clinic/${clinicId}`, {
         params: query,
       }),
+    );
+    return response.data;
+  }
+
+  /**
+   * Read - Get a specific payment by ID for a clinic
+   */
+  async getPaymentById(clinicId: string, paymentId: string): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.get(
+        `/payments/clinic/${clinicId}/payment/${paymentId}`,
+      ),
+    );
+    return response.data;
+  }
+
+  /**
+   * Read - Get payment by appointment ID for a specific clinic
+   */
+  async getPaymentByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.get(
+        `/payments/clinic/${clinicId}/appointment/${appointmentId}`,
+      ),
+    );
+    return response.data;
+  }
+
+  /**
+   * Read - Get ALL payments for a specific clinic and appointment
+   */
+  async getAllPaymentsByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.get(
+        `/payments/clinic/${clinicId}/appointment/${appointmentId}/all`,
+      ),
+    );
+    return response.data;
+  }
+
+  /**
+   * Read - Get all PAID payments for a specific clinic and appointment
+   */
+  async getPaidPaymentsByAppointmentId(
+    clinicId: string,
+    appointmentId: string,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.get(
+        `/payments/clinic/${clinicId}/appointment/${appointmentId}/paid`,
+      ),
     );
     return response.data;
   }

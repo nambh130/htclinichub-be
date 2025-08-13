@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class ImagingTemplate {
@@ -9,4 +9,5 @@ export class ImagingTemplate {
   conclusion: string;
 }
 
-export const ImagingTemplateSchema = SchemaFactory.createForClass(ImagingTemplate);
+export const ImagingTemplateSchema =
+  SchemaFactory.createForClass(ImagingTemplate);
