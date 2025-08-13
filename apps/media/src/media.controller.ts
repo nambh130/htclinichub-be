@@ -16,11 +16,16 @@ import { TokenPayload } from '@app/common';
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(private readonly mediaService: MediaService) { }
 
   @Get('get/:id')
   async getFileById(@Param('id') id: string) {
     return this.mediaService.getFileById(id);
+  }
+
+  @Get('get-avatar-patient/:patientId')
+  async getAvatarPatient(@Param('patientId') patientId: string) {
+    return this.mediaService.getAvatarPatient(patientId);
   }
 
   @Post('upload-image')
@@ -35,6 +40,17 @@ export class MediaController {
     return this.mediaService.uploadFile(file, 'image', currentUser);
   }
 
+  @Post('upload-image-patient/:patientId')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImagePatient(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('patientId') patientId: string,
+  ) {
+    console.log("currentUserRaw:", patientId);
+
+    return this.mediaService.uploadAvatarPatient(file, 'image', patientId);
+  }
+
   @Post('update/:id')
   @UseInterceptors(FileInterceptor('file'))
   async replaceFile(
@@ -45,6 +61,15 @@ export class MediaController {
     const currentUser = JSON.parse(currentUserRaw) as TokenPayload;
 
     return this.mediaService.replaceFile(id, file, currentUser);
+  }
+
+  @Post('update-avatar/:patientId')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatarPatient(
+    @Param('patientId') patientId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.mediaService.updateAvatarPatient(patientId, file);
   }
 
   @Post('delete/:id')
@@ -60,7 +85,7 @@ export class MediaController {
 
   @Post('delete-multiple')
   async deleteMultipleFile(
-    @Body() body: {ids: string[]},
+    @Body() body: { ids: string[] },
     @Headers('x-current-user') currentUserRaw: string,
   ) {
     const currentUser = JSON.parse(currentUserRaw) as TokenPayload;

@@ -24,7 +24,7 @@ export class MediaService {
   constructor(
     @Inject(CLOUDINARY) private cloudinaryClient: typeof cloudinary,
     private readonly mediaRepository: MediaRepository,
-  ) {}
+  ) { }
 
   //   async getFileById(
   //     id: string | null | undefined,
@@ -56,6 +56,18 @@ export class MediaService {
     });
   }
 
+  async getAvatarPatient(
+    patientId: string | null | undefined,
+  ): Promise<MediaDocument | null> {
+    console.log('[MediaService] getFileById called with:', patientId);
+    if (!patientId) return null;
+
+    return await this.mediaRepository.findOne({
+      createdById: patientId,
+      isDeleted: { $ne: true },
+    });
+  }
+
   async uploadFile(
     file: Express.Multer.File,
     fileCategory: FileCategory,
@@ -80,6 +92,38 @@ export class MediaService {
     };
 
     setAudit(mediaData, currentUser);
+
+    const document = await this.mediaRepository.create(mediaData);
+    return this.mapToDto(document);
+  }
+
+  async uploadAvatarPatient(
+    file: Express.Multer.File,
+    fileCategory: FileCategory,
+    currentUser: string,
+  ): Promise<MediaDto> {
+    this.validateFile(file, fileCategory);
+
+    const uploadResult = await this.uploadToCloudinary(
+      file.buffer,
+      fileCategory,
+    );
+
+    const mediaData = {
+      publicId: uploadResult.public_id,
+      name: uploadResult.original_filename,
+      type: fileCategory,
+      url: uploadResult.secure_url,
+      domain: new URL(uploadResult.secure_url).hostname,
+      mimetype: file.mimetype,
+      originalName: file.originalname,
+      size: file.size,
+    };
+
+    setAudit(mediaData, {
+      userId: currentUser,
+      actorType: "patient",
+    });
 
     const document = await this.mediaRepository.create(mediaData);
     return this.mapToDto(document);
@@ -144,6 +188,59 @@ export class MediaService {
 
     if (!updatedDoc) {
       throw new NotFoundException(`Failed to update media with id ${id}`);
+    }
+
+    return this.mapToDto(updatedDoc);
+  }
+
+  async updateAvatarPatient(
+    patientId: string,
+    file: Express.Multer.File,
+  ): Promise<MediaDto> {
+    const media = await this.mediaRepository.findOne({
+      createdById: patientId,
+      isDeleted: { $ne: true },
+    });
+    if (!media) throw new NotFoundException(`Media with id ${patientId} not found`);
+
+    // Validate that uploaded file matches media type
+    if (!this.isFileTypeValidForMedia(file.mimetype, media.type)) {
+      throw new BadRequestException(
+        `Uploaded file type (${file.mimetype}) does not match existing media type (${media.type})`,
+      );
+    }
+
+    const resourceType = this.getResourceType(media.type);
+
+    await this.cloudinaryClient.uploader.destroy(media.publicId, {
+      resource_type: resourceType,
+    });
+
+    // Upload new file
+    const uploadResult = await this.uploadToCloudinary(file.buffer, media.type);
+
+    const updatedData = {
+      publicId: uploadResult.public_id,
+      name: uploadResult.original_filename,
+      url: uploadResult.secure_url,
+      domain: new URL(uploadResult.secure_url).hostname,
+      mimetype: file.mimetype,
+      originalName: file.originalname,
+      size: file.size,
+    };
+
+    updateAudit(updatedData, {
+      userId: patientId,
+      actorType: "patient",
+    });
+
+    const updatedDoc = await this.mediaRepository.findOneAndUpdate(
+      { createdById: patientId },
+      { $set: updatedData },
+    );
+
+    if (!updatedDoc) {
+      throw new NotFoundException(`Failed to update media with id ${patientId}`);
     }
 
     return this.mapToDto(updatedDoc);
