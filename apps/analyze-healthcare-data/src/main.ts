@@ -34,14 +34,15 @@ async function bootstrap() {
   // Use Kafka exception filter for Kafka context only
   // app.useGlobalFilters(new KafkaExceptionFilter());
 
-  const port = configService.get<number>('VITAL_SERVICE_PORT');
+  const port = configService.get<number>('ANALYZE_HEALTHCARE_DATA_PORT');
+  const host = configService.get<string>('ANALYZE_HEALTHCARE_DATA_HOST');
 
   // Start both HTTP and Kafka servers
   await app.startAllMicroservices();
-  await app.listen(port);
+  await app.listen(port, host);
 
   logger.log(
-    `Vital service is running at http://vital:${port} with Kafka broker ${kafkaBroker}`,
+    `Analyze healthcare data service is running at http://${host}:${port} with Kafka broker ${kafkaBroker}`,
   );
 }
 void bootstrap();

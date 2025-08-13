@@ -1,12 +1,12 @@
-import { InjectModel } from "@nestjs/mongoose";
-import { BarcodeConunterType, BarcodeCounter } from "./models/barcode.schema";
-import { Model } from "mongoose";
+import { InjectModel } from '@nestjs/mongoose';
+import { BarcodeConunterType, BarcodeCounter } from './models/barcode.schema';
+import { Model } from 'mongoose';
 
 export class BarcodeCounterService {
   constructor(
     @InjectModel(BarcodeCounter.name, 'patientService')
-    private readonly barcodeCounter: Model<BarcodeCounter>
-  ) { }
+    private readonly barcodeCounter: Model<BarcodeCounter>,
+  ) {}
 
   private getCurrentDateCode(): string {
     const now = new Date();
@@ -21,11 +21,11 @@ export class BarcodeCounterService {
     clinicId: string,
     dateCode: string,
   ): Promise<number> {
-    console.log(name, clinicId, dateCode)
+    console.log(name, clinicId, dateCode);
     const result = await this.barcodeCounter.findOneAndUpdate(
       { name, clinicId, date: dateCode },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
     return result.seq;
   }
