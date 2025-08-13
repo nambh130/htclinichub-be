@@ -1,17 +1,20 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { Types } from "mongoose";
-import { ActorType, LabStatusEnum, LabStatusType } from "@app/common";
-import { LabTestRepository } from "../lab-test/repositories/lab-test.repoository";
-import { LabOrderItemRepository } from "./repositories/lab-order-item.repository";
-import { LabOrderRepository } from "./repositories/lab-order.repository";
-import { BarcodeCounterService } from "../barcode-counter/barcode-counter.service";
-import { BarcodeCounterName } from "../barcode-counter/models/barcode.schema";
-import { TestEnum, TestType } from "../lab-test/models/lab-test.schema";
-import { TestResultService } from "../lab-test-result/lab-test-result.service";
-import { QuantitativeTestResult } from "../lab-test-result/models/quantitative-lab-result.schema";
-import { ImagingResultData, ImagingTestResult } from "../lab-test-result/models/imaging-test-result.schema";
-import { LabOrderItem } from "./models/lab-order-item.schema";
-import { LabTestResult } from "../lab-test-result/models/lab-result.schema";
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { ActorType, LabStatusEnum, LabStatusType } from '@app/common';
+import { LabTestRepository } from '../lab-test/repositories/lab-test.repoository';
+import { LabOrderItemRepository } from './repositories/lab-order-item.repository';
+import { LabOrderRepository } from './repositories/lab-order.repository';
+import { BarcodeCounterService } from '../barcode-counter/barcode-counter.service';
+import { BarcodeCounterName } from '../barcode-counter/models/barcode.schema';
+import { TestEnum, TestType } from '../lab-test/models/lab-test.schema';
+import { TestResultService } from '../lab-test-result/lab-test-result.service';
+import { QuantitativeTestResult } from '../lab-test-result/models/quantitative-lab-result.schema';
+import {
+  ImagingResultData,
+  ImagingTestResult,
+} from '../lab-test-result/models/imaging-test-result.schema';
+import { LabOrderItem } from './models/lab-order-item.schema';
+import { LabTestResult } from '../lab-test-result/models/lab-result.schema';
 
 @Injectable()
 export class LabOrderService {
@@ -20,24 +23,26 @@ export class LabOrderService {
     private readonly labTestRepo: LabTestRepository,
     private readonly labOrderItemRepo: LabOrderItemRepository,
     private readonly barcodeCounterService: BarcodeCounterService,
-    private readonly testResultService: TestResultService
-  ) { }
+    private readonly testResultService: TestResultService,
+  ) {}
 
   async createLabOrder(
     data: {
-      medicalReportId: Types.ObjectId,
-      labTestIds: Types.ObjectId[],
-      testType: TestType,
-      name: string,
-      clinicId: string
+      medicalReportId: Types.ObjectId;
+      labTestIds: Types.ObjectId[];
+      testType: TestType;
+      name: string;
+      clinicId: string;
     },
-    createdBy: { userId: string; userType: ActorType }
+    createdBy: { userId: string; userType: ActorType },
   ) {
     // 1. Find the lab tests
-    const labTests = await this.labTestRepo.find({ _id: { $in: data.labTestIds } });
+    const labTests = await this.labTestRepo.find({
+      _id: { $in: data.labTestIds },
+    });
 
     if (labTests.length !== data.labTestIds.length) {
-      throw new BadRequestException("One or more lab tests not found");
+      throw new BadRequestException('One or more lab tests not found');
     }
 
     // 2. Create LabOrderItems for each labTest
@@ -48,7 +53,7 @@ export class LabOrderService {
       createdById: createdBy.userId,
       createdByType: createdBy.userType,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }));
 
     const createdItems = await this.labOrderItemRepo.createMany(labOrderItems); // or createMany()
@@ -59,37 +64,38 @@ export class LabOrderService {
       medicalRecord: new Types.ObjectId(data.medicalReportId),
       orderDate: new Date(),
       name: data.name,
-      barCode: await this.barcodeCounterService
-        .generateBarcode(BarcodeCounterName.LAB_ORDER, data.clinicId),
-      orderItems: createdItems.map(item => item._id),
+      barCode: await this.barcodeCounterService.generateBarcode(
+        BarcodeCounterName.LAB_ORDER,
+        data.clinicId,
+      ),
+      orderItems: createdItems.map((item) => item._id),
       createdById: createdBy.userId,
       createdByType: createdBy.userType,
-      clinicId: data.clinicId
+      clinicId: data.clinicId,
     });
 
     return labOrder;
   }
 
-  async getLabOrders(query: { isDone: boolean, orderDate: Date }) {
+  async getLabOrders(query: { isDone: boolean; orderDate: Date }) {
     return await this.labOrderRepo.labOrderModel
-      .find(query).populate('orderItems')
+      .find(query)
+      .populate('orderItems')
       .sort({ createdAt: -1 })
       .exec();
   }
 
-  async getLabOrdersByReportId(
-    {
-      medicalReportId,
-      type,
-      page = 1,
-      limit = 10,
-    }: {
-      medicalReportId: Types.ObjectId,
-      type?: TestType,
-      page: number,
-      limit: number,
-    }
-  ) {
+  async getLabOrdersByReportId({
+    medicalReportId,
+    type,
+    page = 1,
+    limit = 10,
+  }: {
+    medicalReportId: Types.ObjectId;
+    type?: TestType;
+    page: number;
+    limit: number;
+  }) {
     const skip = (page - 1) * limit;
 
     const filter: any = {
@@ -145,7 +151,7 @@ export class LabOrderService {
       medicalRecord,
       page,
       limit,
-      labOrder // barcode
+      labOrder, // barcode
     } = query;
 
     return this.labOrderRepo.getOrderItemsByClinic({
@@ -156,7 +162,7 @@ export class LabOrderService {
       page,
       endDate,
       startDate,
-      barcode: labOrder
+      barcode: labOrder,
     });
   }
 
@@ -165,21 +171,31 @@ export class LabOrderService {
   }
 
   async getOrderItemById(id: string) {
-    return await this.labOrderItemRepo
-      .findOnePopulated({ _id: id })
+    return await this.labOrderItemRepo.findOnePopulated({ _id: id });
   }
 
   async updateOrderItemStatus(
-    { orderItemId, status, clinicId }: { orderItemId: string; status: LabStatusType; clinicId?: string },
-    { updatedByType, updatedById }: { updatedByType: ActorType; updatedById: string }
+    {
+      orderItemId,
+      status,
+      clinicId,
+    }: { orderItemId: string; status: LabStatusType; clinicId?: string },
+    {
+      updatedByType,
+      updatedById,
+    }: { updatedByType: ActorType; updatedById: string },
   ) {
-    const item = await this.labOrderItemRepo.findOnePopulated({ _id: orderItemId });
-    if (!item) throw new BadRequestException("Item not found!");
+    const item = await this.labOrderItemRepo.findOnePopulated({
+      _id: orderItemId,
+    });
+    if (!item) throw new BadRequestException('Item not found!');
 
     // Validate transition
-    if (item.status == LabStatusEnum.PENDING
-      && !(status == LabStatusEnum.IN_PROCESS || status == LabStatusEnum.DISPOSED)) {
-      throw new BadRequestException("Invalid state transition");
+    if (
+      item.status == LabStatusEnum.PENDING &&
+      !(status == LabStatusEnum.IN_PROCESS || status == LabStatusEnum.DISPOSED)
+    ) {
+      throw new BadRequestException('Invalid state transition');
     }
 
     const updateData: Partial<LabOrderItem> = {
@@ -193,7 +209,7 @@ export class LabOrderService {
       const finalClinicId = clinicId;
       const barcode = await this.barcodeCounterService.generateBarcode(
         BarcodeCounterName.LAB_ORDER_ITEM,
-        finalClinicId
+        finalClinicId,
       );
 
       if (item.labTest.testType === TestEnum.LAB) {
@@ -210,7 +226,10 @@ export class LabOrderService {
 
       updateData.barcode = barcode;
       updateData.sampleTakenAt = new Date();
-      updateData.sampleTakenBy = { userId: updatedById, userType: updatedByType };
+      updateData.sampleTakenBy = {
+        userId: updatedById,
+        userType: updatedByType,
+      };
     }
 
     // reset on disposed
@@ -225,50 +244,52 @@ export class LabOrderService {
 
     return await this.labOrderItemRepo.findOneAndUpdate(
       { _id: orderItemId },
-      updateData
+      updateData,
     );
   }
 
-  async rejectOrderItem(
-    orderItemId: string,
-  ) {
+  async rejectOrderItem(orderItemId: string) {
     const item = await this.labOrderItemRepo.findOne({ _id: orderItemId });
     if (!item) {
-      throw new BadRequestException("Item not found!");
+      throw new BadRequestException('Item not found!');
     }
 
-    return await this.labOrderItemRepo.findOneAndUpdate({ _id: orderItemId },
-      { status: LabStatusEnum.DISPOSED });
+    return await this.labOrderItemRepo.findOneAndUpdate(
+      { _id: orderItemId },
+      { status: LabStatusEnum.DISPOSED },
+    );
   }
 
-  async saveQuantitativeResult(
-    {
-      orderItemId,
-      result,
-      actor,
-      uploadedResult,
-      accept
-    }: {
-      orderItemId: string,
-      result: QuantitativeTestResult["result"],
-      actor: { userId: string, userType: ActorType },
-      uploadedResult?: LabTestResult["uploadedResult"],
-      accept?: boolean //just save or save and complete
-    }
-  ): Promise<QuantitativeTestResult & { deletedResultFiles: string[] }> {
-    const orderItem = await this.labOrderItemRepo
-      .findOnePopulated({ _id: orderItemId })
-    if (!orderItem || !orderItem.labTest || orderItem.labTest.testType !== 'LAB') {
+  async saveQuantitativeResult({
+    orderItemId,
+    result,
+    actor,
+    uploadedResult,
+    accept,
+  }: {
+    orderItemId: string;
+    result: QuantitativeTestResult['result'];
+    actor: { userId: string; userType: ActorType };
+    uploadedResult?: LabTestResult['uploadedResult'];
+    accept?: boolean; //just save or save and complete
+  }): Promise<QuantitativeTestResult & { deletedResultFiles: string[] }> {
+    const orderItem = await this.labOrderItemRepo.findOnePopulated({
+      _id: orderItemId,
+    });
+    if (
+      !orderItem ||
+      !orderItem.labTest ||
+      orderItem.labTest.testType !== 'LAB'
+    ) {
       throw new BadRequestException('Invalid order item or not a LAB test');
     }
 
-    const updateResult = await
-      this.testResultService.upsertQuantitativeResult({
-        orderId: orderItemId,
-        result,
-        uploadedResult,
-        actor
-      });
+    const updateResult = await this.testResultService.upsertQuantitativeResult({
+      orderId: orderItemId,
+      result,
+      uploadedResult,
+      actor,
+    });
 
     // If the status is updated to "completed"
     if (accept) {
@@ -277,10 +298,10 @@ export class LabOrderService {
           orderItemId,
           status: LabStatusEnum.COLLECTED,
         },
-        { updatedByType: actor.userType, updatedById: actor.userId }
-      )
+        { updatedByType: actor.userType, updatedById: actor.userId },
+      );
     }
-    return updateResult
+    return updateResult;
   }
 
   async saveImagingResult({
@@ -288,26 +309,34 @@ export class LabOrderService {
     result,
     actor,
     uploadedResult,
-    accept
+    accept,
   }: {
     orderItemId: string;
     result: ImagingResultData;
     actor: { userId: string; userType: ActorType };
-    uploadedResult?: LabTestResult["uploadedResult"];
+    uploadedResult?: LabTestResult['uploadedResult'];
     accept?: boolean;
-  }): Promise<ImagingTestResult & { deletedImageIds: string[]; deletedResultFiles: string[] }> {
-
-    const orderItem = await this.labOrderItemRepo.findOnePopulated({ _id: orderItemId });
+  }): Promise<
+    ImagingTestResult & {
+      deletedImageIds: string[];
+      deletedResultFiles: string[];
+    }
+  > {
+    const orderItem = await this.labOrderItemRepo.findOnePopulated({
+      _id: orderItemId,
+    });
 
     if (!orderItem || orderItem.labTest?.testType !== 'IMAGING') {
-      throw new BadRequestException('Invalid order item or not an IMAGING test');
+      throw new BadRequestException(
+        'Invalid order item or not an IMAGING test',
+      );
     }
 
     const updateResult = await this.testResultService.upsertImagingResult({
       orderId: orderItemId,
       result,
       uploadedResult,
-      actor
+      actor,
     });
 
     if (!updateResult) {
@@ -320,21 +349,25 @@ export class LabOrderService {
           orderItemId,
           status: LabStatusEnum.COLLECTED,
         },
-        { updatedByType: actor.userType, updatedById: actor.userId }
+        { updatedByType: actor.userType, updatedById: actor.userId },
       );
     }
 
     return updateResult;
   }
 
-  async getQuantResultsFromOrderId(orderId: string): Promise<QuantitativeTestResult["result"]> {
+  async getQuantResultsFromOrderId(
+    orderId: string,
+  ): Promise<QuantitativeTestResult['result']> {
     const objectId = new Types.ObjectId(orderId);
     const order = await this.labOrderRepo.findOne({ _id: objectId });
     const orderItems = await this.labOrderItemRepo.find({
-      _id: { $in: order.orderItems }, status: LabStatusEnum.COLLECTED
+      _id: { $in: order.orderItems },
+      status: LabStatusEnum.COLLECTED,
     });
-    const itemIds = orderItems.map(item => item._id)
-    const results = await this.testResultService.findManyQuantResultByOrderItems(itemIds);
-    return results.flatMap(result => result.result);
+    const itemIds = orderItems.map((item) => item._id);
+    const results =
+      await this.testResultService.findManyQuantResultByOrderItems(itemIds);
+    return results.flatMap((result) => result.result);
   }
 }
