@@ -18,6 +18,7 @@ import { Request, Response } from 'express';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { ClinicService } from '../clinics/clinic.service';
 import { ActorEnum } from '@app/common/enum/actor-type';
+import { EmployeeService } from '@api-gateway/staff/employee/employee.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -25,6 +26,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly clinicService: ClinicService,
+    private readonly employeeService: EmployeeService,
   ) { }
 
   @Post('/doctor')
@@ -80,9 +82,12 @@ export class AuthController {
     if (setCookie) res.setHeader('Set-Cookie', setCookie);
 
     if (user.actorType === ActorEnum.EMPLOYEE) {
+      const employeeInfo = await this.employeeService.getEmployeeAccountById(user.id) as any
+      console.log(employeeInfo)
       const { currentClinics, adminOf, ...rest } = user;
+
       const clinicData = await this.clinicService.getClinicById(
-        currentClinics[0],
+        employeeInfo.clinic_id,
         user.id,
       );
 
@@ -92,7 +97,7 @@ export class AuthController {
           ...rest,
         },
         currentClinic: {
-          id: currentClinics[0],
+          id: clinicData.name,
           name: clinicData.name,
         },
       });

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { DoctorService } from './doctor/doctor.service';
 import { DoctorController } from './doctor/doctor.controller';
 import { EmployeeService } from './employee/employee.service';
@@ -70,11 +70,11 @@ import { ClinicModule } from '@clinics-gw/clinic.module';
       },
     ]),
     MediaModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
     ClinicModule,
   ],
   controllers: [DoctorController, EmployeeController],
   providers: [DoctorService, EmployeeService, ManageDoctorScheduleService],
   exports: [DoctorService, EmployeeService, ManageDoctorScheduleService],
 })
-export class StaffModule {}
+export class StaffModule { }

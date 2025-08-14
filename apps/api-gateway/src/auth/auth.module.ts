@@ -8,6 +8,7 @@ import { HttpModule } from '@nestjs/axios';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common/auth/jwt.strategy';
 import { ClinicModule } from '../clinics/clinic.module';
+import { StaffModule } from '@api-gateway/staff/staff.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { ClinicModule } from '../clinics/clinic.module';
         inject: [ConfigService],
       },
     ]),
-    ClinicModule
+    ClinicModule,
+    forwardRef(() => StaffModule)
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

@@ -44,20 +44,6 @@ export class InvitationsController {
     });
   }
 
-  //@Post('admin')
-  //@UseGuards(JwtAuthGuard, AuthorizationGuard)
-  //@Authorizations({ roles: ['admin'] })
-  ////@Authorizations({ permissions: ["admin:create:permission"] })
-  //async createInvitationAdmin(
-  //  @Body() createInvitationDto: CreateInvitationDto,
-  //  @CurrentUser() user: TokenPayload,
-  //) {
-  //  return await this.invitationService.createInvitationWithValidation(createInvitationDto, {
-  //    id: user.userId,
-  //    type: user.actorType,
-  //  });
-  //}
-
   @Get()
   async getInvitationById(
     @Query() { token, email }: { token: string; email: string },
@@ -75,10 +61,10 @@ export class InvitationsController {
   ) {
     const foundUser = await this.userService.find({ id: user.userId });
 
-    const isLinked = foundUser?.clinics.some((c) => c.id === body.clinicId);
-    if (!isLinked) {
-      throw new ForbiddenException('Unauthorize to query this clinic');
-    }
+    //const isLinked = foundUser?.clinics.some((c) => c.id === body.clinicId);
+    //if (!isLinked) {
+    //  throw new ForbiddenException('Unauthorize to query this clinic');
+    //}
 
     const response = await this.invitationService.updateInvitationStatus(
       param.id,
@@ -96,10 +82,10 @@ export class InvitationsController {
   ) {
     const foundUser = await this.userService.find({ id: user.userId });
 
-    const isLinked = foundUser?.clinics.some((c) => c.id === dto.clinicId);
-    if (!isLinked) {
-      throw new ForbiddenException('Unauthorize to query this clinic');
-    }
+    //const isLinked = foundUser?.clinics.some((c) => c.id === dto.clinicId);
+    //if (!isLinked) {
+    //  throw new ForbiddenException('Unauthorize to query this clinic');
+    //}
 
     const { limit, page } = dto;
     const filter = this.buildWhereFromDto(dto);
