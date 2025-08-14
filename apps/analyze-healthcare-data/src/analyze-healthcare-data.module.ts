@@ -3,7 +3,12 @@ import { AnalyzeHealthcareDataController } from './analyze-healthcare-data.contr
 import { AnalyzeHealthcareDataService } from './analyze-healthcare-data.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi from 'joi';
-import { INPUT_VITAL_SIGNS_CONSUMER_GROUP, INPUT_VITAL_SIGNS_SERVICE, LoggerModule, MongoDatabaseModule } from '@app/common';
+import {
+  INPUT_VITAL_SIGNS_CONSUMER_GROUP,
+  INPUT_VITAL_SIGNS_SERVICE,
+  LoggerModule,
+  MongoDatabaseModule,
+} from '@app/common';
 import { Vitals, VitalsSchema } from '../models';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AnalyzeHealthcareDataRepository } from './analyze-healthcare-data.repository';
@@ -17,6 +22,8 @@ import { JwtModule } from '@nestjs/jwt';
       validationSchema: Joi.object({
         KAFKA_BROKER: Joi.required(),
         PATIENT_SERVICE_URI: Joi.string().required(),
+        ANALYZE_HEALTHCARE_DATA_HOST: Joi.string().required(),
+        ANALYZE_HEALTHCARE_DATA_PORT: Joi.number().required(),
       }),
     }),
     JwtModule.registerAsync({
@@ -34,12 +41,16 @@ import { JwtModule } from '@nestjs/jwt';
     MongoDatabaseModule.forRoot({
       envKey: 'PATIENT_SERVICE_URI',
       connectionName: 'patientService',
-    }), MongoDatabaseModule.forFeature([
-      {
-        name: Vitals.name,
-        schema: VitalsSchema,
-      },
-    ], 'patientService'),
+    }),
+    MongoDatabaseModule.forFeature(
+      [
+        {
+          name: Vitals.name,
+          schema: VitalsSchema,
+        },
+      ],
+      'patientService',
+    ),
 
     ClientsModule.registerAsync([
       {
@@ -50,7 +61,7 @@ import { JwtModule } from '@nestjs/jwt';
           options: {
             client: {
               clientId: 'analyze-healthcare-data',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: INPUT_VITAL_SIGNS_CONSUMER_GROUP,
@@ -64,6 +75,6 @@ import { JwtModule } from '@nestjs/jwt';
   ],
   controllers: [AnalyzeHealthcareDataController],
   providers: [AnalyzeHealthcareDataService, AnalyzeHealthcareDataRepository],
-  exports: [AnalyzeHealthcareDataService, AnalyzeHealthcareDataRepository]
+  exports: [AnalyzeHealthcareDataService, AnalyzeHealthcareDataRepository],
 })
-export class AnalyzeHealthcareDataModule { }
+export class AnalyzeHealthcareDataModule {}
