@@ -97,7 +97,7 @@ export class AuthController {
           ...rest,
         },
         currentClinic: {
-          id: clinicData.name,
+          id: employeeInfo.clinic_id,
           name: clinicData.name,
         },
       });
