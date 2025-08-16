@@ -620,35 +620,34 @@ export class PatientsService {
       );
     }
 
-    return {
-      data: patients.map((patient) => ({
-        id: patient._id,
-        patient_account_id: patient.patient_account_id,
-        fullName: patient.fullname,
-        relation: patient.relation,
-        dOB: patient.dOB,
-        citizen_id: patient.citizen_id,
-        health_insurance_id: patient.health_insurance_id,
-        marital_status: patient.marital_status,
-        address1: patient.address1,
-        address2: patient.address2 || 'Trống',
-        phone: patient.phone,
-        gender:
-          typeof patient.gender === 'boolean'
-            ? patient.gender
-              ? 'Nam'
-              : 'Nữ'
-            : 'Không xác định',
-        nation: patient.nation,
-        work_address: patient.work_address,
-        medical_history: {
-          allergies: patient.medical_history?.allergies || [],
-          personal_history: patient.medical_history?.personal_history || [],
-          family_history: patient.medical_history?.family_history || [],
-        },
-        bloodGroup: patient.bloodGroup,
-      })),
-    };
+    return patients.map((patient) => ({
+      _id: patient._id,
+      isDeleted: patient.isDeleted ?? false,
+      clinic_id: patient.clinic_id,
+      fullname: patient.fullname,
+      relation: patient.relation,
+      dOB: patient.dOB,
+      citizen_id: patient.citizen_id,
+      health_insurance_id: patient.health_insurance_id,
+      ethnicity: patient.ethnicity, // nếu model có field này
+      marital_status: patient.marital_status,
+      address1: patient.address1,
+      address2: patient.address2 || 'Trống',
+      phone: patient.phone,
+      gender:
+        typeof patient.gender === 'boolean' ? patient.gender : 'Không xác định',
+      nation: patient.nation,
+      work_address: patient.work_address,
+      medical_history: {
+        allergies: patient.medical_history?.allergies || null,
+        personal_history: patient.medical_history?.personal_history || null,
+        family_history: patient.medical_history?.family_history || null,
+      },
+      bloodGroup: patient.bloodGroup,
+      createdBy: patient.createdBy ?? null,
+      createdAt: patient.createdAt,
+      updatedAt: patient.updatedAt,
+    }));
   }
 
   async assignToClinic(patient_account_id: string, clinicId: string) {
@@ -749,6 +748,53 @@ export class PatientsService {
       clinic_id: clinicId,
     });
     return patients;
+  }
+
+  async getAllPatientProfileOfClinic(clinicId: string) {
+    // Lấy account_id của clinic
+    const patientAccountIds = await this.patientClinicLinkRepo
+      .createQueryBuilder('link')
+      .leftJoin('link.patientAccount', 'patientAccount')
+      .select('patientAccount.id', 'account_id')
+      .where('link.clinic_id = :clinicId', { clinicId })
+      .getRawMany();
+
+    const accountIds = [
+      ...new Set(patientAccountIds.map((row) => row.account_id)),
+    ]; // loại trùng
+
+    // Lấy profile của từng account_id
+    const profiles = await Promise.all(
+      accountIds.map((id) => this.getPatientProfileByAccountId(id)),
+    );
+
+    // profiles hiện tại là mảng 2 chiều (array of arrays)
+    // => flatten ra 1 mảng
+    const result = profiles.flatMap((patients, idx) =>
+      patients.map((patient) => ({
+        _id: patient._id,
+        clinic_id: clinicId,
+        fullname: patient.fullname,
+        relation: patient.relation,
+        citizen_id: patient.citizen_id,
+        health_insurance_id: patient.health_insurance_id,
+        ethnicity: patient.ethnicity,
+        marital_status: patient.marital_status,
+        address1: patient.address1,
+        address2: patient.address2,
+        phone: patient.phone,
+        gender: patient.gender,
+        dOB: patient.dOB,
+        nation: patient.nation,
+        work_address: patient.work_address,
+        medical_history: patient.medical_history,
+        bloodGroup: patient.bloodGroup,
+        isDeleted: false,
+        account_id: accountIds[idx], // gán account_id từ index
+      })),
+    );
+
+    return result;
   }
 
   async getShiftById(shiftId: string) {

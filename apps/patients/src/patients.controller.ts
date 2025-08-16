@@ -330,6 +330,19 @@ export class PatientsController {
     return patient;
   }
 
+  @Get('get-patient-clinic/:clinicId')
+  async getAllPatientProfileOfClinic(@Param('clinicId') clinicId: string) {
+    const patient =
+      await this.patientsService.getAllPatientProfileOfClinic(clinicId);
+    if (!patient) {
+      return {
+        message: 'Không có hồ sơ bệnh nhân',
+        data: null,
+      };
+    }
+    return patient;
+  }
+
   @Post('appointment')
   async createAppointment(
     @Body('createAppointmentDto') createAppointmentDto: CreateAppointmentDto,
