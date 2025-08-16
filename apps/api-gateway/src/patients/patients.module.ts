@@ -53,7 +53,7 @@ import { MediaModule } from '@api-gateway/media/media.module';
           options: {
             client: {
               clientId: 'patient',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: PATIENT_CONSUMER_GROUP,
@@ -71,7 +71,7 @@ import { MediaModule } from '@api-gateway/media/media.module';
           options: {
             client: {
               clientId: 'auth',
-              brokers: [configService.get('KAFKA_BROKER')!],
+              brokers: [configService.get('KAFKA_BROKER')],
             },
             consumer: {
               groupId: AUTH_CONSUMER_GROUP,
@@ -83,18 +83,19 @@ import { MediaModule } from '@api-gateway/media/media.module';
     AuthModule,
     StaffModule,
     ClinicModule,
-    MediaModule
+    MediaModule,
   ],
   controllers: [PatientsController, LabTestController, LabOrderController],
   providers: [
     PatientService,
     FavouriteDoctorService,
-    ManageMedicalRecordService, ManageMedicalRecordService,
+    ManageMedicalRecordService,
+    ManageMedicalRecordService,
     AppointmentService,
     LabTestService,
     ICDService,
     LabOrderService,
-    PrescriptionService
+    PrescriptionService,
   ],
   exports: [
     PatientService,
@@ -105,4 +106,4 @@ import { MediaModule } from '@api-gateway/media/media.module';
     PrescriptionService,
   ],
 })
-export class PatientsModule { }
+export class PatientsModule {}
