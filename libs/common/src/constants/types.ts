@@ -9,3 +9,10 @@ export enum LabStatusEnum {
   IN_PROCESS = 'in-process',
   COLLECTED = 'collected',
 }
+
+export type EmployeeRoleType = 'staff' | 'nurse' | 'labtech';
+export enum EmployeeRoleEnum {
+  STAFF = 'staff',
+  NURSE = 'nurse',
+  LAB_TECHNICIAN = 'labtech'
+};

@@ -9,13 +9,23 @@ import { MEDIA_SERVICE, MediaDto, TokenPayload } from '@app/common';
 export class MediaService {
   constructor(
     @Inject(MEDIA_SERVICE) private readonly mediaService: HttpService,
-  ) {}
+  ) { }
 
   async getFileById(id: string | null | undefined): Promise<unknown> {
     if (!id) return null;
 
     const response = await lastValueFrom(
       this.mediaService.get(`/media/get/${id}`),
+    );
+
+    return response.data;
+  }
+
+  async getAvatarPatient(patientId: string | null | undefined): Promise<unknown> {
+    if (!patientId) return null;
+
+    const response = await lastValueFrom(
+      this.mediaService.get(`/media/get-avatar-patient/${patientId}`),
     );
 
     return response.data;
@@ -43,6 +53,26 @@ export class MediaService {
       {
         headers,
       },
+    );
+
+    const response = await lastValueFrom(response$);
+    return response.data;
+  }
+
+  async uploadAvatarPatient(
+    endpoint: string,
+    file: Express.Multer.File,
+    patientId: string,
+  ): Promise<MediaDto> {
+    const form = new FormData();
+    form.append('file', Readable.from(file.buffer), {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    });
+
+    const response$ = this.mediaService.post<MediaDto>(
+      `/media/${endpoint}/${patientId}`,
+      form,
     );
 
     const response = await lastValueFrom(response$);
@@ -102,6 +132,27 @@ export class MediaService {
       `/media/update/${id}`,
       form,
       { headers },
+    );
+
+    const response = await lastValueFrom(response$);
+    return response.data;
+  }
+
+  async updateAvatarPatient(
+    patientId: string,
+    file: Express.Multer.File,
+  ): Promise<MediaDto> {
+    const form = new FormData();
+
+    form.append('file', Readable.from(file.buffer), {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    });
+
+
+    const response$ = this.mediaService.post<MediaDto>(
+      `/media/update-avatar/${patientId}`,
+      form,
     );
 
     const response = await lastValueFrom(response$);

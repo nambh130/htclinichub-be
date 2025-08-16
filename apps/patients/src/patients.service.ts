@@ -1148,12 +1148,15 @@ export class PatientsService {
     return result;
   }
 
-  async getAppointmentByDoctorClinicLink(doctor_id: string, clinic_id: string) {
-    const appointments = await this.appointmentRepository.findMany({
-      clinic_id: clinic_id,
-      doctor_id: doctor_id,
-    });
+  async getAppointmentByDoctorClinicLink(
+    doctor_id?: string,
+    clinic_id?: string,
+  ) {
+    const whereClause: any = {};
 
+    if (clinic_id) whereClause.clinic_id = clinic_id;
+    if (doctor_id) whereClause.doctor_id = doctor_id;
+    const appointments = await this.appointmentRepository.findMany(whereClause);
     const result = await Promise.all(
       appointments.map(async (appointment) => {
         const [clinicRes, doctorRes, slotRes, profileRes] = await Promise.all([

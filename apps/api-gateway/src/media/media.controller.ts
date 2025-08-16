@@ -24,6 +24,12 @@ export class MediaController {
     return this.mediaService.getFileById(id);
   }
 
+  @Get('get-avatar-patient/:patientId')
+  @UseGuards(JwtAuthGuard)
+  getAvatarPatient(@Param('patientId') patientId: string): Promise<unknown> {
+    return this.mediaService.getAvatarPatient(patientId);
+  }
+
   @Post('upload-image')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
@@ -35,6 +41,21 @@ export class MediaController {
       'upload-image',
       file,
       currentUser,
+    );
+  }
+
+  @Post('upload-image-patient/:patientId')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImagePatient(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('patientId') patientId: string,
+  ): Promise<MediaDto> {
+    console.log("patientId ở Gate:", patientId)
+    return this.mediaService.uploadAvatarPatient(
+      'upload-image-patient',
+      file,
+      patientId,
     );
   }
 
@@ -122,5 +143,16 @@ export class MediaController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     return this.mediaService.deleteFile(id, currentUser);
+  }
+
+  @Post('update-avatar/:patientId')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatarPatient(
+    @Param('patientId') patientId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
+    return this.mediaService.updateAvatarPatient(patientId, file);
   }
 }
