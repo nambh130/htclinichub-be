@@ -1,29 +1,25 @@
-import { PATIENT_SERVICE } from "@app/common";
-import { HttpService } from "@nestjs/axios";
-import { HttpException, Inject, Injectable } from "@nestjs/common";
-import { Request } from "express";
-import { catchError, firstValueFrom } from "rxjs";
+import { PATIENT_SERVICE } from '@app/common';
+import { HttpService } from '@nestjs/axios';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Request } from 'express';
+import { catchError, firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class LabOrderService {
   constructor(
     @Inject(PATIENT_SERVICE) private readonly httpService: HttpService,
-  ) { }
+  ) {}
 
   async createLabOrder(req: Request) {
     const cookie = req.headers.cookie;
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-order`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
+        .post(`/lab-order`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -42,15 +38,11 @@ export class LabOrderService {
 
     const response = await firstValueFrom(
       this.httpService
-        .patch(
-          `/lab-order/item/${id}/status`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie,
-            },
+        .patch(`/lab-order/item/${id}/status`, req.body, {
+          headers: {
+            Cookie: cookie,
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -95,7 +87,6 @@ export class LabOrderService {
   }
 
   async getOrderItemById(req: Request, id: string) {
-
     const response = await firstValueFrom(
       this.httpService.get(`/lab-order/item/${id}`, {
         headers: {
@@ -139,15 +130,11 @@ export class LabOrderService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-order/item/quantitative-result`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
+        .post(`/lab-order/item/quantitative-result`, req.body, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -166,15 +153,11 @@ export class LabOrderService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-order/item/imaging-result`,
-          payload,
-          {
-            headers: {
-              Cookie: cookie, // Forward the original cookie
-            },
+        .post(`/lab-order/item/imaging-result`, payload, {
+          headers: {
+            Cookie: cookie, // Forward the original cookie
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -195,15 +178,11 @@ export class LabOrderService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-order/item/result-file/add`,
-          payload,
-          {
-            headers: {
-              Cookie: cookie,
-            },
+        .post(`/lab-order/item/result-file/add`, payload, {
+          headers: {
+            Cookie: cookie,
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
@@ -222,15 +201,11 @@ export class LabOrderService {
 
     const response = await firstValueFrom(
       this.httpService
-        .post(
-          `/lab-order/item/result-file/remove`,
-          req.body,
-          {
-            headers: {
-              Cookie: cookie,
-            },
+        .post(`/lab-order/item/result-file/remove`, req.body, {
+          headers: {
+            Cookie: cookie,
           },
-        )
+        })
         .pipe(
           catchError((error) => {
             const e = error.response;
