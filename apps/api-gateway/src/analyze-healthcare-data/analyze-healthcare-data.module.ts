@@ -18,8 +18,8 @@ import { httpClientConfig, HttpModules } from '../api/http.client';
     HttpModules.registerAsync([
       httpClientConfig(
         INPUT_VITAL_SIGNS_SERVICE,
-        'VITAL_SERVICE_HOST',
-        'VITAL_SERVICE_PORT',
+        'ANALYZE_HEALTHCARE_DATA_HOST',
+        'ANALYZE_HEALTHCARE_DATA_PORT',
       ),
     ]),
 
