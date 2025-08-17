@@ -153,6 +153,20 @@ export class PatientService {
     }
   }
 
+  async getAllPatientProfileOfClinic(clinicId: string, currentUser: TokenPayload) {
+    try {
+      const result = await firstValueFrom(
+        this.httpService.get(
+          `/patient-service/get-patient-clinic/${clinicId}`,
+        ),
+      );
+      return result.data;
+    } catch (error) {
+      console.error('Error retrieving patient:', error);
+      throw error;
+    }
+  }
+
   async getPatientByFullName(fullName: string, currentUser: TokenPayload) {
     try {
       const result = await firstValueFrom(

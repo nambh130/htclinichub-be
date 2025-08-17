@@ -25,7 +25,7 @@ create_db_if_not_exists "clinic_service"
 create_db_if_not_exists "staff_service"
 create_db_if_not_exists "media_service"
 
-echo "✅ All databases checked/created."
+echo "All databases checked/created."
 
 # Keep Postgres running
 wait
