@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class EmployeeSpecializeDto {
   @IsString()
@@ -9,6 +9,33 @@ export class EmployeeSpecializeDto {
   @MaxLength(100)
   description: string;
 
+  @IsOptional()
   @IsString()
-  image_id: string;
+  image_id?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @MaxLength(2048)
+  certificate_url?: string;
+}
+
+export class UpdateEmployeeSpecializeDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  image_id?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @MaxLength(2048)
+  certificate_url?: string;
 }

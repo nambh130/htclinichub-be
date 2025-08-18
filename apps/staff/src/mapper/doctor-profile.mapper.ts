@@ -29,6 +29,7 @@ export function toDoctorProfile(doctor: Doctor, staffInfo: StaffInfo | null) {
         ? {
             id: staffInfo.id,
             full_name: staffInfo.full_name,
+            social_id: staffInfo.social_id,
             dob: staffInfo.dob,
             phone: staffInfo.phone,
             gender: staffInfo.gender,
@@ -57,6 +58,7 @@ export function toStaffBasicInfo(
   return {
     staff_id: staffInfo.staff_id,
     full_name: staffInfo.full_name,
+    social_id: staffInfo.social_id,
     phone: staffInfo.phone,
     dob: staffInfo.dob,
     gender: staffInfo.gender,

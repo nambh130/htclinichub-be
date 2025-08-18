@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import {
   CreateEmployeeAccountDto,
@@ -335,18 +327,15 @@ export class EmployeeController {
     );
   }
 
-  @Delete('clinic')
+  @Post('remove-clinic')
   removeEmployeeFromClinic(
     @Body()
     payload: {
       employeeId: string;
-      currentUser: TokenPayload;
+      clinicId: string;
     },
   ) {
-    const { employeeId, currentUser } = payload;
-    return this.employeeService.removeEmployeeFromClinic(
-      employeeId,
-      currentUser,
-    );
+    const { employeeId, clinicId } = payload;
+    return this.employeeService.removeEmployeeFromClinic(employeeId, clinicId);
   }
 }

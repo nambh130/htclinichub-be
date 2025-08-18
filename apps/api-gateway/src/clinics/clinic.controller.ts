@@ -25,7 +25,7 @@ export class ClinicController {
   constructor(
     private readonly clinicService: ClinicService,
     private readonly clinicScheduleRuleApiService: ClinicScheduleRuleApiService,
-  ) { }
+  ) {}
 
   @Post('')
   @UseGuards(JwtAuthGuard)

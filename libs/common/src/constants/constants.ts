@@ -9,6 +9,7 @@ export const PATIENTS_TO_STAFF_SERVICE = 'patients-to-staff';
 export const PATIENTS_TO_STAFF_CLIENT = 'patients-staff-client';
 export const PATIENTS_TO_STAFF_CONSUMER = 'patients-staff-consumer';
 export const INPUT_VITAL_SIGNS_SERVICE = 'input-vital-signs';
+export const ANALYZE_HEALTHCARE_DATA_SERVICE = 'analyze-healthcare-data';
 export const MEDIA_SERVICE = 'media';
 export const LAB_TEST_SERVICE = 'lab-test';
 export const PAYMENT_SERVICE = 'payment';
@@ -30,6 +31,8 @@ export const COMMUNICATION_CONSUMER_GROUP = 'communication-consumer';
 //cloudinary
 export const CLOUDINARY = 'cloudinary';
 export const INPUT_VITAL_SIGNS_CONSUMER_GROUP = 'input-vital-signs-consumer';
+export const ANALYZE_HEALTHCARE_DATA_CONSUMER_GROUP =
+  'analyze-healthcare-data-consumer';
 
 // Cross-service communication constants
 export const PATIENTS_STAFF_SERVICE = 'patients-staff';
