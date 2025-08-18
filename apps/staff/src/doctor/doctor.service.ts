@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { IsNull, Like, FindOptionsWhere } from 'typeorm';
+import { IsNull, Like, FindOptionsWhere, Not } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import {
@@ -247,6 +247,7 @@ export class DoctorService extends BaseService {
               staff_id: doctor.staffInfo.staff_id,
               staff_type: doctor.staffInfo.staff_type,
               full_name: doctor.staffInfo.full_name,
+              social_id: doctor.staffInfo.social_id,
               dob: doctor.staffInfo.dob,
               phone: doctor.staffInfo.phone,
               gender: doctor.staffInfo.gender,
@@ -561,9 +562,26 @@ export class DoctorService extends BaseService {
         }
       }
 
+      // Check if social_id is unique if provided
+      if (dto.social_id) {
+        const existingStaffWithSocialId =
+          await this.staffInfoRepository.findOne({
+            social_id: dto.social_id.trim(),
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          });
+        if (existingStaffWithSocialId) {
+          throw new ConflictException(
+            `Staff with social ID ${dto.social_id} already exists`,
+          );
+        }
+      }
+
       const staffInfo = new StaffInfo();
       staffInfo.staff_id = staffId;
       staffInfo.full_name = dto.full_name.trim();
+      staffInfo.social_id = dto.social_id?.trim() || null;
       staffInfo.dob = dto.dob;
       staffInfo.phone = dto.phone.trim();
       staffInfo.gender = dto.gender;
@@ -628,6 +646,23 @@ export class DoctorService extends BaseService {
         );
       }
 
+      // Check if social_id is unique if provided (excluding current staff member)
+      if (dto.social_id) {
+        const existingStaffWithSocialId =
+          await this.staffInfoRepository.findOne({
+            social_id: dto.social_id.trim(),
+            id: Not(existingStaffInfo.id),
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          });
+        if (existingStaffWithSocialId) {
+          throw new ConflictException(
+            `Staff with social ID ${dto.social_id} already exists`,
+          );
+        }
+      }
+
       if (dto.dob) {
         const dobDate = new Date(dto.dob);
         const now = new Date();
@@ -639,6 +674,7 @@ export class DoctorService extends BaseService {
 
       const updatedFields: QueryDeepPartialEntity<StaffInfo> = {
         full_name: dto.full_name.trim(),
+        social_id: dto.social_id?.trim() || null,
         dob: dto.dob,
         phone: dto.phone.trim(),
         gender: dto.gender,
@@ -754,8 +790,12 @@ export class DoctorService extends BaseService {
 
       const degree = new Degree();
       degree.name = dto.name.trim();
-      degree.description = dto.description.trim();
-      degree.image_id = dto.image_id;
+      degree.level = dto.level || null;
+      degree.institution = dto.institution?.trim() || null;
+      degree.year = dto.year || null;
+      degree.description = dto.description?.trim() || null;
+      degree.certificate_url = dto.certificate_url || null;
+      degree.image_id = dto.image_id || null;
       degree.staff_info = staff;
 
       setAudit(degree, currentUser);
@@ -830,8 +870,12 @@ export class DoctorService extends BaseService {
 
       const updatedFields: QueryDeepPartialEntity<Degree> = {
         name: dto.name?.trim(),
-        description: dto.description?.trim(),
-        image_id: dto.image_id,
+        level: dto.level || null,
+        institution: dto.institution?.trim() || null,
+        year: dto.year || null,
+        description: dto.description?.trim() || null,
+        certificate_url: dto.certificate_url || null,
+        image_id: dto.image_id || null,
         staff_info: staff,
       };
 
@@ -982,7 +1026,8 @@ export class DoctorService extends BaseService {
       const specialize = new Specialize();
       specialize.name = dto.name.trim();
       specialize.description = dto.description.trim();
-      specialize.image_id = dto.image_id;
+      specialize.certificate_url = dto.certificate_url || null;
+      specialize.image_id = dto.image_id || null;
       specialize.staff_info = staff;
 
       setAudit(specialize, currentUser);
@@ -1059,7 +1104,8 @@ export class DoctorService extends BaseService {
       const updatedFields: QueryDeepPartialEntity<Specialize> = {
         name: dto.name?.trim(),
         description: dto.description?.trim(),
-        image_id: dto.image_id,
+        certificate_url: dto.certificate_url || null,
+        image_id: dto.image_id || null,
         staff_info: staff,
       };
 
@@ -1399,6 +1445,54 @@ export class DoctorService extends BaseService {
       }
       throw new InternalServerErrorException(
         'Failed to get doctor clinic exam fee',
+      );
+    }
+  }
+
+  async updateDoctorClinicExamFee(
+    doctorId: string,
+    clinicId: string,
+    examFee: number,
+  ): Promise<{ message: string; examFee: number }> {
+    try {
+      if (!doctorId || !doctorId.trim() || !clinicId || !clinicId.trim()) {
+        throw new BadRequestException('doctorId and clinicId are required');
+      }
+
+      if (!examFee || examFee <= 0) {
+        throw new BadRequestException('examFee must be a positive number');
+      }
+
+      // Find the existing doctor-clinic mapping
+      const link = await this.doctorClinicRepo.findOne({
+        doctor: { id: doctorId },
+        clinic: { id: clinicId },
+        status: DoctorClinicStatus.ACTIVE,
+      });
+
+      if (!link) {
+        throw new NotFoundException(
+          `Doctor ${doctorId} is not active in clinic ${clinicId}`,
+        );
+      }
+
+      // Update the exam fee
+      link.examFee = examFee;
+      await this.doctorClinicRepo.save(link);
+
+      return {
+        message: `Exam fee updated successfully for doctor ${doctorId} in clinic ${clinicId}`,
+        examFee: examFee,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to update doctor clinic exam fee',
       );
     }
   }

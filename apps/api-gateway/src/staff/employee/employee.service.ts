@@ -381,12 +381,12 @@ export class EmployeeService {
 
   async removeEmployeeFromClinic(
     employeeId: string,
-    currentUser: TokenPayload,
+    clinicId: string,
   ): Promise<unknown> {
-    const payload = { employeeId, currentUser };
+    const payload = { employeeId, clinicId };
 
     const response = await firstValueFrom(
-      this.staffService.delete('/staff/employee/clinic', { data: payload }),
+      this.staffService.post(`/staff/employee/remove-clinic`, payload),
     );
 
     return response.data;

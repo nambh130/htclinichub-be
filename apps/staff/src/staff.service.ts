@@ -122,15 +122,18 @@ export class StaffService {
     const doctorClinicMaps = await doctorQuery.getMany();
     const doctors = doctorClinicMaps.map((map) => map.doctor);
 
-    // Get doctors with their staff info
+    // Get doctors with their staff info, degrees, and specializations
     const doctorResults = await Promise.all(
       doctors.map(async (doctor): Promise<StaffMember> => {
-        const staffInfo = await this.staffInfoRepository.findOne({
-          staff_id: doctor.id,
-          deletedAt: IsNull(),
-          deletedById: IsNull(),
-          deletedByType: IsNull(),
-        });
+        const staffInfo = await this.staffInfoRepository.findOne(
+          {
+            staff_id: doctor.id,
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          },
+          ['degrees', 'specializes'],
+        );
 
         return {
           type: 'doctor',
@@ -143,11 +146,31 @@ export class StaffService {
             ? {
                 staff_id: staffInfo.staff_id,
                 full_name: staffInfo.full_name,
+                social_id: staffInfo.social_id,
                 dob: staffInfo.dob,
                 phone: staffInfo.phone,
                 gender: staffInfo.gender,
                 position: staffInfo.position,
                 profile_img_id: staffInfo.profile_img_id,
+                degrees:
+                  staffInfo.degrees?.map((degree) => ({
+                    id: degree.id,
+                    name: degree.name,
+                    level: degree.level,
+                    institution: degree.institution,
+                    year: degree.year,
+                    description: degree.description,
+                    certificate_url: degree.certificate_url,
+                    image_id: degree.image_id,
+                  })) || [],
+                specializes:
+                  staffInfo.specializes?.map((specialize) => ({
+                    id: specialize.id,
+                    name: specialize.name,
+                    description: specialize.description,
+                    certificate_url: specialize.certificate_url,
+                    image_id: specialize.image_id,
+                  })) || [],
               }
             : null,
         };
@@ -176,6 +199,11 @@ export class StaffService {
         return result.info.phone.toLowerCase().includes(searchLower);
       }
 
+      if (searchBy === 'social_id') {
+        if (!result.info || !result.info.social_id) return false;
+        return result.info.social_id.toLowerCase().includes(searchLower);
+      }
+
       // Default to 'all' - search in all fields
       const matchesEmail = result.account.email
         .toLowerCase()
@@ -188,8 +216,11 @@ export class StaffService {
         const matchesPhone = result.info.phone
           ?.toLowerCase()
           .includes(searchLower);
+        const matchesSocialId = result.info.social_id
+          ?.toLowerCase()
+          .includes(searchLower);
 
-        return matchesEmail || matchesName || matchesPhone;
+        return matchesEmail || matchesName || matchesPhone || matchesSocialId;
       }
 
       return matchesEmail;
@@ -218,15 +249,18 @@ export class StaffService {
       deletedByType: IsNull(),
     });
 
-    // Get employees with their staff info
+    // Get employees with their staff info, degrees, and specializations
     const employeeResults = await Promise.all(
       employees.map(async (employee): Promise<StaffMember> => {
-        const staffInfo = await this.staffInfoRepository.findOne({
-          staff_id: employee.id,
-          deletedAt: IsNull(),
-          deletedById: IsNull(),
-          deletedByType: IsNull(),
-        });
+        const staffInfo = await this.staffInfoRepository.findOne(
+          {
+            staff_id: employee.id,
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          },
+          ['degrees', 'specializes'],
+        );
 
         return {
           type: 'employee',
@@ -240,11 +274,31 @@ export class StaffService {
             ? {
                 staff_id: staffInfo.staff_id,
                 full_name: staffInfo.full_name,
+                social_id: staffInfo.social_id,
                 dob: staffInfo.dob,
                 phone: staffInfo.phone,
                 gender: staffInfo.gender,
                 position: staffInfo.position,
                 profile_img_id: staffInfo.profile_img_id,
+                degrees:
+                  staffInfo.degrees?.map((degree) => ({
+                    id: degree.id,
+                    name: degree.name,
+                    level: degree.level,
+                    institution: degree.institution,
+                    year: degree.year,
+                    description: degree.description,
+                    certificate_url: degree.certificate_url,
+                    image_id: degree.image_id,
+                  })) || [],
+                specializes:
+                  staffInfo.specializes?.map((specialize) => ({
+                    id: specialize.id,
+                    name: specialize.name,
+                    description: specialize.description,
+                    certificate_url: specialize.certificate_url,
+                    image_id: specialize.image_id,
+                  })) || [],
               }
             : null,
         };
@@ -273,6 +327,11 @@ export class StaffService {
         return result.info.phone.toLowerCase().includes(searchLower);
       }
 
+      if (searchBy === 'social_id') {
+        if (!result.info || !result.info.social_id) return false;
+        return result.info.social_id.toLowerCase().includes(searchLower);
+      }
+
       // Default to 'all' - search in all fields
       const matchesEmail = result.account.email
         .toLowerCase()
@@ -285,8 +344,11 @@ export class StaffService {
         const matchesPhone = result.info.phone
           ?.toLowerCase()
           .includes(searchLower);
+        const matchesSocialId = result.info.social_id
+          ?.toLowerCase()
+          .includes(searchLower);
 
-        return matchesEmail || matchesName || matchesPhone;
+        return matchesEmail || matchesName || matchesPhone || matchesSocialId;
       }
 
       return matchesEmail;

@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { IsNull, Like, In, FindOptionsWhere } from 'typeorm';
+import { IsNull, Like, In, FindOptionsWhere, Not } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import {
@@ -255,6 +255,7 @@ export class EmployeeService extends BaseService {
                 staff_id: staff.staff_id,
                 staff_type: staff.staff_type,
                 full_name: staff.full_name,
+                social_id: staff.social_id,
                 dob: staff.dob,
                 phone: staff.phone,
                 gender: staff.gender,
@@ -524,9 +525,26 @@ export class EmployeeService extends BaseService {
         }
       }
 
+      // Check if social_id is unique if provided
+      if (dto.social_id) {
+        const existingStaffWithSocialId =
+          await this.staffInfoRepository.findOne({
+            social_id: dto.social_id.trim(),
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          });
+        if (existingStaffWithSocialId) {
+          throw new ConflictException(
+            `Staff with social ID ${dto.social_id} already exists`,
+          );
+        }
+      }
+
       const staffInfo = new StaffInfo();
       staffInfo.staff_id = staffId;
       staffInfo.full_name = dto.full_name.trim();
+      staffInfo.social_id = dto.social_id?.trim() || null;
       staffInfo.dob = dto.dob;
       staffInfo.phone = dto.phone.trim();
       staffInfo.gender = dto.gender;
@@ -591,8 +609,26 @@ export class EmployeeService extends BaseService {
         }
       }
 
+      // Check if social_id is unique if provided (excluding current staff member)
+      if (dto.social_id) {
+        const existingStaffWithSocialId =
+          await this.staffInfoRepository.findOne({
+            social_id: dto.social_id.trim(),
+            id: Not(existingStaffInfo.id), // Exclude current staff member
+            deletedAt: IsNull(),
+            deletedById: IsNull(),
+            deletedByType: IsNull(),
+          });
+        if (existingStaffWithSocialId) {
+          throw new ConflictException(
+            `Staff with social ID ${dto.social_id} already exists`,
+          );
+        }
+      }
+
       const updatedFields: QueryDeepPartialEntity<StaffInfo> = {
         full_name: dto.full_name.trim(),
+        social_id: dto.social_id?.trim() || null,
         dob: dto.dob,
         phone: dto.phone.trim(),
         gender: dto.gender,
@@ -694,8 +730,12 @@ export class EmployeeService extends BaseService {
 
       const degree = new Degree();
       degree.name = dto.name.trim();
-      degree.description = dto.description.trim();
-      degree.image_id = dto.image_id;
+      degree.level = dto.level || null;
+      degree.institution = dto.institution?.trim() || null;
+      degree.year = dto.year || null;
+      degree.description = dto.description?.trim() || null;
+      degree.certificate_url = dto.certificate_url || null;
+      degree.image_id = dto.image_id || null;
       degree.staff_info = staff;
 
       setAudit(degree, currentUser);
@@ -770,8 +810,12 @@ export class EmployeeService extends BaseService {
 
       const updatedFields: QueryDeepPartialEntity<Degree> = {
         name: dto.name?.trim(),
-        description: dto.description?.trim(),
-        image_id: dto.image_id,
+        level: dto.level || null,
+        institution: dto.institution?.trim() || null,
+        year: dto.year || null,
+        description: dto.description?.trim() || null,
+        certificate_url: dto.certificate_url || null,
+        image_id: dto.image_id || null,
         staff_info: staff,
       };
 
@@ -922,7 +966,8 @@ export class EmployeeService extends BaseService {
       const specialize = new Specialize();
       specialize.name = dto.name.trim();
       specialize.description = dto.description.trim();
-      specialize.image_id = dto.image_id;
+      specialize.certificate_url = dto.certificate_url || null;
+      specialize.image_id = dto.image_id || null;
       specialize.staff_info = staff;
 
       setAudit(specialize, currentUser);
@@ -999,7 +1044,8 @@ export class EmployeeService extends BaseService {
       const updatedFields: QueryDeepPartialEntity<Specialize> = {
         name: dto.name?.trim(),
         description: dto.description?.trim(),
-        image_id: dto.image_id,
+        certificate_url: dto.certificate_url || null,
+        image_id: dto.image_id || null,
         staff_info: staff,
       };
 
@@ -1222,9 +1268,10 @@ export class EmployeeService extends BaseService {
 
   async removeEmployeeFromClinic(
     employeeId: string,
-    currentUser: TokenPayload,
-  ): Promise<Employee> {
+    clinicId: string,
+  ): Promise<{ message: string }> {
     try {
+      // Validate employee exists
       const employee = await this.employeeRepository.findOne({
         id: employeeId,
         deletedAt: IsNull(),
@@ -1236,13 +1283,23 @@ export class EmployeeService extends BaseService {
         throw new NotFoundException(`Employee with ID ${employeeId} not found`);
       }
 
-      const updateData = updateAudit({ clinic_id: null }, currentUser);
-      const updatedEmployee = await this.employeeRepository.findOneAndUpdate(
+      // Check if employee is assigned to the specified clinic
+      if (employee.clinic_id !== clinicId) {
+        throw new NotFoundException(
+          `Employee ${employeeId} is not assigned to clinic ${clinicId}`,
+        );
+      }
+
+      // Remove the clinic assignment
+      const updateData = { clinic_id: null };
+      await this.employeeRepository.findOneAndUpdate(
         { id: employeeId },
         updateData,
       );
 
-      return updatedEmployee;
+      return {
+        message: `Employee ${employeeId} successfully removed from clinic ${clinicId}`,
+      };
     } catch (error) {
       if (
         error instanceof BadRequestException ||

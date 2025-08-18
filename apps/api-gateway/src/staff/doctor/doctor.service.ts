@@ -395,6 +395,20 @@ export class DoctorService {
     return response.data;
   }
 
+  async updateDoctorClinicExamFee(
+    doctorId: string,
+    clinicId: string,
+    examFee: number,
+  ): Promise<unknown> {
+    const payload = { doctorId, clinicId, examFee };
+
+    const response = await firstValueFrom(
+      this.staffService.post('/staff/doctor/update-exam-fee', payload),
+    );
+
+    return response.data;
+  }
+
   // ============================================================================
   // DOCTOR CLINIC ASSIGNMENT
   // ============================================================================

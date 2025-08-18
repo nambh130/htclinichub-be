@@ -465,4 +465,22 @@ export class DoctorController {
   ) {
     return this.doctorService.getDoctorClinicExamFee(doctorId, clinicId);
   }
+
+  @Post('update-exam-fee')
+  @UseGuards(JwtAuthGuard)
+  async updateExamFee(
+    @Body()
+    payload: {
+      doctorId: string;
+      clinicId: string;
+      examFee: number;
+    },
+  ) {
+    const { doctorId, clinicId, examFee } = payload;
+    return this.doctorService.updateDoctorClinicExamFee(
+      doctorId,
+      clinicId,
+      examFee,
+    );
+  }
 }

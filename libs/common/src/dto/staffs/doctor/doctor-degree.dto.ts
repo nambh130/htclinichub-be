@@ -1,27 +1,85 @@
-import { IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { DegreeLevel } from '@app/common/enum';
 
 export class DoctorDegreeDto {
   @IsString()
-  @MaxLength(50)
+  @MaxLength(100)
   name: string;
 
-  @IsString()
-  @MaxLength(100)
-  description: string;
+  @IsOptional()
+  @IsEnum(DegreeLevel)
+  level?: DegreeLevel;
 
+  @IsOptional()
   @IsString()
-  image_id: string;
+  @MaxLength(150)
+  institution?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1900)
+  @Max(new Date().getFullYear())
+  year?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  image_id?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @MaxLength(2048)
+  certificate_url?: string;
 }
 
 export class UpdateDegreeDto {
-  @IsString()
-  @MaxLength(50)
-  name: string;
-
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  description: string;
+  name?: string;
 
+  @IsOptional()
+  @IsEnum(DegreeLevel)
+  level?: DegreeLevel;
+
+  @IsOptional()
   @IsString()
-  image_id: string;
+  @MaxLength(150)
+  institution?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1900)
+  @Max(new Date().getFullYear())
+  year?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  image_id?: string;
+
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @MaxLength(2048)
+  certificate_url?: string;
 }

@@ -304,6 +304,23 @@ export class DoctorController {
     return this.doctorService.removeDoctorFromClinic(doctorId, clinicId);
   }
 
+  @Post('update-exam-fee')
+  updateExamFee(
+    @Body()
+    payload: {
+      doctorId: string;
+      clinicId: string;
+      examFee: number;
+    },
+  ) {
+    const { doctorId, clinicId, examFee } = payload;
+    return this.doctorService.updateDoctorClinicExamFee(
+      doctorId,
+      clinicId,
+      examFee,
+    );
+  }
+
   @Get('get-doctors-by-ids')
   getDoctorsByIds(@Query('ids') ids: string | string[]) {
     const parsedIds = Array.isArray(ids) ? ids.map(Number) : [Number(ids)];
