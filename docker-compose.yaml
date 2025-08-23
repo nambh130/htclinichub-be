@@ -11,8 +11,6 @@ services:
       ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: WARN
       ZOOKEEPER_SESSION_TIMEOUT_MS: 18000
       ZOOKEEPER_MAX_SESSION_TIMEOUT: 60000
-    ports:
-      - '2181:2181'
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-logs:/var/lib/zookeeper/log
@@ -28,9 +26,6 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     hostname: kafka
     container_name: kafka
-    ports:
-      - '9092:9092'
-      - '9101:9101'
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -85,8 +80,6 @@ services:
   mongo:
     image: mongo
     container_name: mongo
-    ports:
-      - '27017:27017'
     command: mongod --quiet --logpath /dev/null
     volumes:
       - mongo-data:/data/db
@@ -105,8 +98,6 @@ services:
       POSTGRES_PASSWORD: randompassword
       POSTGRES_DB: htclinichub
       POSTGRES_MULTIPLE_DATABASES: auth_service,clinic_service,payment_service,staff_service,patient_service
-    ports:
-      - '5433:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
@@ -183,8 +174,6 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
-    ports:
-      - '3007:3007'
     restart: unless-stopped
 
   auth:
@@ -217,8 +206,6 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
-    ports:
-      - '3001:3001'
     restart: unless-stopped
 
   staff:
@@ -244,8 +231,6 @@ services:
           path: ./package.json
     environment:
       - KAFKA_BROKER=kafka:9092
-    ports:
-      - '3003:3003'
     env_file:
       - .env
     depends_on:
@@ -310,8 +295,6 @@ services:
           path: ./package.json
     environment:
       - KAFKA_BROKER=kafka:9092
-    ports:
-      - '3005:3005'
     env_file:
       - .env
     depends_on:
