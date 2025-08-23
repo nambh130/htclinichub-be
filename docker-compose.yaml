@@ -83,6 +83,7 @@ services:
     command: mongod --quiet --logpath /dev/null
     volumes:
       - mongo-data:/data/db
+      - ./init-mongo/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 5s
@@ -100,7 +101,7 @@ services:
       POSTGRES_MULTIPLE_DATABASES: auth_service,clinic_service,payment_service,staff_service,patient_service
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./init-db/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', 'postgres']
       interval: 5s
