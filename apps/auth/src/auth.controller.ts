@@ -484,15 +484,15 @@ export class AuthController {
     console.log(typeof refreshTokenExpiryMs, refreshTokenExpiryMs);
     res.cookie('Authentication', accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
+      secure: false,
+      sameSite: 'lax',
       maxAge: accessTokenMaxAge, // ✅ milliseconds
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
+      secure: false,
+      sameSite: 'lax',
       path: '/',
       maxAge: refreshTokenExpiryMs, // ✅ milliseconds
     });
