@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { CommunicationController } from './communication.controller';
-import { CommunicationService } from './communication.service';
 import { EmailService } from './services/email/email.service';
 import { SmsService } from './services/sms/sms.service';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -87,6 +86,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     LoggerModule,
   ],
   controllers: [CommunicationController],
-  providers: [CommunicationService, EmailService, SmsService],
+  providers: [EmailService, SmsService],
 })
 export class CommunicationModule {}

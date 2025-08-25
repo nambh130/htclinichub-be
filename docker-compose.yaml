@@ -140,7 +140,7 @@ services:
       mongo:
         condition: service_healthy
     ports:
-      - '37146:3000'
+      - '3000:3000'
     restart: unless-stopped
 
   clinic:

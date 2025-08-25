@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Inject,
   Post,
   Req,
@@ -220,7 +221,11 @@ export class AuthController {
   }
 
   @Post('invitation/signup') // Create an account by invitation
-  async invitationSignup(@Body() dto: InvitationSignupDto) {
+  @HttpCode(201)
+  async invitationSignup(
+    @Body() dto: InvitationSignupDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     if (dto.password != dto.confirmPassword) {
       throw new BadRequestException('Password does not match retype password');
     }
