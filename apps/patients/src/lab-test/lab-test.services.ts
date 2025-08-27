@@ -18,7 +18,7 @@ export class LabTestService {
     private readonly quantitativeTestRepo: QuantitativeTestRepository,
     private readonly labTestRepo: LabTestRepository,
     private readonly imagingRepo: ImagingTestRepository,
-  ) {}
+  ) { }
 
   // ==================================
   //  LAB FIELDS FOR QUANTITATIVE TESTS
@@ -178,7 +178,7 @@ export class LabTestService {
     let checkExists = false;
     try {
       await this.quantitativeTestRepo.findOne({
-        name: testName,
+        name: { $regex: `^${testName}$`, $options: 'i' },
         isDeleted: false,
       });
       checkExists = true;

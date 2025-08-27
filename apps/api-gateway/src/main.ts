@@ -11,23 +11,19 @@ async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule, {
     bufferLogs: true,
   });
-  app.enableCors({
-    //8080: doctor, 8082: admin, 8081: patient
-    origin: [
-      'http://localhost:8080',
-      'http://localhost:8000',
-      'http://localhost:8082',
-      'http://localhost:8081',
-      // Allow LocalTunnel domains for webhook testing
-      /.*\.loca\.lt$/,
-    ], // allow requests from these origins
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // allow cookies/auth headers
-  });
 
   // Get ConfigService and Logger
   const configService = app.get(ConfigService);
   app.useLogger(app.get(Logger));
+
+  // Read the comma-separated string from the .env file
+  const allowedOrigins = process.env.CORS_ORIGINS;
+  const originArray = allowedOrigins ? allowedOrigins.split(',') : [];
+  app.enableCors({
+    origin: originArray,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   // Global route prefix
   app.setGlobalPrefix('api');

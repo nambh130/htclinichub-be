@@ -15,7 +15,6 @@ export class CommunicationController {
 
   @EventPattern('invitation-created')
   sendInvitation(@Payload() invitationDto: InvitationCreated): any {
-    console.log('communication: ', invitationDto);
     const { roleName, clinicName, invitationUrl, to } = invitationDto;
     return this.emailService.sendInvitation(
       to,

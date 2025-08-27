@@ -90,10 +90,6 @@ export class EmployeeService {
   }
 
   async getEmployeeByClinic(clinicId: string): Promise<unknown> {
-    console.log(
-      'Calling staff service getEmployeeByClinic with clinicId:',
-      clinicId,
-    );
     const response = await firstValueFrom(
       this.staffService.get(`/staff/employee/employee-by-clinic/${clinicId}`),
     );

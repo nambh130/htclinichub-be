@@ -115,6 +115,7 @@ export class LabOrderRepository extends MongoAbstractRepository<LabOrder> {
                   status: '$items.status',
                   orderDate: '$orderDate',
                   medicalReport: '$medicalRecord._id',
+                  appointmentId: '$medicalRecord.appointment_id',
                   labOrderId: '$_id',
                   labOrderBarcode: '$barCode',
                   patient: {

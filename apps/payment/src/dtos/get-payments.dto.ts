@@ -6,6 +6,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { PaymentMethod } from '../enums/payment-status.enum';
 
 export enum PaymentStatus {
   PENDING = 'PENDING',
@@ -24,6 +25,10 @@ export class GetPaymentsDto {
   @IsOptional()
   @IsEnum(PaymentStatus)
   status?: PaymentStatus;
+
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
 
   @IsOptional()
   @IsDateString()

@@ -550,6 +550,13 @@ export class PayOSService implements PaymentProvider {
     }
 
     try {
+      // First, update existing payments to remove credential reference (to avoid foreign key constraint)
+      await this.paymentRepository.findOneAndUpdate(
+        { credentialId: existingCredential.id },
+        { credentialId: null },
+      );
+
+      // Then delete the PayOS credentials
       await this.paymentConfigRepository.delete({
         clinicId,
         provider: PAYOS,
@@ -560,6 +567,157 @@ export class PayOSService implements PaymentProvider {
           error instanceof Error ? error.message : 'Unknown error'
         }`,
       );
+    }
+  }
+
+  /**
+   * Remove entire PayOS payment configuration for a clinic
+   * This includes deleting credentials, canceling active payments, and cleanup
+   */
+  async removeConfiguration(
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deletedCredentials: boolean;
+    canceledPayments: number;
+    errors?: string[];
+  }> {
+    const result = {
+      success: true,
+      message: 'PayOS configuration removed successfully',
+      deletedCredentials: false,
+      canceledPayments: 0,
+      errors: [] as string[],
+    };
+
+    try {
+      // 1. Check if PayOS credentials exist for this clinic
+      const existingCredential = await this.paymentConfigRepository.findOne({
+        clinicId,
+        provider: PAYOS,
+      });
+
+      if (!existingCredential) {
+        result.message = 'No PayOS configuration found for this clinic';
+        return result;
+      }
+
+      // 2. Get all pending payments for this clinic that need to be canceled
+      const pendingPayments = await this.paymentRepository.findAll({
+        where: {
+          clinicId,
+          status: PaymentStatus.PENDING,
+          credentialId: existingCredential.id,
+        },
+      });
+
+      // 3. Cancel all pending payments via PayOS API
+      if (pendingPayments.data && pendingPayments.data.length > 0) {
+        const credentials: Record<string, any> =
+          this.encryptionService.decrypt<PayOSCredentials>(
+            existingCredential.encryptedCredentials,
+          );
+
+        let payos: PayOS | null = null;
+        try {
+          payos = new PayOS(
+            credentials.clientId as string,
+            credentials.apiKey as string,
+            credentials.checksumKey as string,
+          );
+
+          // Cancel each pending payment
+          for (const payment of pendingPayments.data) {
+            try {
+              if (payment.orderCode) {
+                await payos.cancelPaymentLink(
+                  parseInt(payment.orderCode),
+                  'Clinic PayOS configuration removed',
+                );
+
+                // Update payment status in database
+                await this.paymentRepository.findOneAndUpdate(
+                  { id: payment.id },
+                  {
+                    status: PaymentStatus.CANCELLED,
+                    failureReason: 'Clinic PayOS configuration removed',
+                    updatedAt: new Date(),
+                  },
+                );
+
+                result.canceledPayments++;
+              }
+            } catch (cancelError) {
+              const errorMsg = `Failed to cancel payment ${payment.orderCode}: ${
+                cancelError instanceof Error
+                  ? cancelError.message
+                  : 'Unknown error'
+              }`;
+              result.errors?.push(errorMsg);
+              console.error(errorMsg);
+            }
+          }
+        } finally {
+          this.encryptionService.secureCleanup(credentials);
+          payos = null;
+        }
+      }
+
+      // 4. Update existing payments to remove credential reference (to avoid foreign key constraint)
+      try {
+        await this.paymentRepository.findOneAndUpdate(
+          { credentialId: existingCredential.id },
+          { credentialId: null },
+        );
+        console.log(
+          `Updated payments to remove credential reference for clinic ${clinicId}`,
+        );
+      } catch (updateError) {
+        const errorMsg = `Failed to update payments: ${
+          updateError instanceof Error ? updateError.message : 'Unknown error'
+        }`;
+        result.errors?.push(errorMsg);
+        console.warn(errorMsg);
+        // Continue with deletion even if update fails
+      }
+
+      // 5. Delete the PayOS credentials
+      try {
+        await this.paymentConfigRepository.delete({
+          clinicId,
+          provider: PAYOS,
+        });
+        result.deletedCredentials = true;
+      } catch (deleteError) {
+        const errorMsg = `Failed to delete PayOS credentials: ${
+          deleteError instanceof Error ? deleteError.message : 'Unknown error'
+        }`;
+        result.errors?.push(errorMsg);
+        result.success = false;
+        throw new Error(errorMsg);
+      }
+
+      // 6. Log the removal action
+      console.log(
+        `PayOS configuration removed for clinic ${clinicId} by user ${currentUser.userId}. Credentials deleted: ${result.deletedCredentials}, Payments canceled: ${result.canceledPayments}`,
+      );
+
+      return result;
+    } catch (error) {
+      result.success = false;
+      result.message = 'Failed to remove PayOS configuration';
+
+      const errorMsg =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+      result.errors?.push(errorMsg);
+
+      console.error(
+        `Error removing PayOS configuration for clinic ${clinicId}:`,
+        error,
+      );
+      throw error;
     }
   }
 

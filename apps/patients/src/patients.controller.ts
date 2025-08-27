@@ -393,6 +393,12 @@ export class PatientsController {
     return result;
   }
 
+  @Get('appointment/:id/simplified')
+  async getSimplifiedAppointment(@Param('id') id: string) {
+    const result = await this.patientsService.getSimplifiedAppointment(id);
+    return result;
+  }
+
   @Put('cancel-appointment/:id')
   async updateAppointment(@Param('id') id: string) {
     const result = await this.patientsService.cancelAppointment(id);

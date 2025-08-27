@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { ActorType, AUTH_SERVICE } from '@app/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { PwdRecoveryEvent } from '@app/common/events/auth/password-recovery.event';
+import { SmsVerificationEvent } from '@app/common/events/communication/SmsVerificationEvent.event';
 
 @Injectable()
 export class OtpService {
@@ -33,6 +34,11 @@ export class OtpService {
         `Sending OTP ${code} to phone ${input.target} for ${input.purpose}`,
       );
       // TODO: Send SMS here
+      const smsVerificationEvent = new SmsVerificationEvent({
+        code: code,
+        phoneNumber: input.target
+      })
+      this.kafkaClient.emit('send-sms-verification-code', smsVerificationEvent)
     }
     return { success: true };
   }

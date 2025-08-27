@@ -33,7 +33,6 @@ export class ClinicController {
     @Body() addClinicDto: AddClinicDto,
     @CurrentUser() user: TokenPayload,
   ) {
-    console.log(user);
     return this.clinicService.addClinic(addClinicDto, user.userId);
   }
 

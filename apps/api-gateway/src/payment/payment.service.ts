@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { PAYMENT_SERVICE } from '@app/common';
+import { PATIENT_SERVICE, PAYMENT_SERVICE } from '@app/common';
 import { firstValueFrom } from 'rxjs';
 import {
   StorePayOSCredentialsDto,
@@ -13,10 +13,30 @@ import {
 import { WebhookType } from '@payos/node/lib/type';
 import { TokenPayload } from '@app/common';
 
+interface Payment {
+  id: string;
+  appointmentId?: string;
+  [key: string]: any;
+}
+
+interface PaymentResponse {
+  payments: Payment[];
+  total: number;
+  page: number;
+  limit: number;
+  [key: string]: any;
+}
+
+interface AppointmentResponse {
+  data?: any;
+  [key: string]: any;
+}
+
 @Injectable()
 export class PaymentService {
   constructor(
     @Inject(PAYMENT_SERVICE) private readonly paymentHttpService: HttpService,
+    @Inject(PATIENT_SERVICE) private readonly patientHttpService: HttpService,
   ) {}
 
   // ========================================
@@ -121,6 +141,25 @@ export class PaymentService {
   async deletePayOSCredentials(clinicId: string): Promise<unknown> {
     const response = await firstValueFrom(
       this.paymentHttpService.delete(`/payments/payos/credentials/${clinicId}`),
+    );
+    return response.data;
+  }
+
+  /**
+   * Remove - Remove entire PayOS payment configuration for a clinic
+   * This includes deleting credentials, canceling active payments, and cleanup
+   */
+  async removePayOSConfiguration(
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.delete(
+        `/payments/payos/configuration/${clinicId}`,
+        {
+          data: { currentUser },
+        },
+      ),
     );
     return response.data;
   }
@@ -279,12 +318,179 @@ export class PaymentService {
     clinicId: string,
     query: GetPaymentsDto,
   ): Promise<unknown> {
-    const response = await firstValueFrom(
-      this.paymentHttpService.get(`/payments/clinic/${clinicId}`, {
-        params: query,
-      }),
-    );
-    return response.data;
+    // Extract searchType for API Gateway filtering (don't pass to payment service)
+    const { searchType, ...paymentServiceQuery } = query;
+
+    // If searchType is 'doctor', remove search term from payment service query
+    // (we'll apply it as a second filter after fetching all payments)
+    if (searchType === 'doctor') {
+      const { search, ...queryWithoutSearch } = paymentServiceQuery;
+      console.log(
+        'Doctor search: fetching all payments, will filter by doctor name later',
+      );
+
+      const response = await firstValueFrom(
+        this.paymentHttpService.get(`/payments/clinic/${clinicId}`, {
+          params: queryWithoutSearch,
+        }),
+      );
+
+      const data = response.data as PaymentResponse;
+
+      // If there are payments, populate appointment details for each payment
+      if (
+        data.payments &&
+        Array.isArray(data.payments) &&
+        data.payments.length > 0
+      ) {
+        try {
+          // Fetch appointment details for all payments concurrently
+          const paymentsWithAppointments = await Promise.all(
+            data.payments.map(async (payment: Payment) => {
+              if (payment.appointmentId) {
+                try {
+                  // Use the patient HTTP service to get simplified appointment details
+                  const appointmentResponse = await firstValueFrom(
+                    this.patientHttpService.get(
+                      `/patient-service/appointment/${payment.appointmentId}/simplified`,
+                    ),
+                  );
+
+                  const appointmentData =
+                    appointmentResponse.data as AppointmentResponse;
+
+                  // Add appointment data to the payment object
+                  return {
+                    ...payment,
+                    appointment:
+                      (appointmentData.data as any) || appointmentData,
+                  };
+                } catch (error) {
+                  console.error(
+                    `Error fetching appointment ${payment.appointmentId}:`,
+                    error,
+                  );
+                  // Return payment without appointment data if there's an error
+                  return {
+                    ...payment,
+                    appointment: null,
+                  };
+                }
+              }
+              return payment;
+            }),
+          );
+
+          // Apply doctor name filtering using the search term
+          if (query.search && query.search.trim()) {
+            const searchTerm = query.search.trim().toLowerCase();
+            console.log('Filtering by doctor name:', searchTerm);
+
+            const filteredPayments = paymentsWithAppointments.filter(
+              (payment) => {
+                if (payment.appointment?.doctorName) {
+                  const doctorName =
+                    payment.appointment.doctorName.toLowerCase();
+                  return doctorName.includes(searchTerm);
+                }
+                return false;
+              },
+            );
+
+            console.log('Total payments:', paymentsWithAppointments.length);
+            console.log(
+              'Filtered payments by doctor name:',
+              filteredPayments.length,
+            );
+
+            return {
+              ...data,
+              payments: filteredPayments,
+              total: filteredPayments.length,
+            };
+          }
+
+          return {
+            ...data,
+            payments: paymentsWithAppointments,
+            total: paymentsWithAppointments.length,
+          };
+        } catch (error) {
+          console.error('Error populating appointment details:', error);
+          return data;
+        }
+      }
+
+      return data;
+    } else {
+      // Normal search behavior: pass search term to payment service
+      console.log('Normal search: passing search term to payment service');
+
+      const response = await firstValueFrom(
+        this.paymentHttpService.get(`/payments/clinic/${clinicId}`, {
+          params: paymentServiceQuery,
+        }),
+      );
+
+      const data = response.data as PaymentResponse;
+
+      // If there are payments, populate appointment details for each payment
+      if (
+        data.payments &&
+        Array.isArray(data.payments) &&
+        data.payments.length > 0
+      ) {
+        try {
+          // Fetch appointment details for all payments concurrently
+          const paymentsWithAppointments = await Promise.all(
+            data.payments.map(async (payment: Payment) => {
+              if (payment.appointmentId) {
+                try {
+                  // Use the patient HTTP service to get simplified appointment details
+                  const appointmentResponse = await firstValueFrom(
+                    this.patientHttpService.get(
+                      `/patient-service/appointment/${payment.appointmentId}/simplified`,
+                    ),
+                  );
+
+                  const appointmentData =
+                    appointmentResponse.data as AppointmentResponse;
+
+                  // Add appointment data to the payment object
+                  return {
+                    ...payment,
+                    appointment:
+                      (appointmentData.data as any) || appointmentData,
+                  };
+                } catch (error) {
+                  console.error(
+                    `Error fetching appointment ${payment.appointmentId}:`,
+                    error,
+                  );
+                  // Return payment without appointment data if there's an error
+                  return {
+                    ...payment,
+                    appointment: null,
+                  };
+                }
+              }
+              return payment;
+            }),
+          );
+
+          return {
+            ...data,
+            payments: paymentsWithAppointments,
+            total: data.total, // Keep original total from payment service
+          };
+        } catch (error) {
+          console.error('Error populating appointment details:', error);
+          return data;
+        }
+      }
+
+      return data;
+    }
   }
 
   /**
@@ -369,6 +575,27 @@ export class PaymentService {
     const response = await firstValueFrom(
       this.paymentHttpService.get(`/payments/clinic/${clinicId}/statistics`, {
         params: query,
+      }),
+    );
+    return response.data;
+  }
+
+  /**
+   * Read - Get comprehensive payment analytics for a clinic
+   */
+  async getPaymentAnalytics(
+    clinicId: string,
+    period: string,
+    customStartDate?: string,
+    customEndDate?: string,
+  ): Promise<unknown> {
+    const response = await firstValueFrom(
+      this.paymentHttpService.get(`/payments/clinic/${clinicId}/analytics`, {
+        params: {
+          period,
+          customStartDate,
+          customEndDate,
+        },
       }),
     );
     return response.data;
