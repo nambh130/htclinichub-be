@@ -70,7 +70,6 @@ export class ClinicService implements OnModuleInit {
 
   // Get by array of ids
   async getClinicByIds(ids: string[]): Promise<any> {
-    console.log({ ids });
     return firstValueFrom(
       this.clinicClient.send('get-clinics-by-ids', { ids }),
     );

@@ -91,10 +91,6 @@ export class DoctorService {
   }
 
   async getDoctorByClinic(clinicId: string): Promise<unknown> {
-    console.log(
-      'Calling staff service getDoctorByClinic with clinicId:',
-      clinicId,
-    );
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/doctor-by-clinic/${clinicId}`),
     );
@@ -109,7 +105,6 @@ export class DoctorService {
   }
 
   async getDoctorDetailsById(doctorId: string): Promise<StaffDetails> {
-    console.log('[DEBUG] doctorId truyền vào:', doctorId);
 
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/details/${doctorId}`),
@@ -385,8 +380,6 @@ export class DoctorService {
     doctorId: string,
     clinicId: string,
   ): Promise<{ doctorId: string; clinicId: string; examFee: number | null }> {
-    console.log('doctorId: ', doctorId);
-    console.log('clinicId: ', clinicId);
     const response = await firstValueFrom(
       this.staffService.get(`/staff/doctor/get-doctor-clinic-exam-fee`, {
         params: { doctorId, clinicId },

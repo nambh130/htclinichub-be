@@ -51,7 +51,6 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File,
     @Param('patientId') patientId: string,
   ): Promise<MediaDto> {
-    console.log("patientId ở Gate:", patientId)
     return this.mediaService.uploadAvatarPatient(
       'upload-image-patient',
       file,

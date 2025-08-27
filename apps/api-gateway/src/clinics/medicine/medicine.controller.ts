@@ -34,7 +34,6 @@ export class MedicineController {
     @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
-      console.log("dto:", dto)
       const result = await this.medicineService.createMedicine(dto, clinicId, currentUser);
       return result;
     } catch (error) {

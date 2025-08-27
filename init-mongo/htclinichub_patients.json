@@ -1,0 +1,98 @@
+[{
+  "_id": {
+    "$oid": "688f8a3162e04fce1884fd0e"
+  },
+  "isDeleted": false,
+  "patient_account_id": "f617d77f-4cd9-4938-8b79-a8a2bb0854ac",
+  "fullname": "Nguyễn Thị Hồng",
+  "relation": "Chính chủ",
+  "citizen_id": "079203001234",
+  "ethnicity": "Kinh",
+  "marital_status": "Đã kết hôn",
+  "address1": "Số 12, Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM",
+  "address2": "Chung cư An Bình, Quận Gò Vấp, TP.HCM",
+  "phone": "0912345678",
+  "gender": false,
+  "dOB": "1975-06-14T17:00:00.000Z",
+  "nation": "Viet Nam",
+  "work_address": "Công ty May Việt Thắng, Quận 12, TP.HCM",
+  "medical_history": {
+    "allergies": "Dị ứng hải sản",
+    "personal_history": "Tăng huyết áp",
+    "family_history": "Cha mắc bệnh tiểu đường"
+  },
+  "bloodGroup": "O+",
+  "createdBy": "f617d77f-4cd9-4938-8b79-a8a2bb0854ac",
+  "createdAt": {
+    "$date": "2025-08-03T16:11:29.241Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-03T16:11:29.241Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "688f8b4962e04fce1884fd3a"
+  },
+  "isDeleted": false,
+  "patient_account_id": "f617d77f-4cd9-4938-8b79-a8a2bb0854ac",
+  "fullname": "Trần Minh Quân",
+  "relation": "Con",
+  "citizen_id": "079203009876",
+  "health_insurance_id": "079203009876341",
+  "ethnicity": "Kinh",
+  "marital_status": "Độc thân",
+  "address1": "45 Trần Hưng Đạo, Phường Mỹ Long, TP. Long Xuyên, An Giang",
+  "address2": "KTX Đại học Bách Khoa, Quận 10, TP.HCM",
+  "phone": "0908123456",
+  "gender": true,
+  "dOB": "2005-09-09T17:00:00.000Z",
+  "nation": "Viet Nam",
+  "work_address": "Sinh viên",
+  "medical_history": {
+    "allergies": "Không",
+    "personal_history": "Không",
+    "family_history": "Không"
+  },
+  "bloodGroup": "O+",
+  "createdBy": "f617d77f-4cd9-4938-8b79-a8a2bb0854ac",
+  "createdAt": {
+    "$date": "2025-08-03T16:16:09.971Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-03T16:16:09.971Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "688f8ca362e04fce1884fdbb"
+  },
+  "isDeleted": false,
+  "patient_account_id": "10d4fa98-0e74-4260-be20-cea73a484cd7",
+  "fullname": "Lê Thị Hồng Nhung",
+  "relation": "Chính chủ",
+  "citizen_id": "026502003245",
+  "health_insurance_id": "084991120106123",
+  "ethnicity": "Kinh",
+  "marital_status": "Đã kết hôn",
+  "address1": "215 Lý Chính Thắng, Phường 7, Quận 3, TP.HCM",
+  "address2": "12/3 Lê Văn Sỹ, Phường 1, Tân Bình, TP.HCM",
+  "phone": "0934789123",
+  "gender": false,
+  "dOB": "1992-04-16T17:00:00.000Z",
+  "nation": "Viet Nam",
+  "work_address": "Công ty TNHH Tân Á Đại Thành, Quận Bình Thạnh, TP.HCM",
+  "medical_history": {
+    "allergies": "Không",
+    "personal_history": "Tiểu đường type 2",
+    "family_history": "Không"
+  },
+  "bloodGroup": "AB-",
+  "createdBy": "10d4fa98-0e74-4260-be20-cea73a484cd7",
+  "createdAt": {
+    "$date": "2025-08-03T16:21:55.350Z"
+  },
+  "updatedAt": {
+    "$date": "2025-08-03T16:21:55.350Z"
+  }
+}]

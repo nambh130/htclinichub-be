@@ -115,6 +115,22 @@ export class PaymentController {
   }
 
   /**
+   * Remove - Remove entire PayOS payment configuration for a clinic
+   * This includes deleting credentials, canceling active payments, and cleanup
+   */
+  @Delete('payos/configuration/:clinicId')
+  @UseGuards(JwtAuthGuard)
+  async removePayOSConfiguration(
+    @Param('clinicId') clinicId: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ): Promise<unknown> {
+    return await this.paymentService.removePayOSConfiguration(
+      clinicId,
+      currentUser,
+    );
+  }
+
+  /**
    * Test - Test PayOS credentials by creating and canceling a test payment
    */
   @Post('payos/credentials/test')
@@ -352,5 +368,27 @@ export class PaymentController {
     @Query() query: GetPaymentStatisticsDto,
   ): Promise<unknown> {
     return this.paymentService.getPaymentStatistics(clinicId, query);
+  }
+
+  /**
+   * Read - Get comprehensive payment analytics for a clinic
+   */
+  @Get('clinic/:clinicId/analytics')
+  @UseGuards(JwtAuthGuard)
+  async getPaymentAnalytics(
+    @Param('clinicId') clinicId: string,
+    @Query()
+    query: {
+      period: string;
+      customStartDate?: string;
+      customEndDate?: string;
+    },
+  ): Promise<unknown> {
+    return this.paymentService.getPaymentAnalytics(
+      clinicId,
+      query.period,
+      query.customStartDate,
+      query.customEndDate,
+    );
   }
 }

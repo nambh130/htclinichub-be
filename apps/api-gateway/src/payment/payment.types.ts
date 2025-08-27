@@ -146,6 +146,10 @@ export class GetPaymentsDto {
 
   @IsOptional()
   @IsString()
+  searchType?: 'all' | 'doctor' | 'payment';
+
+  @IsOptional()
+  @IsString()
   sortBy?: string;
 
   @IsOptional()
@@ -153,12 +157,10 @@ export class GetPaymentsDto {
   sortOrder?: string;
 
   @IsOptional()
-  @IsNumber()
-  page?: number;
+  page?: string;
 
   @IsOptional()
-  @IsNumber()
-  limit?: number;
+  limit?: string;
 }
 
 export class GetTransactionsDto {

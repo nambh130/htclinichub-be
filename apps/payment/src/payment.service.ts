@@ -15,6 +15,9 @@ import { TokenPayload } from '@app/common';
 import { PaymentConfig } from './entities/payment-config.entity';
 import { PaymentMethod, PaymentStatus } from './enums/payment-status.enum';
 import { setAudit } from '@app/common';
+import { PaymentAnalyticsService } from './payment-analytics.service';
+import { AnalyticsPeriod } from './dtos/payment-analytics.dto';
+import { PaymentAnalytics } from './types/payment-analytics.types';
 
 @Injectable()
 export class PaymentService {
@@ -28,6 +31,7 @@ export class PaymentService {
     private readonly transactionRepository: Repository<PaymentTransaction>,
     @InjectRepository(PaymentConfig)
     private readonly paymentConfigRepository: Repository<PaymentConfig>,
+    private readonly paymentAnalyticsService: PaymentAnalyticsService,
   ) {}
 
   // ========================================
@@ -119,6 +123,23 @@ export class PaymentService {
    */
   async deletePayOSCredentials(clinicId: string): Promise<void> {
     await this.payosService.deleteCredentials(clinicId);
+  }
+
+  /**
+   * Remove - Remove entire PayOS payment configuration for a clinic
+   * This includes deleting credentials, canceling active payments, and cleanup
+   */
+  async removePayOSConfiguration(
+    clinicId: string,
+    currentUser: TokenPayload,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deletedCredentials: boolean;
+    canceledPayments: number;
+    errors?: string[];
+  }> {
+    return this.payosService.removeConfiguration(clinicId, currentUser);
   }
 
   /**
@@ -358,6 +379,12 @@ export class PaymentService {
       queryBuilder.andWhere('payment.status = :status', { status: dto.status });
     }
 
+    if (dto.paymentMethod) {
+      queryBuilder.andWhere('payment.paymentMethod = :paymentMethod', {
+        paymentMethod: dto.paymentMethod,
+      });
+    }
+
     if (dto.startDate) {
       queryBuilder.andWhere('payment.createdAt >= :startDate', {
         startDate: new Date(dto.startDate),
@@ -384,7 +411,7 @@ export class PaymentService {
 
     if (dto.search) {
       queryBuilder.andWhere(
-        '(payment.orderCode ILIKE :search OR payment.providerPaymentId ILIKE :search OR payment.metadata::text ILIKE :search)',
+        '(payment."orderCode" ILIKE :search OR payment."providerPaymentId" ILIKE :search OR payment."appointmentId"::text ILIKE :search OR payment.metadata::text ILIKE :search)',
         { search: `%${dto.search}%` },
       );
     }
@@ -410,6 +437,12 @@ export class PaymentService {
     if (dto.status) {
       totalQueryBuilder.andWhere('payment.status = :status', {
         status: dto.status,
+      });
+    }
+
+    if (dto.paymentMethod) {
+      totalQueryBuilder.andWhere('payment.paymentMethod = :paymentMethod', {
+        paymentMethod: dto.paymentMethod,
       });
     }
 
@@ -439,7 +472,7 @@ export class PaymentService {
 
     if (dto.search) {
       totalQueryBuilder.andWhere(
-        '(payment.orderCode ILIKE :search OR payment.providerPaymentId ILIKE :search OR payment.metadata::text ILIKE :search)',
+        '(payment."orderCode" ILIKE :search OR payment."providerPaymentId" ILIKE :search OR payment."appointmentId"::text ILIKE :search OR payment.metadata::text ILIKE :search)',
         { search: `%${dto.search}%` },
       );
     }
@@ -799,5 +832,22 @@ export class PaymentService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Get comprehensive payment analytics for a clinic
+   */
+  async getPaymentAnalytics(
+    clinicId: string,
+    period: AnalyticsPeriod,
+    customStartDate?: Date,
+    customEndDate?: Date,
+  ): Promise<PaymentAnalytics> {
+    return this.paymentAnalyticsService.getPaymentAnalytics(
+      clinicId,
+      period,
+      customStartDate,
+      customEndDate,
+    );
   }
 }

@@ -19,6 +19,7 @@ import { WebhookType } from '@payos/node/lib/type';
 import { GetPaymentsDto } from './dtos/get-payments.dto';
 import { GetTransactionsDto } from './dtos/get-transactions.dto';
 import { GetPaymentStatisticsDto } from './dtos/get-statistics.dto';
+import { GetPaymentAnalyticsDto } from './dtos/payment-analytics.dto';
 import { TokenPayload } from '@app/common';
 
 @Controller('payments')
@@ -132,6 +133,27 @@ export class PaymentController {
   ): Promise<{ message: string }> {
     await this.paymentService.deletePayOSCredentials(clinicId);
     return { message: 'PayOS credentials deleted successfully' };
+  }
+
+  /**
+   * Remove - Remove entire PayOS payment configuration for a clinic
+   * This includes deleting credentials, canceling active payments, and cleanup
+   */
+  @Delete('payos/configuration/:clinicId')
+  async removePayOSConfiguration(
+    @Param('clinicId') clinicId: string,
+    @Body() payload: { currentUser: TokenPayload },
+  ): Promise<{
+    success: boolean;
+    message: string;
+    deletedCredentials: boolean;
+    canceledPayments: number;
+    errors?: string[];
+  }> {
+    return this.paymentService.removePayOSConfiguration(
+      clinicId,
+      payload.currentUser,
+    );
   }
 
   /**
@@ -361,5 +383,21 @@ export class PaymentController {
     @Query() dto: GetPaymentStatisticsDto,
   ) {
     return this.paymentService.getPaymentStatistics(clinicId, dto);
+  }
+
+  /**
+   * Read - Get comprehensive payment analytics for a clinic
+   */
+  @Get('clinic/:clinicId/analytics')
+  async getPaymentAnalytics(
+    @Param('clinicId') clinicId: string,
+    @Query() query: GetPaymentAnalyticsDto,
+  ) {
+    return this.paymentService.getPaymentAnalytics(
+      clinicId,
+      query.period,
+      query.customStartDate,
+      query.customEndDate,
+    );
   }
 }
