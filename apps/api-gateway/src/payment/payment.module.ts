@@ -6,7 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { httpClientConfig, HttpModules } from '@api-gateway/api/http.client';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { PAYMENT_CONSUMER_GROUP, PAYMENT_SERVICE } from '@app/common';
+import {
+  PATIENT_SERVICE,
+  PAYMENT_CONSUMER_GROUP,
+  PAYMENT_SERVICE,
+} from '@app/common';
 
 @Module({
   imports: [
@@ -16,6 +20,11 @@ import { PAYMENT_CONSUMER_GROUP, PAYMENT_SERVICE } from '@app/common';
         PAYMENT_SERVICE,
         'PAYMENT_SERVICE_HOST',
         'PAYMENT_SERVICE_PORT',
+      ),
+      httpClientConfig(
+        PATIENT_SERVICE,
+        'PATIENT_SERVICE_HOST',
+        'PATIENT_SERVICE_PORT',
       ),
     ]),
     ClientsModule.registerAsync([

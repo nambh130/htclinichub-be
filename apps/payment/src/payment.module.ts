@@ -8,6 +8,7 @@ import { EncryptionService } from './encryption/encryption.service';
 import { PayOSService } from './providers/payos/payos.service';
 import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
+import { PaymentAnalyticsService } from './payment-analytics.service';
 import Joi from 'joi';
 import { PostgresDatabaseModule } from '@app/common/databases/postgresql';
 import { LoggerModule } from '@app/common';
@@ -48,6 +49,7 @@ import { WebhookEventRepository } from './repositories/webhook-event.repository'
     EncryptionService,
     PayOSService,
     PaymentService,
+    PaymentAnalyticsService,
     PaymentRepository,
     PaymentConfigRepository,
     PaymentTransactionRepository,
@@ -58,6 +60,7 @@ import { WebhookEventRepository } from './repositories/webhook-event.repository'
     PayOSService,
     EncryptionService,
     PaymentService,
+    PaymentAnalyticsService,
     PaymentRepository,
     PaymentConfigRepository,
     PaymentTransactionRepository,

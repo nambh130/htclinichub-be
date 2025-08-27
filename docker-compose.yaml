@@ -80,6 +80,8 @@ services:
   mongo:
     image: mongo
     container_name: mongo
+    ports:
+      - '27017:27017'
     command: mongod --quiet --logpath /dev/null
     volumes:
       - mongo-data:/data/db
@@ -94,6 +96,8 @@ services:
   postgres:
     image: postgres
     container_name: postgres
+    ports:
+      - '5433:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: randompassword

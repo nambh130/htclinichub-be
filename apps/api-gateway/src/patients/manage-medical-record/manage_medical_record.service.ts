@@ -31,7 +31,6 @@ export class ManageMedicalRecordService {
           if (doctorId) {
             const doctorDetails =
               await this.doctorService.getDoctorDetailsById(doctorId);
-            console.log('[DEBUG] doctorDetails:', doctorDetails);
 
             record.doctorInfo = {
               doctorId: doctorId,

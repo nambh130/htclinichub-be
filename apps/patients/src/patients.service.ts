@@ -129,9 +129,7 @@ export class PatientsService {
     };
 
     try {
-      console.log('Creating patient with data:', patientData);
       const patient = await this.patientsRepository.createPatient(patientData);
-      console.log('Patient saved:', patient);
       return patient;
     } catch (error) {
       console.error('Error saved patient:', error);
@@ -652,10 +650,6 @@ export class PatientsService {
 
   async assignToClinic(patient_account_id: string, clinicId: string) {
     try {
-      console.log('Assigning patient to clinic:', {
-        patient_account_id,
-        clinicId,
-      });
       // Kiểm tra patient account có tồn tại không
       const patientAccount = await this.patientAccountRepo.repo.findOne({
         where: { id: patient_account_id },
@@ -803,7 +797,6 @@ export class PatientsService {
     return response.data; // data từ staff service trả về
   }
   async updateShiftToFullyBook(shiftId: string) {
-    console.log(shiftId);
     const url = `http://${this.STAFF_HOST}:${this.STAFF_PORT}/manage-doctor-schedule/doctor/shift/${shiftId}/status/fully-booked`;
     const response = await firstValueFrom(this.httpService.put(url));
     return response.data; // data từ staff service trả về
@@ -910,7 +903,6 @@ export class PatientsService {
             ),
           )
             .then((res) => {
-              console.log('Profile Response:', res.data);
               return res.data;
             })
             .catch((err) => {
@@ -983,6 +975,45 @@ export class PatientsService {
       slot: slotRes,
       profile: profileRes,
     };
+  }
+
+  /**
+   * Get simplified appointment details - only returns appointment ID, doctor ID, and doctor name
+   */
+  async getSimplifiedAppointment(appointmentId: string) {
+    const appointment = await this.appointmentRepository.findOne({
+      id: appointmentId,
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Không tìm thấy appointment');
+    }
+
+    try {
+      // Fetch only doctor details to get the name
+      const doctorResponse = await firstValueFrom(
+        this.httpService.get(
+          `http://${this.STAFF_HOST}:${this.STAFF_PORT}/staff/doctor/details/${appointment.doctor_id}`,
+        ),
+      );
+
+      const doctorData = doctorResponse.data;
+
+      return {
+        appointmentId: appointment.id,
+        doctorId: appointment.doctor_id,
+        doctorName:
+          doctorData?.account?.staffInfo?.full_name || 'Unknown Doctor',
+      };
+    } catch (error) {
+      console.error('Error fetching doctor details:', error);
+      // Return appointment data even if doctor details fail
+      return {
+        appointmentId: appointment.id,
+        doctorId: appointment.doctor_id,
+        doctorName: 'Unknown Doctor',
+      };
+    }
   }
 
   async cancelAppointment(appoinmentId: string) {

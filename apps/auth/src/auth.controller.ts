@@ -118,7 +118,6 @@ export class AuthController {
       oldPassword: dto.oldPassword,
       userId: user.userId
     })
-    console.log(result)
     return result
   }
 
@@ -230,7 +229,6 @@ export class AuthController {
       throw new BadRequestException('Password does not match retype password');
     }
     const response = await this.authService.invitationSignup(dto);
-    console.log('check 3', response);
     return response;
   }
 
@@ -325,7 +323,6 @@ export class AuthController {
 
     // Step 5: Set new refresh token cookie
     const expireDate = this.configService.get('REFRESH_TOKEN_EXPIRES');
-    console.log(expireDate);
     this.setAuthCookies(res, accessToken, newRefreshToken);
 
     return {
@@ -445,7 +442,6 @@ export class AuthController {
   })
   @Get('test-clinic')
   async getClinics(@Req() req: Request) {
-    console.log('header: ', req.user);
     return await this.clinicService.getClinics();
   }
 
@@ -465,7 +461,6 @@ export class AuthController {
     } catch (e) {
       if (e.code === '23505') {
         // Postgres unique violation
-        console.log(e);
         throw new BadRequestException({ message: 'Email already exists' });
       }
       throw e;
@@ -485,8 +480,6 @@ export class AuthController {
       Number(this.configService.get('REFRESH_TOKEN_EXPIRES')) ||
       7 * 24 * 60 * 60 * 1000;
 
-    console.log(typeof accessTokenMaxAge, accessTokenMaxAge);
-    console.log(typeof refreshTokenExpiryMs, refreshTokenExpiryMs);
     res.cookie('Authentication', accessToken, {
       httpOnly: true,
       secure: false,

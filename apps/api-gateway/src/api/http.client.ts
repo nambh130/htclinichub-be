@@ -24,7 +24,7 @@ export class HttpModules {
         const axiosInstance: AxiosInstance = axios.create({
           baseURL: `http://${host}:${port}`,
           timeout: 10000,
-          withCredentials: true
+          withCredentials: true,
         });
 
         // Return HttpService instance with the configured axios

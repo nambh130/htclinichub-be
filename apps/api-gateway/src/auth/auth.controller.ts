@@ -83,7 +83,6 @@ export class AuthController {
 
     if (user.actorType === ActorEnum.EMPLOYEE) {
       const employeeInfo = await this.employeeService.getEmployeeAccountById(user.id) as any
-      console.log(employeeInfo)
       const { currentClinics, adminOf, ...rest } = user;
 
       const clinicData = await this.clinicService.getClinicById(
@@ -130,7 +129,6 @@ export class AuthController {
       invitationDto.clinic,
       'id',
     );
-    console.log('data: ', clinicData);
     if (!clinicData) {
       throw new BadRequestException({
         ERR_CODE: 'CLINIC_NOT_FOUND',
@@ -165,7 +163,6 @@ export class AuthController {
     if (check.clinicId) {
       try {
         const { clinicId, ...rest } = check;
-        console.log(rest);
         const clinic = await this.clinicService.getClinicById(clinicId, '');
         if (clinic) {
           return {

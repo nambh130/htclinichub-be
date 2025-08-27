@@ -304,7 +304,6 @@ export class DoctorService extends BaseService {
       },
       ['clinics', 'clinics.clinic', 'clinics.doctor'], // không cần 'clinics.doctor' nếu không dùng đến
     );
-    console.log(doctor);
 
     if (!doctor) {
       throw new NotFoundException('Doctor not found');
@@ -324,7 +323,6 @@ export class DoctorService extends BaseService {
           ownerId: clinicMap.clinic?.ownerId ?? '',
         },
       }));
-    console.log(clinicLinks);
 
     return clinicLinks;
   }
@@ -480,8 +478,6 @@ export class DoctorService extends BaseService {
   }
 
   async getStaffInfoByDoctorId(doctorId: string): Promise<unknown> {
-    console.log('[DEBUG] doctorId truyền vào Doctor Service:', doctorId);
-
     try {
       const doctor = await this.doctorRepository.findOne(
         {
@@ -492,8 +488,6 @@ export class DoctorService extends BaseService {
         },
         ['clinics', 'clinics.clinic', 'services', 'invitations'],
       );
-
-      console.log('[DEBUG] doctor found:', doctor.email);
 
       if (!doctor) {
         throw new NotFoundException(`Doctor with ID ${doctorId} not found`);
@@ -510,7 +504,6 @@ export class DoctorService extends BaseService {
       );
 
       const profile = toDoctorProfile(doctor, staffInfo);
-      console.log('[DEBUG] doctor profile:', profile);
       return profile;
     } catch (error) {
       if (
@@ -737,17 +730,10 @@ export class DoctorService extends BaseService {
   }
 
   getDoctorsByIds(data: { ids: number[] }) {
-    console.log(
-      'This is a mock response from Doctor Service, received IDs:',
-      data.ids,
-    );
-
     const formatData = data.ids.map((id) => ({
       name: `Doctor ${id}`,
       email: `doctor${id}@example.com`,
     }));
-
-    console.log('Formatted doctor mock data:', formatData);
 
     return formatData;
   }
@@ -1245,7 +1231,6 @@ export class DoctorService extends BaseService {
   async getDoctorAccountById(
     id: string,
   ): Promise<{ id: string; email: string; clinics: any[] }> {
-    console.log('Fetching doctor account by ID:', id);
     const doctor = await this.doctorRepository.findOne(
       {
         id,
@@ -1255,7 +1240,6 @@ export class DoctorService extends BaseService {
       },
       ['clinics', 'clinics.clinic'],
     );
-    console.log('Doctor found:', doctor);
     if (!doctor) {
       throw new Error('Doctor not found');
     }
@@ -1390,9 +1374,7 @@ export class DoctorService extends BaseService {
       }
 
       // Remove the assignment
-      // await this.doctorClinicRepo.deleteLink(assignment.id);
-      assignment.status = DoctorClinicStatus.BLOCKED;
-      await this.doctorClinicRepo.save(assignment);
+      await this.doctorClinicRepo.deleteLink(assignment.id);
 
       return {
         message: `Doctor ${doctorId} successfully removed from clinic ${clinicId}`,

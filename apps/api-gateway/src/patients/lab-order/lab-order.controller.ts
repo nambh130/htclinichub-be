@@ -100,7 +100,6 @@ export class LabOrderController {
     @Body() body: { orderItemId: string },
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    console.log(body);
     const { orderItemId } = body;
     if (!resultFile) {
       throw new BadRequestException('No file uploaded');
@@ -134,7 +133,6 @@ export class LabOrderController {
   ) {
     const { orderItemId, accept, description, conclusion, existingImages } =
       req.body;
-    console.log('existingImages: ', existingImages);
 
     let parsedExistingImages: { id: string; url: string }[] = [];
     try {
@@ -145,11 +143,6 @@ export class LabOrderController {
     } catch (e) {
       parsedExistingImages = [];
     }
-    console.log(
-      'check images 11: ',
-      parsedExistingImages,
-      parsedExistingImages?.[0],
-    );
 
     const payload: CreateImagingTestResultDto = {
       orderItemId,
