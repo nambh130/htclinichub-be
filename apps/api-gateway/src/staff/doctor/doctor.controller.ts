@@ -458,7 +458,6 @@ export class DoctorController {
   }
 
   @Get('get-doctor-clinic-exam-fee/:doctorId/:clinicId')
-  @UseGuards(JwtAuthGuard)
   async getDoctorClinicExamFee(
     @Param('doctorId') doctorId: string,
     @Param('clinicId') clinicId: string,

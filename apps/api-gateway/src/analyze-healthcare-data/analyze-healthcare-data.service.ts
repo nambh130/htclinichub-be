@@ -90,7 +90,7 @@ export class AnalyzeHealthcareDataService {
     }
   }
 
-  async vitalInMRId(mRId: String, currentUser: TokenPayload) {
+  async vitalInMRId(mRId: String) {
     try {
       const result = await firstValueFrom(
         this.httpService.get(`/analyze-healthcare/vital-in-mRId/${mRId}`),

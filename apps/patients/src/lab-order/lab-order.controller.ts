@@ -60,7 +60,6 @@ export class LabOrderController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async getLabOrderByReportId(@Query() query: GetOrdersByRecordDto) {
     return this.labOrderService.getLabOrdersByReportId({
       medicalReportId: query.recordId,

@@ -25,7 +25,6 @@ export class MediaController {
   }
 
   @Get('get-avatar-patient/:patientId')
-  @UseGuards(JwtAuthGuard)
   getAvatarPatient(@Param('patientId') patientId: string): Promise<unknown> {
     return this.mediaService.getAvatarPatient(patientId);
   }
