@@ -179,6 +179,7 @@ export class LabTestService {
     try {
       await this.quantitativeTestRepo.findOne({
         name: { $regex: `^${testName}$`, $options: 'i' },
+        clinicId: test.clinicId,
         isDeleted: false,
       });
       checkExists = true;
