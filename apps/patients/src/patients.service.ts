@@ -612,11 +612,11 @@ export class PatientsService {
       patient_account_id: account_id,
     });
 
-    if (!patients || patients.length === 0) {
-      throw new NotFoundException(
-        `No patient records found for account ID ${account_id}`,
-      );
-    }
+    //if (!patients || patients.length === 0) {
+    //  throw new NotFoundException(
+    //    `No patient records found for account ID ${account_id}`,
+    //  );
+    //}
 
     return patients.map((patient) => ({
       _id: patient._id,
