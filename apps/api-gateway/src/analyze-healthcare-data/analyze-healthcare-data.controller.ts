@@ -101,14 +101,12 @@ export class AnalyzeHealthcareDataController {
   }
 
   @Get('/vital-in-mRId/:mRId')
-  @UseGuards(JwtAuthGuard)
   async vitalInMRId(
     @Param('mRId') mRId: String,
-    @CurrentUser() user: TokenPayload,
   ) {
     try {
       const analyzeHealthcareData =
-        await this.analyzeHealthcareDataService.vitalInMRId(mRId, user);
+        await this.analyzeHealthcareDataService.vitalInMRId(mRId);
       return analyzeHealthcareData;
     } catch (error) {
       console.error('Error input Vital:', error);

@@ -475,7 +475,6 @@ export class PatientsController {
   }
 
   @Get('get-appointment/:appoinmentId')
-  @UseGuards(JwtAuthGuard)
   async getAppointment(@Param('appoinmentId') appoinmentId: string) {
     try {
       const result = await this.appointmentService.getAppointment(appoinmentId);
@@ -554,16 +553,13 @@ export class PatientsController {
   }
 
   @Get('/get-detail-medical-record/:mRid')
-  @UseGuards(JwtAuthGuard)
   async getDetailMedicalRecordsBymRId(
     @Param('mRid') mRid: string,
-    @CurrentUser() user: TokenPayload,
   ) {
     try {
       const patient =
         await this.manageMedicalRecordService.getDetailMedicalRecordsBymRId(
           mRid,
-          user,
         );
       return patient;
     } catch (error) {
@@ -571,6 +567,7 @@ export class PatientsController {
       throw error;
     }
   }
+
   @Get('/search-icd')
   @UseGuards(JwtAuthGuard)
   async searchICD(
@@ -631,7 +628,6 @@ export class PatientsController {
 
   //prescription_detail
   @Get('/get-prescriptions-by-mRId/:mRId')
-  @UseGuards(JwtAuthGuard)
   async getPrescriptionsByMRId(@Param('mRId') mRId: string) {
     try {
       const result =

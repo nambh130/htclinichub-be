@@ -74,11 +74,9 @@ export class MedicineController {
   }
 
   @Get('/:clinicId/medicine-info/:medicineId')
-  @UseGuards(JwtAuthGuard)
   async medicineInfo(
     @Param('clinicId') clinicId: string,
     @Param('medicineId') medicineId: string,
-    @CurrentUser() currentUser: TokenPayload,
   ) {
     try {
       const medicine = await this.medicineService.medicineInfo(clinicId, medicineId);

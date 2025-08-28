@@ -83,7 +83,7 @@ export class Patient extends MongoAbstractDocument {
 
   @Prop({
     type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Không rõ'],
     default: 'O+',
   })
   bloodGroup: string;

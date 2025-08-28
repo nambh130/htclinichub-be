@@ -60,7 +60,7 @@ export class ManageMedicalRecordService {
     }
   }
 
-  async getDetailMedicalRecordsBymRId(mRid: string, currentUser: TokenPayload) {
+  async getDetailMedicalRecordsBymRId(mRid: string) {
     try {
       const response = await firstValueFrom(
         this.httpService.get(
@@ -164,6 +164,68 @@ export class ManageMedicalRecordService {
         ),
       );
       return response.data;
+    } catch (error) {
+      console.error(
+        'Error retrieving medical records:',
+        error?.response?.data || error,
+      );
+      throw error;
+    }
+  }
+
+  async getDetailMedicalRecordsQRBymRId(mRid: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `/manage-medical-record/get-detail-medical-record-qr/${mRid}`,
+        ),
+      );
+
+      const record = response.data;
+
+      // ===== Doctor Info đơn giản =====
+      let doctorInfo: {
+        id: string;
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+      } | null = null;
+
+      if (record?.doctor_id) {
+        const doctorDetails = await this.doctorService.getDoctorDetailsById(
+          record.doctor_id,
+        );
+        const account = doctorDetails?.account;
+
+        doctorInfo = {
+          id: record.doctor_id,
+          name: account?.staffInfo?.full_name || null,
+          email: account?.email || null,
+          phone: account?.staffInfo?.phone || null,
+        };
+      }
+
+      // ===== Kết quả chi tiết cho 1 lần khám =====
+      return {
+        _id: record._id,
+        patient_id: record.patient_id,
+        patient_name: record.patient_name,
+        gender: record.gender,
+        dOB: record.dOB,
+        appointmentId: record.appointment_id,
+        bloodGroup: record.bloodGroup,
+        symptoms: record.symptoms,
+        treatmentDirection: record.treatmentDirection,
+        icd: {
+          code: record.icd?.code,
+          name: record.icd?.name,
+        },
+        diagnosis: record.diagnosis,
+        next_appoint: record.next_appoint,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+        doctorInfo,
+      };
     } catch (error) {
       console.error(
         'Error retrieving medical records:',

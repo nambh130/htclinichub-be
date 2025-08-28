@@ -320,7 +320,6 @@ export class PaymentController {
    * Read - Get ALL payments for a specific clinic and appointment
    */
   @Get('clinic/:clinicId/appointment/:appointmentId/all')
-  @UseGuards(JwtAuthGuard)
   async getAllPaymentsByAppointmentId(
     @Param('clinicId') clinicId: string,
     @Param('appointmentId') appointmentId: string,
