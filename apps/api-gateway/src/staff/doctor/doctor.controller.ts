@@ -109,7 +109,6 @@ export class DoctorController {
   }
 
   @Get('details/:id')
-  @UseGuards(JwtAuthGuard)
   async getDoctorDetailsById(@Param('id') doctorId: string) {
     return await this.doctorService.getDoctorDetailsById(doctorId);
   }

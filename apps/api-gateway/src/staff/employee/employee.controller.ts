@@ -64,7 +64,6 @@ export class EmployeeController {
   }
 
   @Get('details/:id')
-  @UseGuards(JwtAuthGuard)
   async getEmployeeDetailsById(@Param('id') employeeId: string) {
     return await this.employeeService.getEmployeeDetailsById(employeeId);
   }

@@ -70,7 +70,6 @@ export class LabOrderController {
   }
 
   @Get('by-clinic')
-  @UseGuards(JwtAuthGuard)
   async getLabOrderByClinic(@Query() query: GetOrdersByClinicDto) {
     return this.labOrderService.getLabOrderItemsForClinic({
       labOrder: query.labOrderBarcode,
@@ -85,7 +84,6 @@ export class LabOrderController {
   }
 
   @Get('/item/:id')
-  @UseGuards(JwtAuthGuard)
   async getOrderItemById(@Param('id') id: string) {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid id format');
@@ -94,7 +92,6 @@ export class LabOrderController {
   }
 
   @Get('/:id/quantitative-result')
-  @UseGuards(JwtAuthGuard)
   async getManyQuantResultByOrderItems(@Param('id') orderId: string) {
     if (!isValidObjectId(orderId)) {
       throw new BadRequestException('Invalid order id!');

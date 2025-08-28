@@ -56,12 +56,10 @@ export class ClinicController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   async getClinicById(
-    @CurrentUser() user: TokenPayload,
     @Param('id') id: string,
   ): Promise<ClinicDto> {
-    return this.clinicService.getClinicById(id, user.userId);
+    return this.clinicService.getClinicById(id, "123");
   }
 
   @Put(':id')

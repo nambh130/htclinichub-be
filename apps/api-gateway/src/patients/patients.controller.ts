@@ -118,7 +118,6 @@ export class PatientsController {
   }
 
   @Get('/get-patient-by-id/:id')
-  @UseGuards(JwtAuthGuard)
   async getPatientById(
     @Param('id') id: string,
     @CurrentUser() user: TokenPayload,
