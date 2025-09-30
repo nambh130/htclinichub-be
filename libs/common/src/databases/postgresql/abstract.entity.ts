@@ -1,12 +1,11 @@
+import { ActorType } from '@app/common';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   Column,
+  DeleteDateColumn,
 } from 'typeorm';
-
-// Define allowed actor types
-export type ActorType = 'doctor' | 'employee' | 'patient';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export abstract class PostgresAbstractEntity<T> {
@@ -24,7 +23,7 @@ export abstract class PostgresAbstractEntity<T> {
 
   @Column({
     type: 'enum',
-    enum: ['doctor', 'employee', 'patient'],
+    enum: ['doctor', 'employee', 'patient', 'admin'],
     nullable: true,
   })
   createdByType: ActorType;
@@ -34,8 +33,21 @@ export abstract class PostgresAbstractEntity<T> {
 
   @Column({
     type: 'enum',
-    enum: ['doctor', 'employee', 'patient'],
+    enum: ['doctor', 'employee', 'patient', 'admin'],
     nullable: true,
   })
   updatedByType: ActorType;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt?: Date;
+
+  @Column({ nullable: true })
+  deletedById?: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['doctor', 'employee', 'patient'],
+    nullable: true,
+  })
+  deletedByType?: ActorType;
 }

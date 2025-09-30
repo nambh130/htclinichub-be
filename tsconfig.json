@@ -13,17 +13,46 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
     "noImplicitAny": false,
+    "noImplicitReturns": true,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@api-gateway/*": [
+        "apps/api-gateway/src/*"
+      ],
       "@app/common": [
         "libs/common/src"
       ],
       "@app/common/*": [
         "libs/common/src/*"
+      ],
+      "@auth-gw/*": [
+        "apps/api-gateway/src/auth/*"
+      ],
+      "@auth/*": [
+        "apps/auth/src/*"
+      ],
+      "@clinics-gw/*": [
+        "apps/api-gateway/src/clinics/*"
+      ],
+      "@clinics/*": [
+        "apps/clinics/src/*"
+      ],
+      "@media-gw/*": [
+        "apps/api-gateway/src/media/*"
+      ],
+      "@media/*": [
+        "apps/media/src/*"
+      ],
+      "@staff-gw/*": [
+        "apps/api-gateway/src/staff/*"
+      ],
+      "@staff/*": [
+        "apps/staff/src/*"
       ]
     }
   }

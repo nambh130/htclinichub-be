@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, Matches } from "class-validator";
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class VerifyOtpDto {
   @IsString()
@@ -6,7 +6,5 @@ export class VerifyOtpDto {
 
   @IsNotEmpty()
   @IsString()
-  otp: string
+  otp: string;
 }
-
-

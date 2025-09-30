@@ -4,56 +4,59 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  Unique,
 } from 'typeorm';
-import { UserClinicLink } from './user-clinics-links.entity';
-import { PostgresAbstractEntity } from '@app/common';
+import { ActorType, PostgresAbstractEntity } from '@app/common';
 import { Clinic } from '../../clinics/models/clinic.entity';
 import { Role } from '../../roles/models/role.entity';
-import { Exclude } from 'class-transformer';
+import {
+  AccountStatus,
+  AccountStatusType,
+} from '@app/common/enum/account-type.enum';
 
 export enum ActorEnum {
-  DOCTOR = "doctor",
-  EMPLOYEE = "employee",
-  PATIENT = "patient"
+  DOCTOR = 'doctor',
+  EMPLOYEE = 'employee',
+  PATIENT = 'patient',
+  ADMIN = 'admin',
 }
 
-export type ActorType = "doctor" | "employee" | "patient"
-
-@Entity({ name: 'clinic_users' })
-export class ClinicUser extends PostgresAbstractEntity<ClinicUser> {
-  constructor(user?: Partial<ClinicUser>) {
+@Entity({ name: 'users' })
+@Unique(['email', 'actorType'])
+export class User extends PostgresAbstractEntity<User> {
+  constructor(user?: Partial<User>) {
     super();
     if (user) Object.assign(this, user);
   }
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Column({ name: "actor_type",
-    type: 'enum',
-    enum: ActorEnum
-  })
-  actorType: ActorType
+  @Column({ name: 'actor_type', type: 'enum', enum: ActorEnum })
+  actorType: ActorType;
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
 
+  @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.ACTIVE })
+  status: AccountStatusType;
+
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
-    joinColumn: {name: 'user_id', referencedColumnName: 'id'},
-    inverseJoinColumn: {name: 'permission_id', referencedColumnName: 'id'},
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   roles: Role[];
 
   @OneToMany(() => Clinic, (clinic) => clinic.owner)
-  clinics: Clinic[];
+  ownerOf: Clinic[];
 
-  @ManyToMany(() => Clinic, (clinic) => clinic.owner, { cascade: true })
+  @ManyToMany(() => Clinic, (clinic) => clinic.users, { cascade: true })
   @JoinTable({
     name: 'user_clinics',
-    joinColumn: {name: 'user_id', referencedColumnName: 'id'},
-    inverseJoinColumn: {name: 'clinic_id', referencedColumnName: 'id'},
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'clinic_id', referencedColumnName: 'id' },
   })
-  currentClinics: Clinic[];
+  clinics: Clinic[];
 }

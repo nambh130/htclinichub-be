@@ -8,25 +8,31 @@ import { ClinicUserRepository } from '../clinic-users/clinic-users.repository';
 export class ClinicsService {
   constructor(
     private readonly clinicRepository: ClinicRepository,
-    private readonly clinicUserRepository: ClinicUserRepository
-  ) { }
+    private readonly clinicUserRepository: ClinicUserRepository,
+  ) {}
 
   async createClinic(createClinicDto: CreateClinicDto): Promise<Clinic> {
-    try {
-      const owner = await this.clinicUserRepository.findOne(
-        { id: createClinicDto.owner },
-      );
-      const newClinic = new Clinic({
-        ...createClinicDto,
-        owner
-      });
-      return await this.clinicRepository.create(newClinic);
-    } catch (error) {
-      throw new NotFoundException('Clinic owner not found');
+    const newClinic: Partial<Clinic> = { id: createClinicDto.id };
+
+    if (createClinicDto.ownerId) {
+      try {
+        const owner = await this.clinicUserRepository.findOne({
+          id: createClinicDto.ownerId,
+        });
+        newClinic.owner = owner;
+      } catch (error) {
+        throw new NotFoundException('Clinic owner not found');
+      }
     }
+
+    return await this.clinicRepository.create(new Clinic(newClinic));
   }
 
   async getClinics() {
     return await this.clinicRepository.findAll();
+  }
+
+  async getClinicById(id: string) {
+    return await this.clinicRepository.findOne({ id });
   }
 }

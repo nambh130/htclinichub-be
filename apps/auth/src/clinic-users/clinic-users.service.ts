@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ClinicUserRepository } from './clinic-users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ClinicUser } from './models/clinic-user.entity';
+import { User } from './models/clinic-user.entity';
 import * as bcrypt from 'bcrypt';
 import { ClinicRepository } from '../clinics/clinics.repository';
 import { RoleRepository } from '../roles/roles.repository';
+import { In } from 'typeorm';
 import { ActorType } from '@app/common';
-import { UserClinicLink } from './models/user-clinics-links.entity';
 
 @Injectable()
 export class ClinicUsersService {
   constructor(
     private readonly userRepository: ClinicUserRepository,
     private readonly clinicRepository: ClinicRepository,
-    private readonly roleRepository: RoleRepository
+    private readonly roleRepository: RoleRepository,
   ) { }
 
   async createUser(createUserDto: CreateUserDto) {
@@ -21,20 +21,26 @@ export class ClinicUsersService {
     const saltRounds = 12;
     const hash = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    const newUser = new ClinicUser({
+    const newUser = new User({
       ...createUserDto,
-      actorType: actorType as ActorType,
-      password: hash
-    })
+      actorType: actorType,
+      password: hash,
+    });
 
     if (roleId) {
       const role = await this.roleRepository.findOne({ id: roleId });
-      newUser.roles = [role]
+      newUser.roles = [role];
     }
     // Add clinic to user_clinic_links table
     if (clinicId) {
       const clinic = await this.clinicRepository.findOne({ id: clinicId });
-      newUser.currentClinics = [clinic]
+      newUser.clinics = [clinic];
+    }
+    if (!newUser.roles) {
+      throw new BadRequestException({
+        ERR_CODE: 'MISSING_FIELDS',
+        message: 'Role does not exists',
+      });
     }
 
     return await this.userRepository.create(newUser);
@@ -45,11 +51,70 @@ export class ClinicUsersService {
       { email },
       {
         roles: {
-          permissions: true
+          permissions: true,
         },
-        clinics: true,
-        currentClinics: true
-      }
+        clinics: {
+          owner: true,
+        },
+        ownerOf: true,
+      },
     );
+  }
+
+  async findUserByIds(ids: string[]) {
+    return await this.userRepository.find({ id: In(ids) });
+  }
+
+  async find(query: Partial<User>) {
+    return await this.userRepository.findOne(query, {
+      roles: {
+        permissions: true,
+      },
+      clinics: {
+        owner: true,
+      },
+      ownerOf: true,
+    });
+  }
+
+  async findByEmailAndClinic(
+    email: string,
+    clinicId: string,
+    actorType: ActorType,
+  ) {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .leftJoin('user.clinics', 'clinic')
+      .where('user.email = :email', { email })
+      .andWhere('clinic.id = :clinicId', { clinicId })
+      .andWhere('user.actor_type = :actorType', { actorType })
+      .getOne();
+  }
+
+  async updateUser(email: string, updateData: Partial<User>): Promise<User> {
+    return await this.userRepository.create(new User(updateData));
+  }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<User> {
+    const user = await this.userRepository.findOne({ id: userId });
+
+    if (!user) {
+      throw new BadRequestException({ ERR_CODE: 'USER_NOT_FOUND', message: 'User does not exist' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException({ ERR_CODE: 'INVALID_PASSWORD', message: 'Old password is incorrect' });
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+    return await this.userRepository.update(user, { password: hashedPassword });
+  }
+
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 12;
+    const hash = await bcrypt.hash(password, saltRounds);
+    return hash;
   }
 }

@@ -18,7 +18,7 @@ spec:
         - image: reservations:v1.0.0
           name: reservations
           env:
-            - name: MONGODB_URI
+            - name: POSTGRES_URI
               valueFrom:
                 secretKeyRef:
                   name: mongodb

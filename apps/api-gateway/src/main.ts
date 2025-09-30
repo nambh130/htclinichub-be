@@ -16,6 +16,15 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   app.useLogger(app.get(Logger));
 
+  // Read the comma-separated string from the .env file
+  const allowedOrigins = process.env.CORS_ORIGINS;
+  const originArray = allowedOrigins ? allowedOrigins.split(',') : [];
+  app.enableCors({
+    origin: originArray,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   // Global route prefix
   app.setGlobalPrefix('api');
 
@@ -45,7 +54,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // Start the app
-  const port = configService.get<number>('PORT') || 3000;
+  const port = configService.get<number>('API_GATEWAY_PORT');
   await app.listen(port);
   app
     .get(Logger)

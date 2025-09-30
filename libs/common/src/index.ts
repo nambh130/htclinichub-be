@@ -8,3 +8,5 @@ export * from './models';
 export * from './events';
 export * from './filters';
 export * from './utils';
+export * from './interfaces';
+export * from './types';

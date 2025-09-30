@@ -1,81 +1,125 @@
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - '2181:2181'
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: WARN
+      ZOOKEEPER_SESSION_TIMEOUT_MS: 18000
+      ZOOKEEPER_MAX_SESSION_TIMEOUT: 60000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
     healthcheck:
-      test: ['CMD', 'echo', 'ruok', '|', 'nc', 'localhost', '2181']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      test: ['CMD', 'nc', '-z', 'localhost', '2181']
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    ports:
-      - '9092:9092'
+    hostname: kafka
+    container_name: kafka
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_ENABLE_KRAFT: 'false'
+
+      # Connection and session management
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 18000
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 6000
+
+      # Graceful shutdown settings
+      KAFKA_CONTROLLED_SHUTDOWN_ENABLE: 'true'
+      KAFKA_CONTROLLED_SHUTDOWN_MAX_RETRIES: 3
+      KAFKA_CONTROLLED_SHUTDOWN_RETRY_BACKOFF_MS: 5000
+
+      # Log settings to prevent disk issues
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+      KAFKA_LOG_CLEANUP_POLICY: delete
+
+      # JMX monitoring
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+
+      # Auto-create topics (optional, useful for development)
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     depends_on:
       zookeeper:
         condition: service_healthy
     healthcheck:
       test: ['CMD', 'nc', '-z', 'localhost', '9092']
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    # Ensure proper shutdown order
+    stop_grace_period: 30s
 
   mongo:
     image: mongo
+    container_name: mongo
     ports:
       - '27017:27017'
     command: mongod --quiet --logpath /dev/null
+    volumes:
+      - mongo-data:/data/db
+      - ./init-mongo/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   postgres:
     image: postgres
+    container_name: postgres
+    ports:
+      - '5433:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: randompassword
       POSTGRES_DB: htclinichub
-    ports:
-      - '5433:5432'
+      POSTGRES_MULTIPLE_DATABASES: auth_service,clinic_service,payment_service,staff_service,patient_service
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', 'postgres']
       interval: 5s
       timeout: 5s
       retries: 10
-
-  postgres-test:
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: randompassword
-      POSTGRES_DB: authservice
-    ports:
-      - '5432:5432'
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    restart: unless-stopped
 
   api-gateway:
     build:
       context: .
       dockerfile: ./apps/api-gateway/Dockerfile
       target: development
-    command: sh -c "sleep 10 && pnpm run start:dev api-gateway"
+    container_name: api-gateway
+    command: sh -c "sleep 15 && pnpm run start:dev api-gateway"
     develop:
       watch:
         - action: sync
@@ -90,8 +134,10 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
     env_file:
-      - ./apps/api-gateway/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
@@ -99,18 +145,20 @@ services:
         condition: service_healthy
     ports:
       - '3000:3000'
+    restart: unless-stopped
 
-  reservations:
+  clinic:
     build:
       context: .
-      dockerfile: ./apps/reservations/Dockerfile
+      dockerfile: ./apps/clinics/Dockerfile
       target: development
-    command: sh -c "sleep 10 && pnpm run start:dev reservations"
+    container_name: clinic
+    command: sh -c "sleep 15 && pnpm run start:dev clinics"
     develop:
       watch:
         - action: sync
-          path: ./apps/reservations/src
-          target: /app/apps/reservations/src
+          path: ./apps/clinics/src
+          target: /app/apps/clinics/src
           ignore:
             - node_modules/
         - action: sync
@@ -120,20 +168,26 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
     env_file:
-      - ./apps/reservations/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
       mongo:
         condition: service_healthy
+    restart: unless-stopped
 
   auth:
     build:
       context: .
       dockerfile: ./apps/auth/Dockerfile
       target: development
-    command: sh -c "sleep 10 && pnpm run start:dev auth"
+    container_name: auth
+    command: sh -c "sleep 15 && pnpm run start:dev auth"
     develop:
       watch:
         - action: sync
@@ -148,22 +202,24 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
     env_file:
-      - ./apps/auth/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
       mongo:
         condition: service_healthy
-    ports:
-      - '3001:3001'
+    restart: unless-stopped
 
   staff:
     build:
       context: .
       dockerfile: ./apps/staff/Dockerfile
       target: development
-    command: sh -c "sleep 10 && pnpm run start:dev staff"
+    container_name: staff
+    command: sh -c "sleep 15 && pnpm run start:dev staff"
     develop:
       watch:
         - action: sync
@@ -178,10 +234,178 @@ services:
             - node_modules/
         - action: rebuild
           path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
     env_file:
-      - ./apps/staff/.env
+      - .env
     depends_on:
       kafka:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    restart: unless-stopped
+
+  analyze-healthcare-data:
+    build:
+      context: .
+      dockerfile: ./apps/analyze-healthcare-data/Dockerfile
+      target: development
+    container_name: analyze-healthcare-data
+    command: sh -c "sleep 15 && pnpm run start:dev analyze-healthcare-data"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/analyze-healthcare-data/src
+          target: /app/apps/analyze-healthcare-data/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  patient:
+    build:
+      context: .
+      dockerfile: ./apps/patients/Dockerfile
+      target: development
+    container_name: patient
+    command: sh -c "sleep 15 && pnpm run start:dev patients"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/patients/src
+          target: /app/apps/patients/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  media:
+    build:
+      context: .
+      dockerfile: ./apps/media/Dockerfile
+      target: development
+    container_name: media
+    command: sh -c "sleep 15 && pnpm run start:dev media"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/media/src
+          target: /app/apps/media/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  communication:
+    build:
+      context: .
+      dockerfile: ./apps/communication/Dockerfile
+      target: development
+    container_name: communication
+    command: sh -c "sleep 15 && pnpm run start:dev communication"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/communication/src
+          target: /app/apps/communication/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  payment:
+    build:
+      context: .
+      dockerfile: ./apps/payment/Dockerfile
+      target: development
+    container_name: payment
+    command: sh -c "sleep 15 && pnpm run start:dev payment"
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/payment/src
+          target: /app/apps/payment/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./libs
+          target: /app/libs
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+    environment:
+      - KAFKA_BROKER=kafka:9092
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  mongo-data:
+  postgres-data:

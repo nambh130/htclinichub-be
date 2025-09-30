@@ -1,15 +1,30 @@
-import { IsEmail, IsNotEmpty, IsUUID } from "class-validator"
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
-export class CreateInvitationDto{
+export class CreateInvitationDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string
+  email: string;
 
   @IsUUID()
   @IsNotEmpty()
-  clinic: string
+  clinic: string;
+
+  @IsOptional()
+  @IsString()
+  clinicName: string
 
   @IsUUID()
-  @IsNotEmpty()
-  role: string
+  @IsOptional()
+  role: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isOwnerInvitation?: boolean;
 }

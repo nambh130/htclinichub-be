@@ -1,14 +1,19 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AUTH_CONSUMER_GROUP, AUTH_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '@app/common/auth/jwt.strategy';
+import { ClinicModule } from '../clinics/clinic.module';
+import { StaffModule } from '@api-gateway/staff/staff.module';
 
 @Module({
   imports: [
     HttpModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE,
@@ -24,13 +29,18 @@ import { HttpModule } from '@nestjs/axios';
               groupId: AUTH_CONSUMER_GROUP,
             },
           },
+          consumer: {
+            groupId: AUTH_CONSUMER_GROUP,
+          },
         }),
         inject: [ConfigService],
       },
     ]),
+    ClinicModule,
+    forwardRef(() => StaffModule)
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService, ClientsModule],
 })
-export class AuthModule {}
+export class AuthModule { }

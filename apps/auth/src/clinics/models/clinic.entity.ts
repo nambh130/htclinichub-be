@@ -1,12 +1,5 @@
-import {
-  Entity,
-  Column,
-  OneToMany,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
-} from 'typeorm';
-import { ClinicUser } from '../../clinic-users/models/clinic-user.entity';
+import { Entity, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
+import { User } from '../../clinic-users/models/clinic-user.entity';
 import { PostgresAbstractEntity } from '@app/common';
 
 @Entity({ name: 'clinics' })
@@ -16,16 +9,10 @@ export class Clinic extends PostgresAbstractEntity<Clinic> {
     if (clinic) Object.assign(this, clinic);
   }
 
-  @Column({ type: 'varchar', length: 255 })
-  name: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  location: string;
-
-  @ManyToOne(() => ClinicUser, (user) => user.clinics)
+  @ManyToOne(() => User, (user) => user.ownerOf, { nullable: true })
   @JoinColumn()
-  owner: ClinicUser;
+  owner: User;
 
-  @ManyToMany(() => ClinicUser, (user) => user.currentClinics)
-  users: ClinicUser[]
+  @ManyToMany(() => User, (user) => user.clinics)
+  users: User[];
 }

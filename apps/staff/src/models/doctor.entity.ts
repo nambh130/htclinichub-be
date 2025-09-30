@@ -1,8 +1,9 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
-import { EmployeeInfo } from './employeeInfo.entity';
+import { PostgresAbstractEntity } from '@app/common';
 import { Invitation } from './invitation.entity';
 import { DoctorServiceLink } from './doctorServiceLinks.entity';
-import { PostgresAbstractEntity } from '@app/common';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { DoctorClinicMap } from './doctor-clinic-map.entity';
+import { StaffInfo } from './staffInfo.entity';
 
 @Entity()
 export class Doctor extends PostgresAbstractEntity<Doctor> {
@@ -15,13 +16,21 @@ export class Doctor extends PostgresAbstractEntity<Doctor> {
   @Column({ default: false })
   is_locked: boolean;
 
-  @OneToOne(() => EmployeeInfo)
-  @JoinColumn({ name: 'employee_info_id' })
-  employee_info: EmployeeInfo;
+  @OneToOne(() => StaffInfo)
+  @JoinColumn({ name: 'staff_info_id', referencedColumnName: 'id' })
+  staffInfo: StaffInfo;
 
   @OneToMany(() => Invitation, (invitation) => invitation.doctor)
   invitations: Invitation[];
 
   @OneToMany(() => DoctorServiceLink, (link) => link.doctor)
   services: DoctorServiceLink[];
+
+  @OneToMany(() => DoctorClinicMap, (clinic) => clinic.doctor, {
+    cascade: true,
+  })
+  clinics: DoctorClinicMap[];
+
+  // @OneToMany(() => Doctor_WorkShift, (shift) => shift.doctor)
+  // shifts: Doctor_WorkShift[];
 }

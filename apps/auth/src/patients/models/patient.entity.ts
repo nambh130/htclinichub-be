@@ -1,8 +1,11 @@
 import { PostgresAbstractEntity } from '@app/common';
-import { Optional } from '@nestjs/common';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  AccountStatus,
+  AccountStatusType,
+} from '@app/common/enum/account-type.enum';
+import { Entity, Column } from 'typeorm';
 
-@Entity("patient")
+@Entity('patient')
 export class Patient extends PostgresAbstractEntity<Patient> {
   constructor(patient?: Partial<Patient>) {
     super();
@@ -11,6 +14,9 @@ export class Patient extends PostgresAbstractEntity<Patient> {
 
   @Column({ unique: true })
   phone: string;
+
+  @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.ACTIVE })
+  status: AccountStatusType;
 
   @Column({ nullable: true })
   password: string;

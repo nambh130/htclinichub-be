@@ -1,14 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ActorType, PostgresAbstractRepository } from '@app/common';
+import { PostgresAbstractRepository } from '@app/common';
 import { Doctor } from '../models/doctor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, In } from 'typeorm';
 
 @Injectable()
 export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
   protected readonly logger = new Logger(DoctorRepository.name);
 
-  // ✅ Add this line to define the property
   private readonly itemsRepository: Repository<Doctor>;
 
   constructor(
@@ -20,21 +19,21 @@ export class DoctorRepository extends PostgresAbstractRepository<Doctor> {
     this.itemsRepository = itemsRepository;
   }
 
-  async findActorWithIdAndType(
-    type: ActorType,
-    id: string,
-  ): Promise<{ email: string } | null> {
-    const numericId = Number(id);
-    if (!type || !numericId) return null;
+  async checkDoctorEmailExists(email: string): Promise<boolean> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const doctor = await this.itemsRepository.findOne({
+      where: { email: normalizedEmail },
+    });
+    return doctor !== null;
+  }
 
-    switch (type) {
-      case 'doctor':
-        return await this.itemsRepository.findOne({
-          where: { id: numericId },
-          select: ['email'],
-        });
-      default:
-        return null;
-    }
+  get repo(): Repository<Doctor> {
+    return this.itemsRepository;
+  }
+
+  async findDoctorsByIds(ids: number[]): Promise<Doctor[]> {
+    return this.entityRepository.find({
+      where: { id: In(ids) },
+    });
   }
 }

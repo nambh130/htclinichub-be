@@ -1,20 +1,14 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Clinic } from '../../clinics/models/clinic.entity';
-import { ActorEnum, ActorType, ClinicUser } from '../../clinic-users/models/clinic-user.entity';
+import { User } from '../../clinic-users/models/clinic-user.entity';
 import { PostgresAbstractEntity } from '@app/common';
 import { Role } from '../../roles/models/role.entity';
-
 export type InvitationType = 'pending' | 'accepted' | 'expired' | 'revoked';
 export enum InvitationEnum {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   EXPIRED = 'expired',
-  REVOKED = 'revoked'
+  REVOKED = 'revoked',
 }
 
 @Entity('employee_invitation')
@@ -38,17 +32,23 @@ export class EmployeeInvitation extends PostgresAbstractEntity<EmployeeInvitatio
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column({
-    name: 'actor_type',
-    type: 'enum',
-    enum: ActorEnum,
-    default: 'doctor' //Please don't change this
-  })
-  actorType: ActorType;
+  //@Column({
+  //  name: 'actor_type',
+  //  type: 'enum',
+  //  enum: ActorEnum,
+  //})
+  //actorType: ActorType;
 
-  @ManyToOne(() => ClinicUser, { nullable: true })
+  @Column({
+    name: 'is_owner_invitation',
+    type: 'boolean',
+    default: false,
+  })
+  isOwnerInvitation: boolean;
+
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'invited_by' })
-  invitedBy: ClinicUser;
+  invitedBy: User;
 
   @Column({
     type: 'enum',

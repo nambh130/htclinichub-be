@@ -17,6 +17,9 @@ export abstract class MongoAbstractRepository<
     return (await createdDocument.save()).toJSON() as TDocument;
   }
 
+  async createMany(docs: Partial<TDocument>[]) {
+    return this.model.insertMany(docs, { lean: true });
+  }
   async findOne(filterQuery: FilterQuery<TDocument>): Promise<TDocument> {
     const document = await this.model
       .findOne(filterQuery)
@@ -32,10 +35,15 @@ export abstract class MongoAbstractRepository<
     return document;
   }
 
+  async count(filterQuery: FilterQuery<TDocument>): Promise<number> {
+    const count = await this.model.countDocuments(filterQuery).exec();
+    return count;
+  }
+
   async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,
     update: UpdateQuery<TDocument>,
-  ): Promise<TDocument> {
+  ): Promise<TDocument | null> {
     const updatedDocument = await this.model
       .findOneAndUpdate(filterQuery, update, {
         new: true,
@@ -59,5 +67,30 @@ export abstract class MongoAbstractRepository<
     filterQuery: FilterQuery<TDocument>,
   ): Promise<TDocument | null> {
     return this.model.findOneAndDelete(filterQuery).lean<TDocument>(true);
+  }
+
+  async findAndSort(
+    filterQuery: FilterQuery<TDocument>,
+    options?: {
+      sort?: Record<string, 1 | -1>;
+      limit?: number;
+      skip?: number;
+    },
+  ): Promise<TDocument[]> {
+    const query = this.model.find(filterQuery);
+
+    if (options?.sort) {
+      query.sort(options.sort);
+    }
+
+    if (options?.limit !== undefined) {
+      query.limit(options.limit);
+    }
+
+    if (options?.skip !== undefined) {
+      query.skip(options.skip);
+    }
+
+    return query.lean<TDocument[]>(true);
   }
 }

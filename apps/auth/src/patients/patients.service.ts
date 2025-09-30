@@ -5,14 +5,14 @@ import { Patient } from './models/patient.entity';
 
 @Injectable()
 export class PatientsService {
-  constructor(private readonly patientRepository: PatientRepository){}
+  constructor(private readonly patientRepository: PatientRepository) {}
 
-  async createPatient(patient: CreatePatientDto): Promise<Patient>{
+  async createPatient(patient: CreatePatientDto): Promise<Patient> {
     const newPatient = new Patient(patient);
     return await this.patientRepository.create(newPatient);
   }
 
-  async getPatient(){
+  async getPatient() {
     return await this.patientRepository.find({});
   }
 }

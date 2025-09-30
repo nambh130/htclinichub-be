@@ -1,0 +1,3432 @@
+{
+  "info": {
+    "name": "HTClinicHub API Gateway",
+    "description": "Complete API collection for HTClinicHub Healthcare Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "htclinichub-api-gateway",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for patients, staff, and administrators",
+      "item": [
+        {
+          "name": "Patient Authentication",
+          "item": [
+            {
+              "name": "Request OTP (Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+84901234567\",\n  \"password\": \"optionalPassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/patient/login/request-otp",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "patient", "login", "request-otp"]
+                }
+              }
+            },
+            {
+              "name": "Request OTP (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+84901234567\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/patient/request-otp",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "patient", "request-otp"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP (Gateway)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('patient_token', response.token);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+84901234567\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/patient/login/verify-otp",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "patient", "login", "verify-otp"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP (Direct Auth Service)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('patient_token', response.token);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+84901234567\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/patient/verify-otp",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "patient", "verify-otp"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Authentication",
+          "item": [
+            {
+              "name": "Clinic User Login (Gateway)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('staff_token', response.token);",
+                      "        pm.environment.set('current_user_id', response.user.id);",
+                      "        if (response.currentClinic) {",
+                      "            pm.environment.set('current_clinic_id', response.currentClinic.id);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"doctor@clinic.com\",\n  \"password\": \"securePassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/clinic/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "clinic", "login"]
+                }
+              }
+            },
+            {
+              "name": "Clinic User Login (Direct Auth Service)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('staff_token', response.token);",
+                      "        pm.environment.set('current_user_id', response.user.id);",
+                      "        if (response.user.currentClinics && response.user.currentClinics.length > 0) {",
+                      "            pm.environment.set('current_clinic_id', response.user.currentClinics[0]);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"doctor@clinic.com\",\n  \"password\": \"securePassword123\",\n  \"userType\": \"doctor\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/clinic/login",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "clinic", "login"]
+                }
+              }
+            },
+            {
+              "name": "Admin Login (Gateway)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('admin_token', response.token);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@htclinichub.com\",\n  \"password\": \"adminPassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/admin/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "admin", "login"]
+                }
+              }
+            },
+            {
+              "name": "Admin Login (Direct Auth Service)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('admin_token', response.token);",
+                      "        pm.environment.set('current_user_id', response.user.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@htclinichub.com\",\n  \"password\": \"adminPassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/admin/login",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "admin", "login"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invitation System",
+          "item": [
+            {
+              "name": "Create Invitation (Owner - Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"newdoctor@clinic.com\",\n  \"clinic\": \"{{current_clinic_id}}\",\n  \"clinicName\": \"Main Medical Center\",\n  \"role\": \"doctor-role-uuid\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/owner/invitation",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "owner", "invitation"]
+                }
+              }
+            },
+            {
+              "name": "Create Invitation (Clinic - Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"newdoctor@clinic.com\",\n  \"clinic\": \"{{current_clinic_id}}\",\n  \"role\": \"doctor-role-uuid\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/invitation/clinic",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["invitation", "clinic"]
+                }
+              }
+            },
+            {
+              "name": "Create Invitation (Admin - Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"staff@clinic.com\",\n  \"clinic\": \"{{current_clinic_id}}\",\n  \"clinicName\": \"Main Medical Center\",\n  \"role\": \"employee-role-uuid\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/admin/invitation",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "admin", "invitation"]
+                }
+              }
+            },
+            {
+              "name": "Create Invitation (Admin - Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"staff@clinic.com\",\n  \"clinic\": \"{{current_clinic_id}}\",\n  \"role\": \"employee-role-uuid\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/invitation/admin",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["invitation", "admin"]
+                }
+              }
+            },
+            {
+              "name": "Check Invitation (Gateway)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/invitation/check?token={{invitation_token}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "invitation", "check"],
+                  "query": [
+                    {
+                      "key": "token",
+                      "value": "{{invitation_token}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Check Invitation (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"newdoctor@clinic.com\",\n  \"token\": \"{{invitation_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/invitation/check",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "invitation", "check"]
+                }
+              }
+            },
+            {
+              "name": "Invitation Signup (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"newdoctor@clinic.com\",\n  \"token\": \"{{invitation_token}}\",\n  \"password\": \"newPassword123\",\n  \"confirmPassword\": \"newPassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/invitation/signup",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "invitation", "signup"]
+                }
+              }
+            },
+            {
+              "name": "Accept Invitation (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{invitation_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/invitation/accept",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "invitation", "accept"]
+                }
+              }
+            },
+            {
+              "name": "Get Invitation by Token (Direct Auth Service)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_service_url}}/invitation?token={{invitation_token}}&email=newdoctor@clinic.com",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["invitation"],
+                  "query": [
+                    {
+                      "key": "token",
+                      "value": "{{invitation_token}}"
+                    },
+                    {
+                      "key": "email",
+                      "value": "newdoctor@clinic.com"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Invitations by Clinic (Gateway)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/invitation?clinicId={{current_clinic_id}}&status=pending",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "invitation"],
+                  "query": [
+                    {
+                      "key": "clinicId",
+                      "value": "{{current_clinic_id}}"
+                    },
+                    {
+                      "key": "status",
+                      "value": "pending"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Invitations by Clinic (Direct Auth Service)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_service_url}}/invitation/clinic?clinicId={{current_clinic_id}}&status=pending&limit=10&page=1",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["invitation", "clinic"],
+                  "query": [
+                    {
+                      "key": "clinicId",
+                      "value": "{{current_clinic_id}}"
+                    },
+                    {
+                      "key": "status",
+                      "value": "pending"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Revoke Invitation (Gateway)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/invitation/:invitationId",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "invitation", ":invitationId"],
+                  "variable": [
+                    {
+                      "key": "invitationId",
+                      "value": "invitation-uuid"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Revoke Invitation (Direct Auth Service)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"clinicId\": \"{{current_clinic_id}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/invitation/:invitationId/revoke",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["invitation", ":invitationId", "revoke"],
+                  "variable": [
+                    {
+                      "key": "invitationId",
+                      "value": "invitation-uuid"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token Management",
+          "item": [
+            {
+              "name": "Refresh Token (Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/refresh-token",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "refresh-token"]
+                }
+              }
+            },
+            {
+              "name": "Refresh Token (Direct Auth Service)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.token) {",
+                      "        pm.environment.set('staff_token', response.token);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/refresh",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "refresh"]
+                }
+              }
+            },
+            {
+              "name": "Logout (Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "logout"]
+                }
+              }
+            },
+            {
+              "name": "Logout (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/logout",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "logout"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Password Management",
+          "item": [
+            {
+              "name": "Recover Password (Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@clinic.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/recover-password",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "recover-password"]
+                }
+              }
+            },
+            {
+              "name": "Recover Password (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@clinic.com\",\n  \"actorType\": \"doctor\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/forget-password",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "forget-password"]
+                }
+              }
+            },
+            {
+              "name": "Reset Password (Gateway)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"reset-token\",\n  \"newPassword\": \"newSecurePassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/reset-password",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "reset-password"]
+                }
+              }
+            },
+            {
+              "name": "Reset Password (Direct Auth Service)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"reset-token\",\n  \"password\": \"newSecurePassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{auth_service_url}}/auth/reset-password",
+                  "host": ["{{auth_service_url}}"],
+                  "path": ["auth", "reset-password"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Roles & Permissions",
+          "item": [
+            {
+              "name": "Role Management",
+              "item": [
+                {
+                  "name": "Get Roles for Clinic (Gateway)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/auth/roles?clinicId={{current_clinic_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": ["auth", "roles"],
+                      "query": [
+                        {
+                          "key": "clinicId",
+                          "value": "{{current_clinic_id}}"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Create Role (Direct Auth Service)",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_role_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Senior Doctor\",\n  \"description\": \"Senior doctor with additional privileges\",\n  \"permissionIds\": [\"permission-uuid-1\", \"permission-uuid-2\"],\n  \"roleType\": \"doctor\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{auth_service_url}}/roles",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["roles"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get All Roles (Direct Auth Service)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{auth_service_url}}/roles?roleType=doctor&limit=10&page=1",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["roles"],
+                      "query": [
+                        {
+                          "key": "roleType",
+                          "value": "doctor"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        },
+                        {
+                          "key": "page",
+                          "value": "1"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Clinic Roles (Direct Auth Service)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{auth_service_url}}/roles/clinic",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["roles", "clinic"]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Role (Direct Auth Service)",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Updated Senior Doctor\",\n  \"description\": \"Updated description for senior doctor role\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{auth_service_url}}/roles/{{created_role_id}}",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["roles", "{{created_role_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Role (Direct Auth Service)",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"id\": \"{{created_role_id}}\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{auth_service_url}}/roles",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["roles"]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Permission Management",
+              "item": [
+                {
+                  "name": "Create Permission (Direct Auth Service)",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_permission_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"manage_prescriptions\",\n  \"description\": \"Permission to create and manage prescriptions\",\n  \"resource\": \"prescriptions\",\n  \"action\": \"manage\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{auth_service_url}}/permissions",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["permissions"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get All Permissions (Direct Auth Service)",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{auth_service_url}}/permissions?page=1&limit=20",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["permissions"],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "20"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Permission (Direct Auth Service)",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"manage_advanced_prescriptions\",\n  \"description\": \"Updated permission for advanced prescription management\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{auth_service_url}}/permissions/{{created_permission_id}}",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["permissions", "{{created_permission_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Permission (Direct Auth Service)",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{admin_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{auth_service_url}}/permissions/{{created_permission_id}}",
+                      "host": ["{{auth_service_url}}"],
+                      "path": ["permissions", "{{created_permission_id}}"]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clinic Management",
+      "description": "Clinic CRUD operations, staff management, and schedule rules",
+      "item": [
+        {
+          "name": "Clinic CRUD",
+          "item": [
+            {
+              "name": "Create Clinic",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('created_clinic_id', response.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Main Medical Center\",\n  \"location\": \"123 Healthcare Street, Medical District\",\n  \"phone\": \"+84901234567\",\n  \"email\": \"contact@mainmedical.com\",\n  \"description\": \"Comprehensive healthcare services with modern facilities\",\n  \"website\": \"https://mainmedical.com\",\n  \"operatingHours\": {\n    \"monday\": { \"open\": \"08:00\", \"close\": \"18:00\" },\n    \"tuesday\": { \"open\": \"08:00\", \"close\": \"18:00\" },\n    \"wednesday\": { \"open\": \"08:00\", \"close\": \"18:00\" },\n    \"thursday\": { \"open\": \"08:00\", \"close\": \"18:00\" },\n    \"friday\": { \"open\": \"08:00\", \"close\": \"18:00\" },\n    \"saturday\": { \"open\": \"08:00\", \"close\": \"16:00\" },\n    \"sunday\": { \"open\": \"09:00\", \"close\": \"15:00\" }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/clinic",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic"]
+                }
+              }
+            },
+            {
+              "name": "Get All Clinics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/all",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "all"]
+                }
+              }
+            },
+            {
+              "name": "Get User Clinics (Paginated)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic?page=1&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Clinic by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Update Clinic",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Medical Center\",\n  \"location\": \"456 New Healthcare Avenue\",\n  \"phone\": \"+84901234568\",\n  \"email\": \"updated@mainmedical.com\",\n  \"description\": \"Updated comprehensive healthcare services\",\n  \"website\": \"https://updated-mainmedical.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Delete Clinic",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff Management",
+          "item": [
+            {
+              "name": "Get Clinic Staff List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}/staff-list?limit=20&offset=0&type=all&search=&searchBy=all",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}", "staff-list"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    },
+                    {
+                      "key": "type",
+                      "value": "all",
+                      "description": "doctor | employee | all"
+                    },
+                    {
+                      "key": "search",
+                      "value": ""
+                    },
+                    {
+                      "key": "searchBy",
+                      "value": "all",
+                      "description": "all | name | email | phone"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Doctors Only",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}/staff-list?type=doctor&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}", "staff-list"],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "doctor"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Search Staff by Name",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}/staff-list?search=John&searchBy=name",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}", "staff-list"],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "John"
+                    },
+                    {
+                      "key": "searchBy",
+                      "value": "name"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Schedule Rules",
+          "item": [
+            {
+              "name": "Get Clinic Schedule Rules",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/clinic/{{current_clinic_id}}/schedule-rule",
+                  "host": ["{{base_url}}"],
+                  "path": ["clinic", "{{current_clinic_id}}", "schedule-rule"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Staff Management",
+      "description": "Doctor and employee management with profiles, degrees, and specializations",
+      "item": [
+        {
+          "name": "Doctor Management",
+          "item": [
+            {
+              "name": "Account Management",
+              "item": [
+                {
+                  "name": "Get Doctor Account List",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/account-list?page=1&limit=10",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "doctor", "account-list"],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Doctor List with Profile",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/account-list-with-profile?page=1&limit=10&search=&searchField=all",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "doctor", "account-list-with-profile"],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        },
+                        {
+                          "key": "search",
+                          "value": ""
+                        },
+                        {
+                          "key": "searchField",
+                          "value": "all",
+                          "description": "name | email | phone | all"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Create Doctor Account",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_doctor_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"newdoctor@clinic.com\",\n  \"password\": \"doctorPassword123\",\n  \"firstName\": \"Dr. John\",\n  \"lastName\": \"Smith\",\n  \"phone\": \"+84901234567\",\n  \"dateOfBirth\": \"1985-03-15\",\n  \"gender\": \"male\",\n  \"address\": \"123 Medical Street\",\n  \"clinicId\": \"{{current_clinic_id}}\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/create-account",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "doctor", "create-account"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Doctor by ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "doctor", "{{created_doctor_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Lock Doctor Account",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/lock/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "lock",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Unlock Doctor Account",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/unlock/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "unlock",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Profile Management",
+              "item": [
+                {
+                  "name": "Create Doctor Profile",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"biography\": \"Experienced cardiologist with 10+ years in practice\",\n  \"specialization\": \"Cardiology\",\n  \"experience\": \"10 years\",\n  \"education\": \"MD from Medical University\",\n  \"consultationFee\": 500000,\n  \"followUpFee\": 300000,\n  \"availableHours\": {\n    \"monday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"tuesday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"wednesday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"thursday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"friday\": [\"09:00-12:00\", \"14:00-17:00\"]\n  }\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/profile/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "profile",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Doctor Profile",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"biography\": \"Updated biography - Senior cardiologist specialist\",\n  \"consultationFee\": 600000,\n  \"followUpFee\": 350000\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/profile/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "profile",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Staff Info by Doctor ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/staff-info/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "staff-info",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Degrees Management",
+              "item": [
+                {
+                  "name": "Get Doctor Degrees",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/degrees/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "degrees",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Add Doctor Degree",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_degree_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"degreeName\": \"Doctor of Medicine (MD)\",\n  \"institution\": \"Harvard Medical School\",\n  \"graduationYear\": 2010,\n  \"gpa\": 3.8,\n  \"honors\": \"Magna Cum Laude\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/degrees/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "degrees",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Doctor Degree",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"degreeName\": \"Doctor of Medicine (MD) - Updated\",\n  \"gpa\": 3.9\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/degrees/{{created_doctor_id}}/{{created_degree_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "degrees",
+                        "{{created_doctor_id}}",
+                        "{{created_degree_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Doctor Degree",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/degrees/{{created_doctor_id}}/{{created_degree_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "degrees",
+                        "{{created_doctor_id}}",
+                        "{{created_degree_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Specializations",
+              "item": [
+                {
+                  "name": "Get Doctor Specializations",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/specializes/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "specializes",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Add Doctor Specialization",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_specialization_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"specializationName\": \"Interventional Cardiology\",\n  \"certificationBody\": \"American Board of Internal Medicine\",\n  \"certificationDate\": \"2015-06-15\",\n  \"expirationDate\": \"2025-06-15\",\n  \"description\": \"Specialized in minimally invasive cardiac procedures\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/specializes/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "specializes",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Doctor Specialization",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"description\": \"Updated specialization in advanced cardiac interventions\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/specializes/{{created_doctor_id}}/{{created_specialization_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "specializes",
+                        "{{created_doctor_id}}",
+                        "{{created_specialization_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Delete Doctor Specialization",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/specializes/{{created_doctor_id}}/{{created_specialization_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "specializes",
+                        "{{created_doctor_id}}",
+                        "{{created_specialization_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Schedule Management",
+              "item": [
+                {
+                  "name": "Get Doctor Working Shift",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/working-shift/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "working-shift",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Setup Working Shift",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"clinicId\": \"{{current_clinic_id}}\",\n  \"schedule\": {\n    \"monday\": {\n      \"isWorking\": true,\n      \"shifts\": [\n        {\n          \"startTime\": \"09:00\",\n          \"endTime\": \"12:00\",\n          \"maxPatients\": 10\n        },\n        {\n          \"startTime\": \"14:00\",\n          \"endTime\": \"17:00\",\n          \"maxPatients\": 12\n        }\n      ]\n    },\n    \"tuesday\": {\n      \"isWorking\": true,\n      \"shifts\": [\n        {\n          \"startTime\": \"09:00\",\n          \"endTime\": \"12:00\",\n          \"maxPatients\": 10\n        }\n      ]\n    },\n    \"wednesday\": {\n      \"isWorking\": false,\n      \"shifts\": []\n    }\n  }\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/working-shift/{{created_doctor_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "working-shift",
+                        "{{created_doctor_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Doctor Shifts by Date",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/shifts/{{current_clinic_id}}/{{created_doctor_id}}/2024-01-15",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "shifts",
+                        "{{current_clinic_id}}",
+                        "{{created_doctor_id}}",
+                        "2024-01-15"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Clinic Assignment",
+              "item": [
+                {
+                  "name": "Get Clinics by Doctor",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/clinics-by-doctor",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "doctor", "clinics-by-doctor"]
+                    }
+                  }
+                },
+                {
+                  "name": "Assign Doctor to Clinic",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/assign-clinic/{{created_doctor_id}}/{{current_clinic_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "assign-clinic",
+                        "{{created_doctor_id}}",
+                        "{{current_clinic_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Remove Doctor from Clinic",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/doctor/remove-clinic/{{created_doctor_id}}/{{current_clinic_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "doctor",
+                        "remove-clinic",
+                        "{{created_doctor_id}}",
+                        "{{current_clinic_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Employee Management",
+          "item": [
+            {
+              "name": "Account Management",
+              "item": [
+                {
+                  "name": "Get Employee Account List",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/account-list?page=1&limit=10",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "employee", "account-list"],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Employee List with Profile",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/account-list-with-profile?page=1&limit=10&search=&searchField=all",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "account-list-with-profile"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "10"
+                        },
+                        {
+                          "key": "search",
+                          "value": ""
+                        },
+                        {
+                          "key": "searchField",
+                          "value": "all"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Create Employee Account",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 201) {",
+                          "    const response = pm.response.json();",
+                          "    if (response.id) {",
+                          "        pm.environment.set('created_employee_id', response.id);",
+                          "    }",
+                          "}"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"email\": \"nurse@clinic.com\",\n  \"password\": \"nursePassword123\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+84901234568\",\n  \"dateOfBirth\": \"1990-05-20\",\n  \"gender\": \"female\",\n  \"address\": \"456 Healthcare Avenue\",\n  \"position\": \"Registered Nurse\",\n  \"department\": \"Emergency\",\n  \"clinicId\": \"{{current_clinic_id}}\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/create-account",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "employee", "create-account"]
+                    }
+                  }
+                },
+                {
+                  "name": "Get Employee by ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": ["staff", "employee", "{{created_employee_id}}"]
+                    }
+                  }
+                },
+                {
+                  "name": "Lock Employee Account",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/lock/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "lock",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Unlock Employee Account",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/unlock/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "unlock",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Profile Management",
+              "item": [
+                {
+                  "name": "Create Employee Profile",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"biography\": \"Experienced registered nurse with emergency care specialization\",\n  \"position\": \"Senior Registered Nurse\",\n  \"department\": \"Emergency Department\",\n  \"experience\": \"8 years\",\n  \"skills\": [\"Emergency Care\", \"Patient Assessment\", \"IV Therapy\", \"Wound Care\"],\n  \"certifications\": [\"BLS\", \"ACLS\", \"TNCC\"]\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/profile/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "profile",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Update Employee Profile",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"biography\": \"Updated - Lead emergency nurse with trauma specialization\",\n  \"position\": \"Lead Emergency Nurse\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/profile/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "profile",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Degrees & Certifications",
+              "item": [
+                {
+                  "name": "Get Employee Degrees",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/degrees/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "degrees",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Add Employee Degree",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"degreeName\": \"Bachelor of Science in Nursing (BSN)\",\n  \"institution\": \"University of Nursing\",\n  \"graduationYear\": 2016,\n  \"gpa\": 3.7,\n  \"honors\": \"Cum Laude\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/degrees/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "degrees",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Clinic Assignment",
+              "item": [
+                {
+                  "name": "Assign Employee to Clinic",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/assign-clinic/{{created_employee_id}}/{{current_clinic_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "assign-clinic",
+                        "{{created_employee_id}}",
+                        "{{current_clinic_id}}"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "name": "Remove Employee from Clinic",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{staff_token}}"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/staff/employee/remove-clinic/{{created_employee_id}}",
+                      "host": ["{{base_url}}"],
+                      "path": [
+                        "staff",
+                        "employee",
+                        "remove-clinic",
+                        "{{created_employee_id}}"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Patient Management",
+      "description": "Patient CRUD operations, medical records, appointments, and favorites",
+      "item": [
+        {
+          "name": "Patient CRUD",
+          "item": [
+            {
+              "name": "Create Patient",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('created_patient_id', response.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Patient\",\n  \"email\": \"john.patient@email.com\",\n  \"phone\": \"+84901234569\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"gender\": \"male\",\n  \"address\": \"789 Patient Street\",\n  \"emergencyContact\": {\n    \"name\": \"Jane Patient\",\n    \"relationship\": \"spouse\",\n    \"phone\": \"+84901234570\"\n  },\n  \"medicalHistory\": {\n    \"allergies\": [\"Penicillin\", \"Shellfish\"],\n    \"chronicConditions\": [\"Hypertension\"],\n    \"medications\": [\"Lisinopril 10mg daily\"]\n  },\n  \"insuranceInfo\": {\n    \"provider\": \"HealthCare Insurance\",\n    \"policyNumber\": \"HC123456789\",\n    \"groupNumber\": \"GRP001\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/patient/create-patient",
+                  "host": ["{{base_url}}"],
+                  "path": ["patient", "create-patient"]
+                }
+              }
+            },
+            {
+              "name": "Update Patient",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"John Updated\",\n  \"phone\": \"+84901234571\",\n  \"address\": \"Updated Address 123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/patient/update-patient/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "update-patient",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Patient by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-patient-by-id/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-patient-by-id",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Patient by Full Name",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-patient-by-fullname/John Patient",
+                  "host": ["{{base_url}}"],
+                  "path": ["patient", "get-patient-by-fullname", "John Patient"]
+                }
+              }
+            },
+            {
+              "name": "Get Patient by Phone",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-patient-by-phonenumber/+84901234569",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-patient-by-phonenumber",
+                    "+84901234569"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get All Patients",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-all-patients",
+                  "host": ["{{base_url}}"],
+                  "path": ["patient", "get-all-patients"]
+                }
+              }
+            },
+            {
+              "name": "Delete Patient",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/delete-patient/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "delete-patient",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Favourite Doctors",
+          "item": [
+            {
+              "name": "Add Favourite Doctor",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"patientId\": \"{{created_patient_id}}\",\n  \"doctorId\": \"{{created_doctor_id}}\",\n  \"reason\": \"Excellent cardiology care and bedside manner\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/patient/add-favourite-doctor",
+                  "host": ["{{base_url}}"],
+                  "path": ["patient", "add-favourite-doctor"]
+                }
+              }
+            },
+            {
+              "name": "Get Favourite Doctors",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-favourite-doctors/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-favourite-doctors",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Medical Records",
+          "item": [
+            {
+              "name": "Get Medical Records by User ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-medical-records-by-userId/{{current_user_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-medical-records-by-userId",
+                    "{{current_user_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Medical Record Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-detail-medical-records-by-mRid/{{medical_record_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-detail-medical-records-by-mRid",
+                    "{{medical_record_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Appointments",
+          "item": [
+            {
+              "name": "Create Appointment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('created_appointment_id', response.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"patientId\": \"{{created_patient_id}}\",\n  \"doctorId\": \"{{created_doctor_id}}\",\n  \"clinicId\": \"{{current_clinic_id}}\",\n  \"appointmentDate\": \"2024-02-15\",\n  \"appointmentTime\": \"10:00\",\n  \"appointmentType\": \"consultation\",\n  \"reason\": \"Regular cardiology checkup\",\n  \"notes\": \"Patient has been experiencing chest pain\",\n  \"duration\": 30,\n  \"priority\": \"normal\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/patient/create-appointment",
+                  "host": ["{{base_url}}"],
+                  "path": ["patient", "create-appointment"]
+                }
+              }
+            },
+            {
+              "name": "Get Appointments by Patient",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-appointments-by-patient-account-id/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-appointments-by-patient-account-id",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Appointment by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-appointment-by-appointment-id/{{created_appointment_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-appointment-by-appointment-id",
+                    "{{created_appointment_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Pending Appointments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-pending-appointments/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-pending-appointments",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Completed Appointments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-done-appointments/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-done-appointments",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient-Clinic Relations",
+          "item": [
+            {
+              "name": "Assign Patient to Clinic",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/assign-to-clinic/{{current_clinic_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "assign-to-clinic",
+                    "{{current_clinic_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Patient Clinics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{patient_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/patient/get-patient-clinics/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "patient",
+                    "get-patient-clinics",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Media Management",
+      "description": "File upload and management for images, PDFs, and documents",
+      "item": [
+        {
+          "name": "Image Management",
+          "item": [
+            {
+              "name": "Upload Single Image",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('uploaded_image_id', response.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "/path/to/image.jpg",
+                      "description": "Select an image file (JPG, PNG, GIF)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-image",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-image"]
+                }
+              }
+            },
+            {
+              "name": "Upload Multiple Images",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/image1.jpg"
+                    },
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/image2.jpg"
+                    },
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/image3.jpg"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-images",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-images"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "PDF Management",
+          "item": [
+            {
+              "name": "Upload Single PDF",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "/path/to/document.pdf",
+                      "description": "Select a PDF file"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-pdf",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-pdf"]
+                }
+              }
+            },
+            {
+              "name": "Upload Multiple PDFs",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/document1.pdf"
+                    },
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/document2.pdf"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-pdfs",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-pdfs"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Document Management",
+          "item": [
+            {
+              "name": "Upload Single Document",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "/path/to/document.docx",
+                      "description": "Select a document file (DOC, DOCX, TXT, etc.)"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-document",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-document"]
+                }
+              }
+            },
+            {
+              "name": "Upload Multiple Documents",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/document1.docx"
+                    },
+                    {
+                      "key": "files",
+                      "type": "file",
+                      "src": "/path/to/document2.pdf"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/upload-documents",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "upload-documents"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "File Operations",
+          "item": [
+            {
+              "name": "Get File by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/media/get/{{uploaded_image_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "get", "{{uploaded_image_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Replace File",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "/path/to/new-file.jpg",
+                      "description": "Select replacement file"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/media/replace/{{uploaded_image_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "replace", "{{uploaded_image_id}}"]
+                }
+              }
+            },
+            {
+              "name": "Delete File",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/media/delete/{{uploaded_image_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["media", "delete", "{{uploaded_image_id}}"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Healthcare Data Analysis",
+      "description": "Vital signs input, tracking, and health data analysis",
+      "item": [
+        {
+          "name": "Vital Signs Management",
+          "item": [
+            {
+              "name": "Input Vital Signs",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.id) {",
+                      "        pm.environment.set('created_vital_id', response.id);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"patientId\": \"{{created_patient_id}}\",\n  \"recordedDate\": \"2024-01-15T10:30:00Z\",\n  \"recordedBy\": \"{{current_user_id}}\",\n  \"vitalSigns\": {\n    \"bloodPressure\": {\n      \"systolic\": 120,\n      \"diastolic\": 80,\n      \"unit\": \"mmHg\"\n    },\n    \"heartRate\": {\n      \"value\": 72,\n      \"unit\": \"bpm\"\n    },\n    \"temperature\": {\n      \"value\": 36.5,\n      \"unit\": \"celsius\"\n    },\n    \"respiratoryRate\": {\n      \"value\": 16,\n      \"unit\": \"breaths/min\"\n    },\n    \"oxygenSaturation\": {\n      \"value\": 98,\n      \"unit\": \"%\"\n    },\n    \"weight\": {\n      \"value\": 70.5,\n      \"unit\": \"kg\"\n    },\n    \"height\": {\n      \"value\": 175,\n      \"unit\": \"cm\"\n    },\n    \"bmi\": {\n      \"value\": 23.0,\n      \"category\": \"normal\"\n    }\n  },\n  \"notes\": \"Patient appears healthy, all vitals within normal range\",\n  \"clinicId\": \"{{current_clinic_id}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/analyze-healthcare-data/input-vital-signs",
+                  "host": ["{{base_url}}"],
+                  "path": ["analyze-healthcare-data", "input-vital-signs"]
+                }
+              }
+            },
+            {
+              "name": "Get Vital Signs by Patient ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/analyze-healthcare-data/vital-signs-data/{{created_patient_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "analyze-healthcare-data",
+                    "vital-signs-data",
+                    "{{created_patient_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Vital Signs by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/analyze-healthcare-data/vital-signs/{{created_vital_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "analyze-healthcare-data",
+                    "vital-signs",
+                    "{{created_vital_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Vital Signs",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"vitalSigns\": {\n    \"bloodPressure\": {\n      \"systolic\": 125,\n      \"diastolic\": 82,\n      \"unit\": \"mmHg\"\n    },\n    \"heartRate\": {\n      \"value\": 75,\n      \"unit\": \"bpm\"\n    }\n  },\n  \"notes\": \"Updated readings - slight increase in BP and HR\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/analyze-healthcare-data/update-vital-signs/{{created_vital_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": [
+                    "analyze-healthcare-data",
+                    "update-vital-signs",
+                    "{{created_vital_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{staff_token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string",
+      "description": "Base URL for HTClinicHub API Gateway"
+    },
+    {
+      "key": "auth_service_url",
+      "value": "http://localhost:3001",
+      "type": "string",
+      "description": "Base URL for HTClinicHub Auth Service (Direct)"
+    },
+    {
+      "key": "staging_url",
+      "value": "https://staging-api.htclinichub.com/api",
+      "type": "string",
+      "description": "Staging environment URL"
+    },
+    {
+      "key": "staging_auth_url",
+      "value": "https://staging-auth.htclinichub.com",
+      "type": "string",
+      "description": "Staging Auth Service URL"
+    },
+    {
+      "key": "production_url",
+      "value": "https://api.htclinichub.com/api",
+      "type": "string",
+      "description": "Production environment URL"
+    },
+    {
+      "key": "production_auth_url",
+      "value": "https://auth.htclinichub.com",
+      "type": "string",
+      "description": "Production Auth Service URL"
+    },
+    {
+      "key": "patient_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for patient authentication"
+    },
+    {
+      "key": "staff_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for staff authentication"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for admin authentication"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string",
+      "description": "Refresh token for token renewal"
+    },
+    {
+      "key": "current_user_id",
+      "value": "",
+      "type": "string",
+      "description": "Current authenticated user ID"
+    },
+    {
+      "key": "current_clinic_id",
+      "value": "",
+      "type": "string",
+      "description": "Current clinic ID"
+    },
+    {
+      "key": "created_doctor_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created doctor"
+    },
+    {
+      "key": "created_employee_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created employee"
+    },
+    {
+      "key": "created_patient_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created patient"
+    },
+    {
+      "key": "created_appointment_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created appointment"
+    },
+    {
+      "key": "uploaded_image_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently uploaded image"
+    },
+    {
+      "key": "created_vital_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created vital signs record"
+    },
+    {
+      "key": "invitation_token",
+      "value": "",
+      "type": "string",
+      "description": "Invitation token for checking/accepting invitations"
+    },
+    {
+      "key": "medical_record_id",
+      "value": "",
+      "type": "string",
+      "description": "Medical record ID for testing"
+    },
+    {
+      "key": "created_role_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created role"
+    },
+    {
+      "key": "created_permission_id",
+      "value": "",
+      "type": "string",
+      "description": "ID of recently created permission"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set environment-specific base URLs",
+          "const environment = pm.environment.get('environment') || 'local';",
+          "switch(environment) {",
+          "    case 'staging':",
+          "        pm.environment.set('base_url', pm.variables.get('staging_url'));",
+          "        pm.environment.set('auth_service_url', pm.variables.get('staging_auth_url'));",
+          "        break;",
+          "    case 'production':",
+          "        pm.environment.set('base_url', pm.variables.get('production_url'));",
+          "        pm.environment.set('auth_service_url', pm.variables.get('production_auth_url'));",
+          "        break;",
+          "    default:",
+          "        pm.environment.set('base_url', pm.variables.get('base_url'));",
+          "        pm.environment.set('auth_service_url', pm.variables.get('auth_service_url'));",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global error handling",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error Response:', pm.response.json());",
+          "}",
+          "",
+          "// Log response time for performance monitoring",
+          "console.log('Response time:', pm.response.responseTime + 'ms');"
+        ]
+      }
+    }
+  ]
+}

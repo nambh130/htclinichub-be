@@ -1,12 +1,8 @@
-import {
-  Entity,
-  Column,
-  ManyToMany,
-  JoinTable
-} from 'typeorm';
+import { Entity, Column, ManyToMany, JoinTable } from 'typeorm';
 import { Permission } from '../../permissions/models/permission.entity';
 import { PostgresAbstractEntity } from '@app/common';
-import { ClinicUser } from '../../clinic-users/models/clinic-user.entity';
+import { User } from '../../clinic-users/models/clinic-user.entity';
+import { ActorEnum, ActorType } from '@app/common/enum/actor-type';
 
 export enum RoleEnum {
   DOCTOR = 'doctor',
@@ -14,7 +10,7 @@ export enum RoleEnum {
   ADMIN = 'admin',
 }
 
-export type RoleType = 'doctor' | 'employee' | 'admin'
+export type RoleType = 'doctor' | 'employee' | 'admin';
 
 @Entity()
 export class Role extends PostgresAbstractEntity<Role> {
@@ -32,18 +28,18 @@ export class Role extends PostgresAbstractEntity<Role> {
   @Column({
     name: 'role_type',
     type: 'enum',
-    enum: RoleEnum
+    enum: ActorEnum,
   })
-  roleType: RoleType
+  roleType: ActorType;
 
-  @ManyToMany(() => Permission, permission => permission.roles)
+  @ManyToMany(() => Permission, (permission) => permission.roles)
   @JoinTable({
     name: 'role_permission',
     joinColumn: { name: 'role_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' }
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   permissions: Permission[];
 
-  @ManyToMany(() => ClinicUser, (user) => user.roles)
-  users: ClinicUser[]
+  @ManyToMany(() => User, (user) => user.roles)
+  users: User[];
 }

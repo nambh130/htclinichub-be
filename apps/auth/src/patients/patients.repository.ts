@@ -11,7 +11,7 @@ export class PatientRepository extends PostgresAbstractRepository<Patient> {
   constructor(
     @InjectRepository(Patient)
     itemsRepository: Repository<Patient>,
-    entityManager: EntityManager
+    entityManager: EntityManager,
   ) {
     super(itemsRepository, entityManager);
   }

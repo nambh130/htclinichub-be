@@ -15,16 +15,13 @@ export class AuthorizationGuard implements CanActivate {
     const required = this.reflector.getAllAndOverride<{
       roles?: string[];
       permissions?: string[];
-    }>(Authorizations, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    }>(Authorizations, [context.getHandler(), context.getClass()]);
 
     if (!required) return true; // No roles/permissions required
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    console.log("test user: ", user);
+    console.log('test user: ', user);
 
     if (!user) throw new ForbiddenException('User not authenticated');
 
@@ -34,9 +31,7 @@ export class AuthorizationGuard implements CanActivate {
 
     const hasPermission =
       !required.permissions?.length ||
-      required.permissions.some((perm) =>
-        user.permissions?.includes(perm),
-      );
+      required.permissions.some((perm) => user.permissions?.includes(perm));
 
     if (!hasRole || !hasPermission) {
       throw new ForbiddenException('Access denied');
@@ -45,4 +40,3 @@ export class AuthorizationGuard implements CanActivate {
     return true;
   }
 }
-

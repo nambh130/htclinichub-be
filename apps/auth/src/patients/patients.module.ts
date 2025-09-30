@@ -1,4 +1,10 @@
-import { AUTH_CONSUMER_GROUP, AUTH_SERVICE, PostgresDatabaseModule, RESERVATIONS_CONSUMER_GROUP, RESERVATIONS_SERVICE } from '@app/common';
+import {
+  AUTH_CONSUMER_GROUP,
+  AUTH_SERVICE,
+  PostgresDatabaseModule,
+  RESERVATIONS_CONSUMER_GROUP,
+  RESERVATIONS_SERVICE,
+} from '@app/common';
 import { Module } from '@nestjs/common';
 import { Patient } from './models/patient.entity';
 import { LoggerModule } from 'nestjs-pino';
@@ -11,43 +17,12 @@ import { PatientRepository } from './patients.repository';
 @Module({
   imports: [
     //PostgreSQL
-    PostgresDatabaseModule,
+    PostgresDatabaseModule.register('AUTH_SERVICE_DB'),
     PostgresDatabaseModule.forFeature([Patient]),
 
     LoggerModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/auth/.env',
-      validationSchema: Joi.object({
-        KAFKA_BROKER: Joi.required(),
-        POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_DB: Joi.string().required(),
-        POSTGRES_USER: Joi.string().required(),
-        POSTGRES_PASSWORD: Joi.string().required(),
-        // Synchronize should only use in development, not in production
-        POSTGRES_SYNC: Joi.boolean().default(false),
-      }),
-    }),
 
     ClientsModule.registerAsync([
-      {
-        name: RESERVATIONS_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.KAFKA,
-          options: {
-            client: {
-              clientId: 'reservations',
-              brokers: [configService.get('KAFKA_BROKER')!],
-            },
-            consumer: {
-              groupId: RESERVATIONS_CONSUMER_GROUP,
-            },
-          },
-        }),
-        inject: [ConfigService],
-      },
       {
         name: AUTH_SERVICE,
         imports: [ConfigModule],
@@ -69,6 +44,6 @@ import { PatientRepository } from './patients.repository';
   ],
   controllers: [],
   providers: [PatientsService, PatientRepository],
-  exports: [PatientsService, PatientRepository]
+  exports: [PatientsService, PatientRepository],
 })
 export class PatientsModule {}

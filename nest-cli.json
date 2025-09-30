@@ -5,9 +5,18 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/reservations/tsconfig.app.json"
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "projects": {
+    "analyze-healthcare-data": {
+      "type": "application",
+      "root": "apps/analyze-healthcare-data",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyze-healthcare-data/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyze-healthcare-data/tsconfig.app.json"
+      }
+    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",
@@ -26,6 +35,15 @@
         "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
     },
+    "clinics": {
+      "type": "application",
+      "root": "apps/clinics",
+      "entryFile": "main",
+      "sourceRoot": "apps/clinics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/clinics/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
@@ -35,13 +53,46 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "reservations": {
+    "communication": {
       "type": "application",
-      "root": "apps/reservations",
+      "root": "apps/communication",
       "entryFile": "main",
-      "sourceRoot": "apps/reservations/src",
+      "sourceRoot": "apps/communication/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/reservations/tsconfig.app.json"
+        "tsConfigPath": "apps/communication/tsconfig.app.json",
+        "assets": [
+          {
+            "include": "**/*.hbs",
+            "outDir": "./dist/apps/communication"
+          }
+        ]
+      }
+    },
+    "media": {
+      "type": "application",
+      "root": "apps/media",
+      "entryFile": "main",
+      "sourceRoot": "apps/media/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/media/tsconfig.app.json"
+      }
+    },
+    "patients": {
+      "type": "application",
+      "root": "apps/patients",
+      "entryFile": "main",
+      "sourceRoot": "apps/patients/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/patients/tsconfig.app.json"
+      }
+    },
+    "payment": {
+      "type": "application",
+      "root": "apps/payment",
+      "entryFile": "main",
+      "sourceRoot": "apps/payment/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/payment/tsconfig.app.json"
       }
     },
     "staff": {
