@@ -1,6 +1,6 @@
 # Description
 This is the back-end for HTclinchub, a multi-clinic management system designed to help healthcare providers track patients, manage check-ins, and view medical results in a secure and efficient way. This app ensure that clinics share the same robust back-end services while keeping their operations and patient data separate
-- Front-end gits: [Doctor front-end](https://github.com/nambh130/htclinichub-be), [Patient front-end](https://github.com/ItsVuong/htclinic-patient-front-end)
+- Front-end gits: [Doctor front-end](https://github.com/nambh130/htclinichub), [Patient front-end](https://github.com/ItsVuong/htclinic-patient-front-end)
 
 # Main Features
 - Patient check-in and appointment tracking
